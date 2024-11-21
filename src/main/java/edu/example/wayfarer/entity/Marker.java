@@ -30,6 +30,9 @@ public class Marker {
     @JoinColumn(name = "schedule_id")
     private Schedule schedule;
 
+    @OneToOne(mappedBy = "marker", cascade = CascadeType.ALL)
+    private ScheduleItem scheduleItem;
+
     private Double lat;
     private Double lng;
     private String color;
@@ -43,6 +46,10 @@ public class Marker {
 
     public void changeConfirm(Boolean confirm) {
         this.confirm = confirm;
+    }
+
+    public void changeColor(String color) {
+        this.color = color;
     }
 
 }

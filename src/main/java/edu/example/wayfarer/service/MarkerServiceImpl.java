@@ -48,10 +48,7 @@ public class MarkerServiceImpl implements MarkerService {
                 .orElseThrow(() -> new RuntimeException("Schedule not found"));
 
         // 해당 멤버의 memberRoom.color 조회
-        String color = memberRoomRepository.findByMember_EmailAndRoom_RoomId(
-                member.getEmail(),
-                schedule.getRoom().getRoomId()
-        ).getColor();
+        String color = findColor(member.getEmail(), schedule.getRoom().getRoomId());
 
         // Marker 저장
         Marker savedMarker = markerRepository.save(
@@ -151,11 +148,20 @@ public class MarkerServiceImpl implements MarkerService {
             saveScheduleItem(foundMarker, markerUpdateDTO);
             // Marker 의 confirm 값 변경
             foundMarker.changeConfirm(true);
+            // Marker 의 color 를 확정 컬러로 변경
+            foundMarker.changeColor("#F72216");
         } else {
             // false 로 변경 요청시 자식 scheduleItem 삭제
             deleteScheduleItem(markerUpdateDTO.getMarkerId());
             // Marker 의 confirm 값 변경
             foundMarker.changeConfirm(false);
+            // Marker 의 color 를 memberRoom 의 컬러로 변경
+            foundMarker.changeColor(
+                    findColor(
+                            foundMarker.getMember().getEmail(),
+                            foundMarker.getSchedule().getRoom().getRoomId()
+                    )
+            );
         }
         
         // 수정한 Marker 를 저장 후 MarkerResponseDTO 로 변환하여 반환
@@ -183,18 +189,29 @@ public class MarkerServiceImpl implements MarkerService {
 
         // Marker 의 위도, 경도 값으로 주소 생성
 
+        // scheduleItem 생성
         ScheduleItem scheduleItem = ScheduleItem.builder()
                 .marker(marker)
                 .name("제목")
+                .content("내용")
                 .address("주소")
                 .time(time)
                 .build();
 
+        // scheduleItem 저장
         scheduleItemRepository.save(scheduleItem);
     }
 
     private void deleteScheduleItem(Long markerId) {
         // MarkerId 를 기준으로 scheduleItem 삭제
         scheduleItemRepository.deleteByMarker_MarkerId(markerId);
+    }
+
+    private String findColor(String email, String roomId) {
+        // 특정 방 사용자의 color 값 가져오기
+        return memberRoomRepository.findByMember_EmailAndRoom_RoomId(
+                email,
+                roomId
+        ).getColor();
     }
 }
