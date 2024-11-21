@@ -10,4 +10,6 @@ public interface MarkerRepository extends JpaRepository<Marker, Long> {
 
     // schedule_id 로 Marker 리스트 조회
     List<Marker> findBySchedule_ScheduleId(Long scheduleId);
+
+    Boolean existsBySchedule_ScheduleId(Long scheduleId);
 }
