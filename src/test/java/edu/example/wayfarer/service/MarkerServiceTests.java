@@ -17,7 +17,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application-test.properties")
+//@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MarkerServiceTests {
     @Autowired
@@ -38,8 +37,6 @@ public class MarkerServiceTests {
     private ScheduleRepository scheduleRepository;
     @Autowired
     private MemberRepository memberRepository;
-    @Autowired
-    private MarkerRepository markerRepository;
     @Autowired
     private MemberRoomRepository memberRoomRepository;
 
@@ -94,10 +91,12 @@ public class MarkerServiceTests {
                 }
             }
             scheduleRepository.saveAll(schedules);
+            Member foundMember = memberRepository.findById("member1@abc.com")
+                    .orElseThrow(() -> new RuntimeException("Member not found"));
 
             MemberRoom memberRoom = MemberRoom.builder()
                     .room(savedRoom)
-                    .member(memberRepository.findById("member1@abc.com").get())
+                    .member(foundMember)
                     .color("#FFFF00")
                     .joinDate(LocalDateTime.now())
                     .build();
