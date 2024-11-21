@@ -1,9 +1,9 @@
 package edu.example.wayfarer.service;
 
-import edu.example.wayfarer.dto.MarkerListDTO;
-import edu.example.wayfarer.dto.MarkerRequestDTO;
-import edu.example.wayfarer.dto.MarkerResponseDTO;
-import edu.example.wayfarer.dto.MarkerUpdateDTO;
+import edu.example.wayfarer.dto.marker.MarkerListDTO;
+import edu.example.wayfarer.dto.marker.MarkerRequestDTO;
+import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
+import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
 
 import java.util.List;
 

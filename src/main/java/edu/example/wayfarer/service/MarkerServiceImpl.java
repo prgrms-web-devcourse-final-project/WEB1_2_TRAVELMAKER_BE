@@ -1,22 +1,20 @@
 package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.converter.MarkerConverter;
-import edu.example.wayfarer.dto.MarkerListDTO;
-import edu.example.wayfarer.dto.MarkerRequestDTO;
-import edu.example.wayfarer.dto.MarkerResponseDTO;
-import edu.example.wayfarer.dto.MarkerUpdateDTO;
+import edu.example.wayfarer.dto.marker.MarkerListDTO;
+import edu.example.wayfarer.dto.marker.MarkerRequestDTO;
+import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
+import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
 import edu.example.wayfarer.entity.Marker;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Schedule;
-import edu.example.wayfarer.repository.MarkerRepository;
-import edu.example.wayfarer.repository.MemberRepository;
-import edu.example.wayfarer.repository.MemberRoomRepository;
-import edu.example.wayfarer.repository.ScheduleRepository;
+import edu.example.wayfarer.entity.ScheduleItem;
+import edu.example.wayfarer.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.sql.Time;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +27,7 @@ public class MarkerServiceImpl implements MarkerService {
     private final MemberRepository memberRepository;
     private final MemberRoomRepository memberRoomRepository;
     private final ScheduleRepository scheduleRepository;
+    private final ScheduleItemRepository scheduleItemRepository;
 
     /**
      * 마커 생성 메서드
@@ -134,17 +133,68 @@ public class MarkerServiceImpl implements MarkerService {
 
     /**
      * 마커 상태 변경 메서드
-     * @param markerUpdateDTO
-     * @return
+     * Marker 의 confirm 을 true or false 로 변경하는 메서드
+     * - true 로 변경 요청시 해당 Marker 의 자식으로 임의의 scheduleItem 생성
+     * - false 로 변경 요청시 해당 Marker 의 자식 scheduleItem 삭제
+     *
+     * @param markerUpdateDTO Marker 변경 요청 데이터
+     * @return MarkerResponseDTO 수정된 Marker 응답 데이터
      */
     @Override
     public MarkerResponseDTO updateMarker(MarkerUpdateDTO markerUpdateDTO) {
+        // 수정할 Marker 조회
+        Marker foundMarker = markerRepository.findById(markerUpdateDTO.getMarkerId())
+                .orElseThrow(() -> new RuntimeException("Marker not found"));
 
-        return null;
+        if (markerUpdateDTO.getConfirm()) {
+            // true 로 변경 요청시 자식 scheduleItem 생성
+            saveScheduleItem(foundMarker, markerUpdateDTO);
+            // Marker 의 confirm 값 변경
+            foundMarker.changeConfirm(true);
+        } else {
+            // false 로 변경 요청시 자식 scheduleItem 삭제
+            deleteScheduleItem(markerUpdateDTO.getMarkerId());
+            // Marker 의 confirm 값 변경
+            foundMarker.changeConfirm(false);
+        }
+        
+        // 수정한 Marker 를 저장 후 MarkerResponseDTO 로 변환하여 반환
+        return MarkerConverter.toMarkerResponseDTO(markerRepository.save(foundMarker));
     }
 
+    /**
+     * 마커 삭제 메서드
+     * markerId 를 기준으로 마커 삭제
+     * @param markerId 삭제할 Marker 의 PK
+     */
     @Override
     public void deleteMarker(Long markerId) {
+        // 삭제할 Marker 조회
+        Marker foundMarker = markerRepository.findById(markerId)
+                .orElseThrow(() -> new RuntimeException("Marker not found"));
 
+        // Marker 삭제
+        markerRepository.delete(foundMarker);
+    }
+
+    private void saveScheduleItem(Marker marker, MarkerUpdateDTO markerUpdateDTO) {
+        // 임의의 날짜 생성
+        Time time = Time.valueOf("00:00:00");
+
+        // Marker 의 위도, 경도 값으로 주소 생성
+
+        ScheduleItem scheduleItem = ScheduleItem.builder()
+                .marker(marker)
+                .name("제목")
+                .address("주소")
+                .time(time)
+                .build();
+
+        scheduleItemRepository.save(scheduleItem);
+    }
+
+    private void deleteScheduleItem(Long markerId) {
+        // MarkerId 를 기준으로 scheduleItem 삭제
+        scheduleItemRepository.deleteByMarker_MarkerId(markerId);
     }
 }
