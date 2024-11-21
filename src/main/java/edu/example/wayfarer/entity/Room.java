@@ -55,5 +55,13 @@ public class Room {
         }
     }
 
+    public void changeTitle(String title){
+        this.title = title;
+    }
+
+    public void changeCountry(String country){
+        this.country = country;
+    }
+
 
 }
