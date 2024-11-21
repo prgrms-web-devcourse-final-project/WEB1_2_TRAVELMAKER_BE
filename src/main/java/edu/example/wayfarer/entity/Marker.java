@@ -21,7 +21,10 @@ public class Marker {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long markerId;
-    private String email;
+
+    @ManyToOne
+    @JoinColumn(name = "email")
+    private Member member;
 
     @ManyToOne
     @JoinColumn(name = "schedule_id")
