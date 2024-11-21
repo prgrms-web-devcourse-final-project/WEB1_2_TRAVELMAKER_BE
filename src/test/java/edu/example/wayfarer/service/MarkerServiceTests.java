@@ -116,7 +116,8 @@ public class MarkerServiceTests {
             markerRequestDTO.setLat(37.552);
             markerRequestDTO.setLng(126.988);
 
-            markerService.createMarker(markerRequestDTO);
+            MarkerResponseDTO markerResponseDTO = markerService.create(markerRequestDTO);
+            System.out.println(markerResponseDTO);
         }
     }
 
@@ -124,7 +125,7 @@ public class MarkerServiceTests {
     @Order(3)
     public void testReadMarker() {
         Long markerId = 1L;
-        MarkerResponseDTO markerResponseDTO = markerService.readMarker(markerId);
+        MarkerResponseDTO markerResponseDTO = markerService.read(markerId);
         System.out.println(markerResponseDTO);
     }
 
@@ -132,7 +133,7 @@ public class MarkerServiceTests {
     @Order(4)
     public void testReadMarkers(){
         Long scheduleId = 1L;
-        List<MarkerResponseDTO> markerResponseDTOS = markerService.readMarkers(scheduleId);
+        List<MarkerResponseDTO> markerResponseDTOS = markerService.getListBySchedule(scheduleId);
         System.out.println(markerResponseDTOS);
     }
 
@@ -140,7 +141,7 @@ public class MarkerServiceTests {
     @Order(5)
     public void testReadAllMarkers() {
         String roomId = "abc1";
-        List<MarkerListDTO> markerListDTOS = markerService.readAllMarkers(roomId);
+        List<MarkerListDTO> markerListDTOS = markerService.getListByRoom(roomId);
         System.out.println(markerListDTOS);
     }
 
@@ -152,7 +153,7 @@ public class MarkerServiceTests {
         markerUpdateDTO.setConfirm(true);
         markerUpdateDTO.setEmail("member1@abc.com");
 
-        System.out.println(markerService.updateMarker(markerUpdateDTO));
+        System.out.println(markerService.update(markerUpdateDTO));
     }
 
     @Test
@@ -163,14 +164,14 @@ public class MarkerServiceTests {
         markerUpdateDTO.setConfirm(false);
         markerUpdateDTO.setEmail("member1@abc.com");
 
-        System.out.println(markerService.updateMarker(markerUpdateDTO));
+        System.out.println(markerService.update(markerUpdateDTO));
     }
 
     @Test
     @Order(8)
     public void testDeleteMarker() {
         Long markerId = 1L;
-        markerService.deleteMarker(markerId);
+        markerService.delete(markerId);
 
     }
 

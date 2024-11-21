@@ -9,17 +9,17 @@ import java.util.List;
 
 public interface MarkerService {
 
-    MarkerResponseDTO createMarker(MarkerRequestDTO markerRequestDTO);
+    MarkerResponseDTO create(MarkerRequestDTO markerRequestDTO);
 
-    MarkerResponseDTO readMarker(Long markerId);
+    MarkerResponseDTO read(Long markerId);
 
-    List<MarkerResponseDTO> readMarkers(Long scheduleId);
+    List<MarkerResponseDTO> getListBySchedule(Long scheduleId);
 
-    List<MarkerListDTO> readAllMarkers(String roomId);
+    List<MarkerListDTO> getListByRoom(String roomId);
 
-    MarkerResponseDTO updateMarker(MarkerUpdateDTO markerUpdateDTO);
+    MarkerResponseDTO update(MarkerUpdateDTO markerUpdateDTO);
 
-    void deleteMarker(Long markerId);
+    void delete(Long markerId);
 
 
 

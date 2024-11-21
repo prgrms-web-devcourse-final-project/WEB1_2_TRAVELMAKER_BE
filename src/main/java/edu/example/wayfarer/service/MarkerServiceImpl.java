@@ -38,7 +38,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return MarkerResponseDTO 생성된 Marker 응답 데이터
      */
     @Override
-    public MarkerResponseDTO createMarker(MarkerRequestDTO markerRequestDTO) {
+    public MarkerResponseDTO create(MarkerRequestDTO markerRequestDTO) {
         // 마커 생성을 위한 Member 조회
         Member member = memberRepository.findById(markerRequestDTO.getEmail())
                 .orElseThrow(() -> new RuntimeException("Member not found"));
@@ -72,7 +72,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return MarkerResponseDTO 조회된 Marker 의 응답 데이터
      */
     @Override
-    public MarkerResponseDTO readMarker(Long markerId) {
+    public MarkerResponseDTO read(Long markerId) {
         // markerId 로 Marker 조회
         Marker foundMarker = markerRepository.findById(markerId)
                 .orElseThrow(() -> new RuntimeException("Marker not found"));
@@ -89,7 +89,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return List<MarkerResponseDTO> 조회된 Marker 들의 응답데이터 리스트
      */
     @Override
-    public List<MarkerResponseDTO> readMarkers(Long scheduleId) {
+    public List<MarkerResponseDTO> getListBySchedule(Long scheduleId) {
         // scheduleId 로 Marker 리스트 조회
         List<Marker> markers = markerRepository.findBySchedule_ScheduleId(scheduleId);
 
@@ -111,7 +111,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return List<MarkerListDTO> 해당하는 Room 의 모든 Marker 들의 응답데이터 리스트
      */
     @Override
-    public List<MarkerListDTO> readAllMarkers(String roomId) {
+    public List<MarkerListDTO> getListByRoom(String roomId) {
         // 1. roomId 에 해당하는 모든 Schedule 조회
         return scheduleRepository.findByRoom_RoomId(roomId).stream()
                 .map(schedule -> {
@@ -138,7 +138,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return MarkerResponseDTO 수정된 Marker 응답 데이터
      */
     @Override
-    public MarkerResponseDTO updateMarker(MarkerUpdateDTO markerUpdateDTO) {
+    public MarkerResponseDTO update(MarkerUpdateDTO markerUpdateDTO) {
         // 수정할 Marker 조회
         Marker foundMarker = markerRepository.findById(markerUpdateDTO.getMarkerId())
                 .orElseThrow(() -> new RuntimeException("Marker not found"));
@@ -174,7 +174,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @param markerId 삭제할 Marker 의 PK
      */
     @Override
-    public void deleteMarker(Long markerId) {
+    public void delete(Long markerId) {
         // 삭제할 Marker 조회
         Marker foundMarker = markerRepository.findById(markerId)
                 .orElseThrow(() -> new RuntimeException("Marker not found"));
