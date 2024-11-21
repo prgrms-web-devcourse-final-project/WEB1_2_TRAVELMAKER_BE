@@ -1,10 +1,13 @@
 package edu.example.wayfarer.converter;
 
+import edu.example.wayfarer.dto.MarkerListDTO;
 import edu.example.wayfarer.dto.MarkerRequestDTO;
 import edu.example.wayfarer.dto.MarkerResponseDTO;
 import edu.example.wayfarer.entity.Marker;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Schedule;
+
+import java.util.List;
 
 public class MarkerConverter {
 
@@ -35,6 +38,16 @@ public class MarkerConverter {
                 .confirm(marker.getConfirm())
                 .createdAt(marker.getCreatedAt())
                 .updatedAt(marker.getUpdatedAt())
+                .build();
+    }
+
+    public static MarkerListDTO toMarkerListDTO(
+            Long scheduleId,
+            List<MarkerResponseDTO> markerList
+    ) {
+        return MarkerListDTO.builder()
+                .scheduleId(scheduleId)
+                .markerList(markerList)
                 .build();
     }
 }

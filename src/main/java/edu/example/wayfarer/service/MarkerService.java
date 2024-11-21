@@ -3,6 +3,7 @@ package edu.example.wayfarer.service;
 import edu.example.wayfarer.dto.MarkerListDTO;
 import edu.example.wayfarer.dto.MarkerRequestDTO;
 import edu.example.wayfarer.dto.MarkerResponseDTO;
+import edu.example.wayfarer.dto.MarkerUpdateDTO;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ public interface MarkerService {
 
     List<MarkerListDTO> readAllMarkers(String roomId);
 
-    MarkerResponseDTO updateMarker(MarkerRequestDTO markerRequestDTO);
+    MarkerResponseDTO updateMarker(MarkerUpdateDTO markerUpdateDTO);
 
     void deleteMarker(Long markerId);
 

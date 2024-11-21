@@ -4,5 +4,5 @@ import edu.example.wayfarer.entity.MemberRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
-    String findColorByEmailAndRoom_Id(String email, String RoomId);
+    MemberRoom findByMember_EmailAndRoom_RoomId(String email, String roomId);
 }
