@@ -15,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -81,9 +83,19 @@ public class MarkerServiceImpl implements MarkerService {
         return MarkerConverter.toMarkerResponseDTO(foundMarker);
     }
 
+    /**
+     * 마커 목록 조회 메서드
+     * scheduleId 를 기준으로 조회하여 MarkerResponse 리스트로 반환
+     * @param scheduleId 조회할 기준
+     * @return List<MarkerResponseDTO> 조회된 마커들의 응답 데이터리스트
+     */
     @Override
     public List<MarkerResponseDTO> readMarkers(Long scheduleId) {
-        return List.of();
+        List<Marker> markers = markerRepository.findBySchedule_ScheduleId(scheduleId);
+
+        return markers.stream()
+                .map(MarkerConverter::toMarkerResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
