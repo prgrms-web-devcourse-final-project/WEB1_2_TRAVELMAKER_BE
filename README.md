@@ -19,7 +19,7 @@
 ## 💻 BE_Team
 |👑허찬솔|📝박현우|👨🏻‍💻김세현|👨🏻‍💻임현규|👨🏻‍💻이용민|
 |:---:|:---:|:---:|:---:|:---:|
-|BE_TeamLeader|PM|GitAdmin|BE_Developer|BE_Developer|
+|BE_TeamLeader|PM|BE_GitAdmin|BE_Developer|BE_Developer|
 |[iamnahc](https://github.com/iamnahc)|[ObjectGipi](https://github.com/ObjectGipi)|[chadoli27](https://github.com/chadoli27)|[LimHyeonGyu](https://github.com/LimHyeonGyu)|[lǐ_róng_mín](https://github.com/Yi-YongMin)|
 |![](https://avatars.githubusercontent.com/u/90306923?v=4)|![](https://avatars.githubusercontent.com/u/177755524?v=4)|![](https://avatars.githubusercontent.com/u/148460430?v=4)|![](https://avatars.githubusercontent.com/u/90891022?v=4)|![](https://avatars.githubusercontent.com/u/96493001?v=4)|
 
