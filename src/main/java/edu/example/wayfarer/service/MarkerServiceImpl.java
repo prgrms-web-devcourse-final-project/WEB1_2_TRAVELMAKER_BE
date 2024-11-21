@@ -145,7 +145,7 @@ public class MarkerServiceImpl implements MarkerService {
 
         if (markerUpdateDTO.getConfirm()) {
             // true 로 변경 요청시 자식 scheduleItem 생성
-            saveScheduleItem(foundMarker, markerUpdateDTO);
+            saveScheduleItem(foundMarker);
             // Marker 의 confirm 값 변경
             foundMarker.changeConfirm(true);
             // Marker 의 color 를 확정 컬러로 변경
@@ -183,7 +183,7 @@ public class MarkerServiceImpl implements MarkerService {
         markerRepository.delete(foundMarker);
     }
 
-    private void saveScheduleItem(Marker marker, MarkerUpdateDTO markerUpdateDTO) {
+    private void saveScheduleItem(Marker marker) {
         // 임의의 날짜 생성
         Time time = Time.valueOf("00:00:00");
 
