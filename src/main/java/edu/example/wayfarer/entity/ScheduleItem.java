@@ -39,4 +39,20 @@ public class ScheduleItem {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    public void changeName(String name) {
+        this.name = name;
+    }
+
+    public void changeAddress(String address) {
+        this.address = address;
+    }
+
+    public void changeTime(Time time) {
+        this.time = time;
+    }
+
+    public void changeContent(String content) {
+        this.content = content;
+    }
+
 }
