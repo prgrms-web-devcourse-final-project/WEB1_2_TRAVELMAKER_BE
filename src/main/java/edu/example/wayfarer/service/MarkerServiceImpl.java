@@ -93,7 +93,7 @@ public class MarkerServiceImpl implements MarkerService {
         // scheduleId 로 Marker 리스트 조회
         List<Marker> markers = markerRepository.findBySchedule_ScheduleId(scheduleId);
 
-        // 조회된 Marker 리스트를 MakerResponseDTO 로 변환하여 반환
+        // 조회된 Marker 리스트를 MakerResponseDTO 리스트로 변환하여 반환
         return markers.stream()
                 .map(MarkerConverter::toMarkerResponseDTO)
                 .collect(Collectors.toList());
