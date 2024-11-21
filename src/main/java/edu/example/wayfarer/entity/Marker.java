@@ -41,4 +41,8 @@ public class Marker {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    public void changeConfirm(Boolean confirm) {
+        this.confirm = confirm;
+    }
+
 }

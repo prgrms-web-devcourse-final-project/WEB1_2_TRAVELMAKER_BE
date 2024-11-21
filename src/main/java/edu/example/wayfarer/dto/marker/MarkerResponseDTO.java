@@ -1,9 +1,11 @@
-package edu.example.wayfarer.dto;
+package edu.example.wayfarer.dto.marker;
 
 import lombok.Builder;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@Data
 @Builder
 public class MarkerResponseDTO {
     private Long markerId;

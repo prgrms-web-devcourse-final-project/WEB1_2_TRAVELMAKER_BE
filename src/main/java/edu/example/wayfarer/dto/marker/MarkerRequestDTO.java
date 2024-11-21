@@ -1,4 +1,4 @@
-package edu.example.wayfarer.dto;
+package edu.example.wayfarer.dto.marker;
 
 import lombok.Data;
 
