@@ -2,8 +2,7 @@ package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.dto.room.RoomRequestDTO;
 import edu.example.wayfarer.dto.room.RoomResponseDTO;
-import edu.example.wayfarer.entity.Member;
-import edu.example.wayfarer.repository.MemberRepository;
+import edu.example.wayfarer.dto.room.RoomUpdateDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -14,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
@@ -45,5 +45,22 @@ public class RoomServiceTest {
         RoomResponseDTO result = roomService.read(roomId);
         assertNotNull(result);
         System.out.println(result);
+    }
+
+    @Test
+    @Transactional
+    @Commit
+    public void testUpdateRoom() {
+        String roomId = "xu688Ljt";
+        RoomUpdateDTO roomUpdateDTO = new RoomUpdateDTO();
+        roomUpdateDTO.setRoomId(roomId);
+        roomUpdateDTO.setCountry("중국");
+        roomUpdateDTO.setTitle("후후탕후루를먹자");
+
+        RoomResponseDTO result = roomService.update(roomUpdateDTO);
+        assertNotNull(result);
+        assertEquals("중국", result.getCountry());
+        assertEquals("후후탕후루를먹자", result.getTitle());
+
     }
 }
