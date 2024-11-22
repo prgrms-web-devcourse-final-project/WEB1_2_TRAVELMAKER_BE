@@ -1,5 +1,6 @@
 package edu.example.wayfarer.service;
 
+import edu.example.wayfarer.util.GeocodingUtil;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -12,14 +13,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 public class GeocodingServiceTest {
 
     @Autowired
-    private GeocodingService geocodingService;
+    private GeocodingUtil geocodingUtil;
 
     @Test
     @Order(1)
     public void testGeocoding() {
         String address = "서울특별시 종로구 세종대로 110)";
 
-        String result = geocodingService.geocoding(address);
+        String result = geocodingUtil.geocoding(address);
 
         System.out.println(result);
     }
@@ -30,7 +31,7 @@ public class GeocodingServiceTest {
         double lat = 37.5665;
         double lon = 126.9780;
 
-        String result = geocodingService.reverseGeocoding(lat, lon);
+        String result = geocodingUtil.reverseGeocoding(lat, lon);
 
         System.out.println(result);
     }
