@@ -3,7 +3,10 @@ package edu.example.wayfarer.controller;
 import edu.example.wayfarer.dto.marker.MarkerRequestDTO;
 import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
 import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
+import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
+import edu.example.wayfarer.repository.ScheduleItemRepository;
 import edu.example.wayfarer.service.MarkerService;
+import edu.example.wayfarer.service.ScheduleItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -20,9 +23,9 @@ import java.util.Map;
 public class MarkerController {
     private final SimpMessagingTemplate template;
     private final MarkerService markerService;
+    private final ScheduleItemService scheduleItemService;
 
     @MessageMapping("room/{roomId}/map")
-    @SendTo("/topic/room/{roomId}/map")
     public void handleMarker(
             @DestinationVariable String roomId,
             @Payload Map<String, Object> markerPayload,
@@ -96,6 +99,22 @@ public class MarkerController {
                                 "confirm", updatedMarker.getConfirm()
                         )
                 );
+
+                if(confirm == true) {
+                    ScheduleItemResponseDTO foundScheduleItem =  scheduleItemService.readByMarkerId(markerId);
+                    Map<String, Object> createdScheduleItemMessage = Map.of(
+                            "action", "ADDED_SCHEDULE",
+                            "data", Map.of(
+                                    "scheduleItemId", foundScheduleItem.getScheduleItemId(),
+                                    "markerId", foundScheduleItem.getMarkerId(),
+                                    "name", foundScheduleItem.getName(),
+                                    "address", foundScheduleItem.getAddress(),
+                                    "time", foundScheduleItem.getTime(),
+                                    "content", foundScheduleItem.getContent()
+                            )
+                    );
+                    template.convertAndSend("/topic/room/" + roomId + "/schedule", createdScheduleItemMessage);
+                }
 
                 template.convertAndSend("/topic/room/" + roomId + "/map", updatedMarkerMessage);
 

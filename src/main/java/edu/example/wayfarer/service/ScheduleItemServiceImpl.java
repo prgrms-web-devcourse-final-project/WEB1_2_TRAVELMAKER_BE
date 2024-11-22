@@ -90,6 +90,12 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         return ScheduleItemConverter.toScheduleItemResponseDTO(savedScheduleItem);
     }
 
+    @Override
+    public ScheduleItemResponseDTO readByMarkerId(Long markerId) {
+        ScheduleItem scheduleItem = scheduleItemRepository.findByMarker_MarkerId(markerId);
+        return ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem);
+    }
+
     // 독립적으로 ScheduleItem 이 생성되고 삭제되는 경우는 없기 때문에 create delete 는 생략
     // create -> Marker 의 confirm true 요청시 생성
     // delete -> Marker 의 confirm false 요청시 삭제

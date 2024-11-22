@@ -1,10 +1,12 @@
 package edu.example.wayfarer.dto.scheduleItem;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.sql.Time;
 
 @Data
+@Builder
 public class ScheduleItemUpdateDTO {
     private Long scheduleItemId;
     private String name;
