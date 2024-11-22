@@ -23,6 +23,7 @@ public class ChatController {
     ) {
         String action = (String) messagePayload.get("action");
 
+
         if("ENTER_ROOM".equals(action)) {
             String email = (String) ((Map<String, Object>) messagePayload.get("data")).get("sender");
 
