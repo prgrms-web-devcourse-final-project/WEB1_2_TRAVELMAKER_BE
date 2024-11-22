@@ -5,7 +5,7 @@
 # 데브코스 2회차 4팀 최종 프로젝트
 [<img width="50" alt="notion" src="https://github.com/user-attachments/assets/a016430b-e6b0-4594-8a80-ff84c932e64d">](https://www.notion.so/prgrms/44a38f6f064f40bbaca1bce6d7658407?pvs=4)
 <br/>
-↗ **WEB1_2_TravelMaker_BE Notion Link**
+↗ **WEB1_2_TravelMaker Notion Link**
 
 ***
 
