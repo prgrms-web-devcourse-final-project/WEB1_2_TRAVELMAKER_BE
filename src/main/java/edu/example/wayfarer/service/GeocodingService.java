@@ -71,7 +71,7 @@ public class GeocodingService {
     public String reverseGeocoding(double lat, double lng) {
         // Google Maps Geocoding API 요청 URL
         String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng="
-                + lat + "," + lng + "&key=" + apiKey;
+                + lat + "," + lng + "&key=" + apiKey+ "&language=ko";
 
         // RestTemplate 를 사용해 Google API 요청 후 JSON 응답 데이터 가져오기
         String response = restTemplate.getForObject(url, String.class);
