@@ -28,10 +28,10 @@ public class RoomServiceTest {
     @Commit
     public void testCreateRoom() {
         RoomRequestDTO roomRequestDTO = new RoomRequestDTO();
-        roomRequestDTO.setTitle("여행!!!!");
-        roomRequestDTO.setCountry("마카오");
-        roomRequestDTO.setStartDate(LocalDate.of(2025,1,6));
-        roomRequestDTO.setEndDate(LocalDate.of(2025,1,10));
+        roomRequestDTO.setTitle("크리스마스 흐흐");
+        roomRequestDTO.setCountry("서울");
+        roomRequestDTO.setStartDate(LocalDate.of(2024,12,24));
+        roomRequestDTO.setEndDate(LocalDate.of(2024,12,25));
         roomRequestDTO.setHostEmail("aa@aa.com");
 
         RoomResponseDTO result = roomService.create(roomRequestDTO);
@@ -61,6 +61,13 @@ public class RoomServiceTest {
         assertNotNull(result);
         assertEquals("중국", result.getCountry());
         assertEquals("후후탕후루를먹자", result.getTitle());
+    }
 
+    @Test
+    @Transactional
+    @Commit
+    public void testDeleteRoom(){
+        String roomId = "vTJBdpwg";
+        roomService.delete(roomId);
     }
 }

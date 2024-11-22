@@ -14,7 +14,6 @@ import edu.example.wayfarer.repository.MemberRepository;
 import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.RoomRepository;
 import edu.example.wayfarer.repository.ScheduleRepository;
-import edu.example.wayfarer.util.RandomStringGenerator;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -120,11 +119,16 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public void delete(String roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new NoSuchElementException("삭제할 방이 존재하지 않습니다."));
 
+        scheduleRepository.deleteByRoomId(roomId);
+        memberRoomRepository.deleteByRoomId(roomId);
+        roomRepository.delete(room);
     }
 
-    @Override
-    public List<RoomListDTO> getList() {
-        return List.of();
-    }
+//    @Override
+//    public List<RoomListDTO> getList() {
+//        return List.of();
+//    }
 }
