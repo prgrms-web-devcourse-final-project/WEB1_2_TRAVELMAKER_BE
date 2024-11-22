@@ -73,9 +73,9 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
             scheduleItem.changeName(scheduleItemUpdateDTO.getName());
         }
         // address 수정
-        if (scheduleItemUpdateDTO.getAddress() != null) {
-            scheduleItem.changeAddress(scheduleItemUpdateDTO.getAddress());
-        }
+//        if (scheduleItemUpdateDTO.getAddress() != null) {
+//            scheduleItem.changeAddress(scheduleItemUpdateDTO.getAddress());
+//        }
         // time 수정
         if (scheduleItemUpdateDTO.getTime() != null) {
             scheduleItem.changeTime(scheduleItemUpdateDTO.getTime());
