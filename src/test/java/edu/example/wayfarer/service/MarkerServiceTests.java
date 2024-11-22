@@ -5,6 +5,7 @@ import edu.example.wayfarer.dto.marker.MarkerRequestDTO;
 import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
 import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
 import edu.example.wayfarer.entity.*;
+import edu.example.wayfarer.entity.enums.Color;
 import edu.example.wayfarer.entity.enums.PlanType;
 import edu.example.wayfarer.repository.*;
 import org.junit.jupiter.api.*;
@@ -62,16 +63,16 @@ public class MarkerServiceTests {
                     .roomId("abc1")
                     .title("테스트용 Room")
                     .country("대한민국")
-                    .startDate(time1)
-                    .endDate(time2)
+                    .startDate(time1.toLocalDate())
+                    .endDate(time2.toLocalDate())
                     .roomCode("abc1")
                     .hostEmail("member1@abc.com")
                     .build();
 
             Room savedRoom = roomRepository.save(room);
 
-            LocalDate start = savedRoom.getStartDate().toLocalDate();
-            LocalDate end = savedRoom.getEndDate().toLocalDate();
+            LocalDate start = savedRoom.getStartDate();
+            LocalDate end = savedRoom.getEndDate();
 
             // 임의의 스케쥴 생성
             List<Schedule> schedules = new ArrayList<>();
@@ -94,7 +95,7 @@ public class MarkerServiceTests {
             MemberRoom memberRoom = MemberRoom.builder()
                     .room(savedRoom)
                     .member(foundMember)
-                    .color("#FFFF00")
+                    .color(Color.BLUE)
                     .joinDate(LocalDateTime.now())
                     .build();
             memberRoomRepository.save(memberRoom);
