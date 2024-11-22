@@ -37,4 +37,13 @@ public class RoomServiceTest {
         RoomResponseDTO result = roomService.create(roomRequestDTO);
         assertNotNull(result);
     }
+
+    @Test
+    public void testReadRoom(){
+        String roomId = "xu688Ljt";
+
+        RoomResponseDTO result = roomService.read(roomId);
+        assertNotNull(result);
+        System.out.println(result);
+    }
 }
