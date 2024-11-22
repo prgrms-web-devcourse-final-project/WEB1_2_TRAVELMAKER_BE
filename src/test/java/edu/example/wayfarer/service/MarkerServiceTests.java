@@ -4,19 +4,15 @@ import edu.example.wayfarer.dto.marker.MarkerListDTO;
 import edu.example.wayfarer.dto.marker.MarkerRequestDTO;
 import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
 import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
-import edu.example.wayfarer.entity.Member;
-import edu.example.wayfarer.entity.MemberRoom;
-import edu.example.wayfarer.entity.Room;
-import edu.example.wayfarer.entity.Schedule;
+import edu.example.wayfarer.entity.*;
+import edu.example.wayfarer.entity.enums.Color;
 import edu.example.wayfarer.entity.enums.PlanType;
 import edu.example.wayfarer.repository.*;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
-//@TestPropertySource(locations = "classpath:application-test.properties")
+@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MarkerServiceTests {
     @Autowired
@@ -39,6 +35,8 @@ public class MarkerServiceTests {
     private MemberRepository memberRepository;
     @Autowired
     private MemberRoomRepository memberRoomRepository;
+    @Autowired
+    private ScheduleItemService scheduleItemService;
 
 
     @Test
@@ -65,16 +63,16 @@ public class MarkerServiceTests {
                     .roomId("abc1")
                     .title("테스트용 Room")
                     .country("대한민국")
-                    .startDate(time1)
-                    .endDate(time2)
+                    .startDate(time1.toLocalDate())
+                    .endDate(time2.toLocalDate())
                     .roomCode("abc1")
                     .hostEmail("member1@abc.com")
                     .build();
 
             Room savedRoom = roomRepository.save(room);
 
-            LocalDate start = savedRoom.getStartDate().toLocalDate();
-            LocalDate end = savedRoom.getEndDate().toLocalDate();
+            LocalDate start = savedRoom.getStartDate();
+            LocalDate end = savedRoom.getEndDate();
 
             // 임의의 스케쥴 생성
             List<Schedule> schedules = new ArrayList<>();
@@ -97,7 +95,7 @@ public class MarkerServiceTests {
             MemberRoom memberRoom = MemberRoom.builder()
                     .room(savedRoom)
                     .member(foundMember)
-                    .color("#FFFF00")
+                    .color(Color.BLUE)
                     .joinDate(LocalDateTime.now())
                     .build();
             memberRoomRepository.save(memberRoom);
@@ -116,6 +114,8 @@ public class MarkerServiceTests {
             markerRequestDTO.setLng(126.988);
 
             MarkerResponseDTO markerResponseDTO = markerService.create(markerRequestDTO);
+
+            System.out.println("2. 마커 생성 테스트" + i);
             System.out.println(markerResponseDTO);
         }
     }
@@ -125,6 +125,8 @@ public class MarkerServiceTests {
     public void testReadMarker() {
         Long markerId = 1L;
         MarkerResponseDTO markerResponseDTO = markerService.read(markerId);
+
+        System.out.println("3. 마커 조회 테스트");
         System.out.println(markerResponseDTO);
     }
 
@@ -133,6 +135,8 @@ public class MarkerServiceTests {
     public void testReadMarkers(){
         Long scheduleId = 1L;
         List<MarkerResponseDTO> markerResponseDTOS = markerService.getListBySchedule(scheduleId);
+
+        System.out.println("4. 마커 리스트 조회(스케쥴단위) 테스트");
         System.out.println(markerResponseDTOS);
     }
 
@@ -141,6 +145,8 @@ public class MarkerServiceTests {
     public void testReadAllMarkers() {
         String roomId = "abc1";
         List<MarkerListDTO> markerListDTOS = markerService.getListByRoom(roomId);
+
+        System.out.println("5. 마커 리스트 조회(룸단위) 테스트");
         System.out.println(markerListDTOS);
     }
 
@@ -152,7 +158,9 @@ public class MarkerServiceTests {
         markerUpdateDTO.setConfirm(true);
         markerUpdateDTO.setEmail("member1@abc.com");
 
+        System.out.println("6. 마커 확정 테스트");
         System.out.println(markerService.update(markerUpdateDTO));
+        System.out.println(scheduleItemService.read(1L));
     }
 
     @Test
@@ -163,16 +171,41 @@ public class MarkerServiceTests {
         markerUpdateDTO.setConfirm(false);
         markerUpdateDTO.setEmail("member1@abc.com");
 
+        System.out.println("7. 마커 확정 취소 테스트");
         System.out.println(markerService.update(markerUpdateDTO));
+//        System.out.println(scheduleItemService.read(1L));
     }
 
     @Test
     @Order(8)
     public void testDeleteMarker() {
-        Long markerId = 1L;
+        Long markerId = 3L;
         markerService.delete(markerId);
-
     }
 
+    @Test
+    @Order(9)
+    public void testDeleteItem() {
+//        Long markerId = 1L;
+//
+//        Marker foundMarker = markerRepository.findById(markerId).orElseThrow(RuntimeException::new);
+//
+//        if(foundMarker.getScheduleItem() != null ) {
+//            foundMarker.changeScheduleItem(null);
+//            markerRepository.save(foundMarker);
+//        }
+
+//        ScheduleItem scheduleItem = scheduleItemRepository.findByMarker_MarkerId(markerId)
+//                .orElseThrow(() -> new RuntimeException("ScheduleItem not found"));
+//        System.out.println(ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem));
+//
+//        // 엔티티 상태 확인
+//        boolean isManaged = entityManager.contains(scheduleItem);
+//        System.out.println("Is scheduleItem managed: " + isManaged);
+//        System.out.println("Transaction active: " + TransactionSynchronizationManager.isActualTransactionActive());
+//
+//        scheduleItemRepository.deleteById(scheduleItem.getScheduleItemId());
+
+    }
 
 }
