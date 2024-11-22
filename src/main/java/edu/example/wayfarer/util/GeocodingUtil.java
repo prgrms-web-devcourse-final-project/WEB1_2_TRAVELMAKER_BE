@@ -1,13 +1,13 @@
-package edu.example.wayfarer.service;
+package edu.example.wayfarer.util;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-@Service
-public class GeocodingService {
+@Component
+public class GeocodingUtil {
 
     // Google API 키를 application.properties 에서 주입받음
     @Value("${google.api.key}")
