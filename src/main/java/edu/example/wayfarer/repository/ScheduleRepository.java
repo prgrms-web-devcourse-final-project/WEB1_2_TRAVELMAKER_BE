@@ -8,8 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-public interface ScheduleRepository extends JpaRepository<Schedule, String> {
+import java.util.List;
 
+public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
+    List<Schedule> findByRoom_RoomId(String roomId);
+    
     @Modifying
     @Transactional
     @Query("DELETE FROM Schedule s WHERE s.room.roomId = :roomId")
