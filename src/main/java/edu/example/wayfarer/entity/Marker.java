@@ -1,5 +1,6 @@
 package edu.example.wayfarer.entity;
 
+import edu.example.wayfarer.entity.enums.Color;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,7 +35,7 @@ public class Marker {
 
     private Double lat;
     private Double lng;
-    private String color;
+    private Color color;
     private Boolean confirm;
 
     @CreatedDate
@@ -47,7 +48,7 @@ public class Marker {
         this.confirm = confirm;
     }
 
-    public void changeColor(String color) {
+    public void changeColor(Color color) {
         this.color = color;
     }
 

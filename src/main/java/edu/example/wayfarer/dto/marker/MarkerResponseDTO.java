@@ -1,5 +1,6 @@
 package edu.example.wayfarer.dto.marker;
 
+import edu.example.wayfarer.entity.enums.Color;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,7 +14,7 @@ public class MarkerResponseDTO {
     private Long scheduleId;
     private double lat;
     private double lng;
-    private String color;
+    private Color color;
     private Boolean confirm;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
