@@ -14,7 +14,7 @@ public class MarkerResponseDTO {
     private Long scheduleId;
     private double lat;
     private double lng;
-    private Color color;
+    private String color;
     private Boolean confirm;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
