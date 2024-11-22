@@ -9,6 +9,7 @@ import edu.example.wayfarer.entity.Marker;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Schedule;
 import edu.example.wayfarer.entity.ScheduleItem;
+import edu.example.wayfarer.entity.enums.Color;
 import edu.example.wayfarer.exception.MarkerException;
 import edu.example.wayfarer.exception.ScheduleItemException;
 import edu.example.wayfarer.repository.*;
@@ -52,7 +53,7 @@ public class MarkerServiceImpl implements MarkerService {
                 .orElseThrow(() -> new RuntimeException("Schedule not found"));
 
         // 해당 멤버의 memberRoom.color 조회
-        String color = findColor(member.getEmail(), schedule.getRoom().getRoomId());
+        Color color = findColor(member.getEmail(), schedule.getRoom().getRoomId());
 
         // Marker 저장
         Marker savedMarker = markerRepository.save(
@@ -153,7 +154,7 @@ public class MarkerServiceImpl implements MarkerService {
             // Marker 의 confirm 값 변경
             foundMarker.changeConfirm(true);
             // Marker 의 color 를 확정 컬러로 변경
-            foundMarker.changeColor("#F72216");
+            foundMarker.changeColor(Color.RED);
         } else {
             // false 로 변경 요청시 자식 scheduleItem 삭제
             deleteScheduleItem(markerUpdateDTO.getMarkerId());
@@ -225,7 +226,7 @@ public class MarkerServiceImpl implements MarkerService {
         }
     }
 
-    private String findColor(String email, String roomId) {
+    private Color findColor(String email, String roomId) {
         // 특정 방 사용자의 color 값 가져오기
         return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
                 .orElseThrow(()-> new RuntimeException("memberRoom not found"))
