@@ -13,5 +13,5 @@ public interface RoomService {
     RoomResponseDTO read(String roomId);
     RoomResponseDTO update(RoomUpdateDTO roomUpdateDTO);
     void delete(String roomId);
-    List<RoomListDTO> getList();
+//    List<RoomListDTO> getList();
 }
