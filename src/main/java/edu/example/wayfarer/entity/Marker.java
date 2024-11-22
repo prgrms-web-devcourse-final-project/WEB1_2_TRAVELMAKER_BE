@@ -1,5 +1,6 @@
 package edu.example.wayfarer.entity;
 
+import edu.example.wayfarer.entity.enums.Color;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import java.time.LocalDateTime;
 
 @AllArgsConstructor
@@ -30,12 +30,12 @@ public class Marker {
     @JoinColumn(name = "schedule_id")
     private Schedule schedule;
 
-    @OneToOne(mappedBy = "marker", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "marker", cascade = CascadeType.ALL, orphanRemoval = true)
     private ScheduleItem scheduleItem;
 
     private Double lat;
     private Double lng;
-    private String color;
+    private Color color;
     private Boolean confirm;
 
     @CreatedDate
@@ -48,8 +48,11 @@ public class Marker {
         this.confirm = confirm;
     }
 
-    public void changeColor(String color) {
+    public void changeColor(Color color) {
         this.color = color;
     }
 
+    public void changeScheduleItem(ScheduleItem scheduleItem) {
+        this.scheduleItem = scheduleItem;
+    }
 }

@@ -21,6 +21,4 @@ public interface MarkerService {
 
     void delete(Long markerId);
 
-
-
 }
