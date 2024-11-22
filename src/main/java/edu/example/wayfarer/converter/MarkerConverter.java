@@ -6,6 +6,7 @@ import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
 import edu.example.wayfarer.entity.Marker;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Schedule;
+import edu.example.wayfarer.entity.enums.Color;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class MarkerConverter {
             MarkerRequestDTO markerRequestDTO,
             Member member,
             Schedule schedule,
-            String color
+            Color color
     ) {
         return Marker.builder()
                 .member(member)

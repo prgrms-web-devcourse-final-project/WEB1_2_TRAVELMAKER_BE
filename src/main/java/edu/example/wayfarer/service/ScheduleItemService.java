@@ -13,4 +13,6 @@ public interface ScheduleItemService {
 
     ScheduleItemResponseDTO update(ScheduleItemUpdateDTO scheduleItemUpdateDTO);
 
+    ScheduleItemResponseDTO readByMarkerId(Long markerId);
+
 }
