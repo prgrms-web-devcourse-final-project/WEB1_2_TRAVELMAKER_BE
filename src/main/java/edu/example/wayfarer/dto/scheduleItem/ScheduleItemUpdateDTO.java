@@ -8,7 +8,7 @@ import java.sql.Time;
 public class ScheduleItemUpdateDTO {
     private Long scheduleItemId;
     private String name;
-    private String address;
+//    private String address;
     private Time time;
     private String content;
 }
