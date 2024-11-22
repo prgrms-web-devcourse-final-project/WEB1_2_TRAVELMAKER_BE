@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -101,7 +102,9 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public RoomResponseDTO read(String roomId) {
-        return null;
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
+        return new RoomResponseDTO(room);
     }
 
     @Override
