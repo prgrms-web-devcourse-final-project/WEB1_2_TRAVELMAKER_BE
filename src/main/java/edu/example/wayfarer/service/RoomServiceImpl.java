@@ -109,7 +109,13 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public RoomResponseDTO update(RoomUpdateDTO roomUpdateDTO) {
-        return null;
+        Room room = roomRepository.findById(roomUpdateDTO.getRoomId())
+                .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
+
+        room.changeCountry(roomUpdateDTO.getCountry());
+        room.changeTitle(roomUpdateDTO.getTitle());
+
+        return new RoomResponseDTO(roomRepository.save(room));
     }
 
     @Override
