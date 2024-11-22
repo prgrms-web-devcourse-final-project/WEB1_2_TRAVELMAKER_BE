@@ -12,4 +12,5 @@ public class RoomRequestDTO {
     private String country;
     private LocalDate startDate;
     private LocalDate endDate;
+    private String hostEmail;   // 임시, 나중에 로그인해서 알아서 받아오게 하면 될 것 같아요
 }

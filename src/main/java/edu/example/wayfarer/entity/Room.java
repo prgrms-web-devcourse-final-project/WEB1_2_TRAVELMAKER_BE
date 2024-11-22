@@ -4,10 +4,7 @@ package edu.example.wayfarer.entity;
 
 import edu.example.wayfarer.util.RandomStringGenerator;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -19,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Setter
 @Builder
 @EntityListeners(AuditingEntityListener.class)
 @Entity
@@ -48,7 +46,7 @@ public class Room {
     @PrePersist // when generating unique identifiers
     public void generateRoomId(){
         if(this.roomId == null || this.roomId.isBlank()){
-            this.roomId = RandomStringGenerator.generateRandomString(20);
+            this.roomId = RandomStringGenerator.generateRandomString(8);
         }
         if (this.roomCode == null || this.roomCode.isBlank()) {
             this.roomCode = RandomStringGenerator.generateRandomString(8);
