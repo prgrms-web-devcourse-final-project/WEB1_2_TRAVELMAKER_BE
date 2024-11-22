@@ -12,11 +12,11 @@ import edu.example.wayfarer.entity.ScheduleItem;
 import edu.example.wayfarer.exception.MarkerException;
 import edu.example.wayfarer.exception.ScheduleItemException;
 import edu.example.wayfarer.repository.*;
+import edu.example.wayfarer.util.GeocodingUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.sql.Time;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +31,7 @@ public class MarkerServiceImpl implements MarkerService {
     private final MemberRoomRepository memberRoomRepository;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleItemRepository scheduleItemRepository;
+    private final GeocodingUtil geocodingUtil;
 
     /**
      * 마커 생성 메서드
@@ -191,13 +192,14 @@ public class MarkerServiceImpl implements MarkerService {
         Time time = Time.valueOf("00:00:00");
 
         // Marker 의 위도, 경도 값으로 주소 생성
+        String address = geocodingUtil.reverseGeocoding(marker.getLat(), marker.getLng());
 
         // scheduleItem 생성
         ScheduleItem scheduleItem = ScheduleItem.builder()
                 .marker(marker)
-                .name("제목")
+                .name(address) // 최초 생성시 주소로 제목 생성
                 .content("내용")
-                .address("주소")
+                .address(address)
                 .time(time)
                 .build();
 
@@ -210,13 +212,17 @@ public class MarkerServiceImpl implements MarkerService {
         }
     }
 
+    // 마커 확정 취소시 아이템삭제가 안되는 오류
     public void deleteScheduleItem(Long markerId) {
-        // 삭제할 ScheduleItem 이 존재하는지 체크
-        if (!scheduleItemRepository.existsByMarker_MarkerId(markerId)){
-            throw ScheduleItemException.NOT_FOUND.get();
+        // 삭제할 ScheduleItem 의 부모 마커 조회
+        Marker foundMarker = markerRepository.findById(markerId)
+                .orElseThrow(MarkerException.NOT_FOUND::get);
+
+        // Marker 자식 관계 끊고 orphanRemoval = true 를 이용해 자동 삭제
+        if(foundMarker.getScheduleItem() != null) {
+            foundMarker.changeScheduleItem(null);
+            markerRepository.save(foundMarker);
         }
-        // MarkerId 를 기준으로 scheduleItem 삭제
-        scheduleItemRepository.deleteByMarker_MarkerId(markerId);
     }
 
     private String findColor(String email, String roomId) {
