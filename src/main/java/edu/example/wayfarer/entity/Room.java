@@ -2,22 +2,21 @@ package edu.example.wayfarer.entity;
 
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import edu.example.wayfarer.util.RandomStringGenerator;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Setter
 @Builder
 @EntityListeners(AuditingEntityListener.class)
 @Entity
@@ -28,16 +27,39 @@ public class Room {
 
     private String title;
     private String country;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String roomCode;
+
     private String hostEmail;
+
+    @CreatedDate
     private LocalDateTime createdAt;
+
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "room")
     private List<MemberRoom> memberRooms;
 
+    // Room 생성시 랜덤 roomId 할당
+    @PrePersist // when generating unique identifiers
+    public void generateRoomId(){
+        if(this.roomId == null || this.roomId.isBlank()){
+            this.roomId = RandomStringGenerator.generateRandomString(8);
+        }
+        if (this.roomCode == null || this.roomCode.isBlank()) {
+            this.roomCode = RandomStringGenerator.generateRandomString(8);
+        }
+    }
+
+    public void changeTitle(String title){
+        this.title = title;
+    }
+
+    public void changeCountry(String country){
+        this.country = country;
+    }
 
 
 }

@@ -25,6 +25,7 @@ public class Schedule {
     @JoinColumn(name = "room_id")
     private Room room;
 
+    @Enumerated(EnumType.STRING)
     private PlanType planType;
     private LocalDate date;
 
