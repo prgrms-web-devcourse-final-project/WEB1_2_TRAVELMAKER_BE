@@ -1,10 +1,12 @@
 package edu.example.wayfarer.entity;
 
+import edu.example.wayfarer.entity.enums.Color;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -28,6 +30,8 @@ public class MemberRoom {
     @ManyToOne
     @JoinColumn(name = "email")
     private Member member;
-    private String color;
+    private Color color;
+
+    @CreatedDate
     private LocalDateTime joinDate;
 }
