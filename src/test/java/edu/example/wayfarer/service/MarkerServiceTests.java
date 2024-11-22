@@ -10,13 +10,11 @@ import edu.example.wayfarer.entity.Room;
 import edu.example.wayfarer.entity.Schedule;
 import edu.example.wayfarer.entity.enums.PlanType;
 import edu.example.wayfarer.repository.*;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
-//@TestPropertySource(locations = "classpath:application-test.properties")
+@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MarkerServiceTests {
     @Autowired
@@ -171,8 +169,10 @@ public class MarkerServiceTests {
     public void testDeleteMarker() {
         Long markerId = 1L;
         markerService.delete(markerId);
-
     }
+
+
+
 
 
 }

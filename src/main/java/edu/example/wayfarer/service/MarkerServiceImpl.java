@@ -9,8 +9,11 @@ import edu.example.wayfarer.entity.Marker;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Schedule;
 import edu.example.wayfarer.entity.ScheduleItem;
+import edu.example.wayfarer.exception.MarkerException;
+import edu.example.wayfarer.exception.ScheduleItemException;
 import edu.example.wayfarer.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,7 +78,7 @@ public class MarkerServiceImpl implements MarkerService {
     public MarkerResponseDTO read(Long markerId) {
         // markerId 로 Marker 조회
         Marker foundMarker = markerRepository.findById(markerId)
-                .orElseThrow(() -> new RuntimeException("Marker not found"));
+                .orElseThrow(MarkerException.NOT_FOUND::get);
 
         // 조회된 Marker 를 MarkerResponseDTO 로 변환하여 반환
         return MarkerConverter.toMarkerResponseDTO(foundMarker);
@@ -141,7 +144,7 @@ public class MarkerServiceImpl implements MarkerService {
     public MarkerResponseDTO update(MarkerUpdateDTO markerUpdateDTO) {
         // 수정할 Marker 조회
         Marker foundMarker = markerRepository.findById(markerUpdateDTO.getMarkerId())
-                .orElseThrow(() -> new RuntimeException("Marker not found"));
+                .orElseThrow(MarkerException.NOT_FOUND::get);
 
         if (markerUpdateDTO.getConfirm()) {
             // true 로 변경 요청시 자식 scheduleItem 생성
@@ -177,7 +180,7 @@ public class MarkerServiceImpl implements MarkerService {
     public void delete(Long markerId) {
         // 삭제할 Marker 조회
         Marker foundMarker = markerRepository.findById(markerId)
-                .orElseThrow(() -> new RuntimeException("Marker not found"));
+                .orElseThrow(MarkerException.NOT_FOUND::get);
 
         // Marker 삭제
         markerRepository.delete(foundMarker);
@@ -198,17 +201,28 @@ public class MarkerServiceImpl implements MarkerService {
                 .time(time)
                 .build();
 
-        // scheduleItem 저장
-        scheduleItemRepository.save(scheduleItem);
+        try {
+            // scheduleItem 저장
+            scheduleItemRepository.save(scheduleItem);
+        } catch (DataIntegrityViolationException e) {
+            // 해당 마커에 이미 ScheduleItem 이 존재할 경우 예외처리
+            throw ScheduleItemException.ITEM_DUPLICATE.get();
+        }
     }
 
-    private void deleteScheduleItem(Long markerId) {
+    public void deleteScheduleItem(Long markerId) {
+        // 삭제할 ScheduleItem 이 존재하는지 체크
+        if (!scheduleItemRepository.existsByMarker_MarkerId(markerId)){
+            throw ScheduleItemException.NOT_FOUND.get();
+        }
         // MarkerId 를 기준으로 scheduleItem 삭제
         scheduleItemRepository.deleteByMarker_MarkerId(markerId);
     }
 
     private String findColor(String email, String roomId) {
         // 특정 방 사용자의 color 값 가져오기
-        return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId).getColor();
+        return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
+                .orElseThrow(()-> new RuntimeException("memberRoom not found"))
+                .getColor();
     }
 }
