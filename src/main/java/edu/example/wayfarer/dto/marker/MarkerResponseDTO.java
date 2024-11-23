@@ -1,5 +1,6 @@
 package edu.example.wayfarer.dto.marker;
 
+import edu.example.wayfarer.entity.enums.Color;
 import lombok.Builder;
 import lombok.Data;
 
