@@ -4,6 +4,7 @@ import edu.example.wayfarer.converter.ScheduleItemConverter;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemUpdateDTO;
 import edu.example.wayfarer.entity.ScheduleItem;
+import edu.example.wayfarer.exception.ScheduleItemException;
 import edu.example.wayfarer.repository.ScheduleItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     public ScheduleItemResponseDTO read(Long scheduleItemId) {
         // scheduleItemId 로 scheduleItem 조회
         ScheduleItem scheduleItem = scheduleItemRepository.findById(scheduleItemId)
-                .orElseThrow(() -> new RuntimeException("ScheduleItem not found"));
+                .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
         // 조회된 scheduleItem 을 ScheduleItemResponseDTO 로 변환 후 반환
         return ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem);
@@ -65,16 +66,16 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     public ScheduleItemResponseDTO update(ScheduleItemUpdateDTO scheduleItemUpdateDTO) {
         // 수정한 ScheduleItem 조회
         ScheduleItem scheduleItem = scheduleItemRepository.findById(scheduleItemUpdateDTO.getScheduleItemId())
-                .orElseThrow(() -> new RuntimeException("ScheduleItem not found"));
+                .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
         // name 수정
         if (scheduleItemUpdateDTO.getName() != null) {
             scheduleItem.changeName(scheduleItemUpdateDTO.getName());
         }
         // address 수정
-        if (scheduleItemUpdateDTO.getAddress() != null) {
-            scheduleItem.changeAddress(scheduleItemUpdateDTO.getAddress());
-        }
+//        if (scheduleItemUpdateDTO.getAddress() != null) {
+//            scheduleItem.changeAddress(scheduleItemUpdateDTO.getAddress());
+//        }
         // time 수정
         if (scheduleItemUpdateDTO.getTime() != null) {
             scheduleItem.changeTime(scheduleItemUpdateDTO.getTime());

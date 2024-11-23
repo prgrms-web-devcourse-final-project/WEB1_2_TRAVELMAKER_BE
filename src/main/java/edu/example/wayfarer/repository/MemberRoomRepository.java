@@ -8,9 +8,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.util.Optional;
+
 public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
-    MemberRoom findByMember_EmailAndRoom_RoomId(String email, String roomId);
-  
+    Optional<MemberRoom> findByMember_EmailAndRoom_RoomId(String email, String roomId);
+
     @Query("select mb from MemberRoom mb where mb.room.roomId = :roomId")
     public MemberRoom findByRoomId(@Param("roomId") String roomId);
 
@@ -18,5 +20,5 @@ public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
     @Transactional
     @Query("DELETE FROM MemberRoom mr WHERE mr.room.roomId = :roomId")
     void deleteByRoomId(@Param("roomId") String roomId);
-  
+
 }

@@ -35,7 +35,7 @@ public class MarkerConverter {
                 .scheduleId(marker.getSchedule().getScheduleId())
                 .lat(marker.getLat())
                 .lng(marker.getLng())
-                .color(marker.getColor())
+                .color(marker.getColor().getHexCode())
                 .confirm(marker.getConfirm())
                 .createdAt(marker.getCreatedAt())
                 .updatedAt(marker.getUpdatedAt())

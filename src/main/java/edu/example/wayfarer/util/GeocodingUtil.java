@@ -1,13 +1,13 @@
-package edu.example.wayfarer.service;
+package edu.example.wayfarer.util;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-@Service
-public class GeocodingService {
+@Component
+public class GeocodingUtil {
 
     // Google API 키를 application.properties 에서 주입받음
     @Value("${google.api.key}")
@@ -71,7 +71,7 @@ public class GeocodingService {
     public String reverseGeocoding(double lat, double lng) {
         // Google Maps Geocoding API 요청 URL
         String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng="
-                + lat + "," + lng + "&key=" + apiKey;
+                + lat + "," + lng + "&key=" + apiKey+ "&language=ko";
 
         // RestTemplate 를 사용해 Google API 요청 후 JSON 응답 데이터 가져오기
         String response = restTemplate.getForObject(url, String.class);

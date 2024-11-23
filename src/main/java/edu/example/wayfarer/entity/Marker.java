@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import java.time.LocalDateTime;
 
 @AllArgsConstructor
@@ -31,7 +30,7 @@ public class Marker {
     @JoinColumn(name = "schedule_id")
     private Schedule schedule;
 
-    @OneToOne(mappedBy = "marker", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "marker", cascade = CascadeType.ALL, orphanRemoval = true)
     private ScheduleItem scheduleItem;
 
     private Double lat;
@@ -53,4 +52,7 @@ public class Marker {
         this.color = color;
     }
 
+    public void changeScheduleItem(ScheduleItem scheduleItem) {
+        this.scheduleItem = scheduleItem;
+    }
 }
