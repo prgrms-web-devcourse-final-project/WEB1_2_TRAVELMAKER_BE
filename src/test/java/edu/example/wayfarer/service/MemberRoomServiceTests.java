@@ -29,4 +29,14 @@ public class MemberRoomServiceTests {
         memberRoomService.create(memberRoomRequestDTO);
     }
 
+    @Test
+    @Transactional
+    @Commit
+    public void testDeleteMemberRoom() {
+        String email = "aa@aa.com";
+        String roomId = "xu688Ljt";
+
+        memberRoomService.delete(email, roomId);
+    }
+
 }

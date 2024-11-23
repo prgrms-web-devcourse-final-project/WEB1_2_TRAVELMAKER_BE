@@ -8,14 +8,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 
 public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
     Optional<MemberRoom> findByMember_EmailAndRoom_RoomId(String email, String roomId);
-  
-    @Query("select mb from MemberRoom mb where mb.room.roomId = :roomId")
-    public MemberRoom findByRoomId(@Param("roomId") String roomId);
 
     @Modifying
     @Transactional
@@ -26,5 +24,7 @@ public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
     boolean existsByRoom_RoomIdAndColor(String roomId, Color color);
 
     boolean existsByMember_Email(String email);
+
+    List<MemberRoom> findAllByRoom_RoomId(String roomId); // Room에 속한 모든 MemberRoom 조회
   
 }
