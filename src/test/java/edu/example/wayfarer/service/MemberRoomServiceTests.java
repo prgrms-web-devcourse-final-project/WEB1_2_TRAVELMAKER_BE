@@ -49,4 +49,11 @@ public class MemberRoomServiceTests {
         System.out.println(members);
     }
 
+    @Test
+    public void testListByEmail(){
+        String email = "jj@jj.com";
+        List<MemberRoomResponseDTO> rooms = memberRoomService.listByEmail(email);
+        System.out.println(rooms);
+    }
+
 }

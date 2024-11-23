@@ -131,4 +131,15 @@ public class MemberRoomServiceImpl implements MemberRoomService {
                 .map(MemberRoomResponseDTO::new)
                 .toList();
     }
+
+    @Override
+    public List<MemberRoomResponseDTO> listByEmail(String email) {
+        List<MemberRoom> memberRooms = memberRoomRepository.findAllByMember_Email(email);
+
+        return memberRooms.stream()
+                .map(MemberRoomResponseDTO::new)
+                .toList();
+    }
+
+
 }

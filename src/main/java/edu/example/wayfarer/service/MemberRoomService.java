@@ -13,4 +13,6 @@ public interface MemberRoomService {
 
     public List<MemberRoomResponseDTO> listByRoomId(String roomId);
 
+    public List<MemberRoomResponseDTO> listByEmail(String email);
+
 }
