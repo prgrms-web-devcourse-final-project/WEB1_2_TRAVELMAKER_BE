@@ -1,6 +1,7 @@
 package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
+import edu.example.wayfarer.dto.memberRoom.MemberRoomResponseDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -8,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @SpringBootTest
 //@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -37,6 +40,13 @@ public class MemberRoomServiceTests {
         String roomId = "xu688Ljt";
 
         memberRoomService.delete(email, roomId);
+    }
+
+    @Test
+    public void testListByRoomId(){
+        String roomId = "xu688Ljt";
+        List<MemberRoomResponseDTO> members = memberRoomService.listByRoomId(roomId);
+        System.out.println(members);
     }
 
 }

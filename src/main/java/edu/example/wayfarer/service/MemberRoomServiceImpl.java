@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -113,5 +114,17 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             memberRoomRepository.delete(memberRoom);
         }
 
+    }
+
+    // 해당 방에 참가하고 있는 참여자들을 볼 수 있는 리스트
+    @Override
+    public List<MemberRoomResponseDTO> listByRoomId(String roomId) {
+        // 1. 방에 속한 모든 MemberRoom 조회
+        List<MemberRoom> memberRooms = memberRoomRepository.findAllByRoom_RoomId(roomId);
+
+        // 2. MemberRoom 엔티티를 MemberRoomResponseDTO로 변환
+        return memberRooms.stream()
+                .map(MemberRoomResponseDTO::new)
+                .toList();
     }
 }
