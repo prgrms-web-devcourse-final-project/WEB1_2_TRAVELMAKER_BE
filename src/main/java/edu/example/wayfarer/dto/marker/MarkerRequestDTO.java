@@ -8,4 +8,6 @@ public class MarkerRequestDTO {
     private Long scheduleId;
     private double lat;
     private double lng;
+
+
 }
