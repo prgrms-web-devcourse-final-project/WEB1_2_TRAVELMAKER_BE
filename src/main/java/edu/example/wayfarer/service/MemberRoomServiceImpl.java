@@ -52,7 +52,11 @@ public class MemberRoomServiceImpl implements MemberRoomService {
         Member member = memberRepository.findById(memberRoomRequestDTO.getEmail())
                 .orElseThrow(()-> new NoSuchElementException("해당 유저는 없는 유저입니다."));
 
-        if(memberRoomRepository.existsByMember_Email(memberRoomRequestDTO.getEmail())) { // -> 나중엔 뭐 currentUser.getEmail() 이런식으로 받겠죠?
+        boolean memberExistsInRoom = memberRoomRepository.findAllByRoom_RoomId(memberRoomRequestDTO.getRoomId())
+                .stream()
+                .anyMatch(existingMemberRoom -> existingMemberRoom.getMember().getEmail().equals(memberRoomRequestDTO.getEmail()));
+
+        if(memberExistsInRoom) { // -> 나중엔 뭐 currentUser.getEmail() 이런식으로 받겠죠?
             throw MemberRoomException.DUPLICATED_MEMBER.get();
         }
 
