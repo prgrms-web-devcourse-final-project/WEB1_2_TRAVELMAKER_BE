@@ -26,5 +26,6 @@ public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
     boolean existsByMember_Email(String email);
 
     List<MemberRoom> findAllByRoom_RoomId(String roomId); // Room에 속한 모든 MemberRoom 조회
+    List<MemberRoom> findAllByMember_Email(String email); // 한 사용자가 참여하고 있는 모든 방 조회
   
 }
