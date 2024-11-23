@@ -25,8 +25,8 @@ public class MemberRoomServiceTests {
     @Commit
     public void testCreateMemberRoom() {
         MemberRoomRequestDTO memberRoomRequestDTO = new MemberRoomRequestDTO();
-        memberRoomRequestDTO.setRoomId("xu688Ljt");
-        memberRoomRequestDTO.setRoomCode("xuA19CYH");
+        memberRoomRequestDTO.setRoomId("LEhvP36I");
+        memberRoomRequestDTO.setRoomCode("jNSLpIlO");
         memberRoomRequestDTO.setEmail("jj@jj.com");
 
         memberRoomService.create(memberRoomRequestDTO);
