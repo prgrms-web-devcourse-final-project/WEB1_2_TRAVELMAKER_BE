@@ -6,6 +6,7 @@ import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
 import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
 import edu.example.wayfarer.entity.*;
 import edu.example.wayfarer.entity.enums.Color;
+import edu.example.wayfarer.entity.enums.Days;
 import edu.example.wayfarer.entity.enums.PlanType;
 import edu.example.wayfarer.repository.*;
 import org.junit.jupiter.api.*;
@@ -16,6 +17,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,12 +79,14 @@ public class MarkerServiceTests {
             // 임의의 스케쥴 생성
             List<Schedule> schedules = new ArrayList<>();
 
-            for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-                for (int i = 0; i<2; i++) {
+            long daysBetween = ChronoUnit.DAYS.between(start, end)+1;
+            Days[] days = Days.values();
+            for (int i = 0; i < daysBetween; i++) {
+                for (int j = 0; j<2; j++) {
                     Schedule schedule = Schedule.builder()
                             .room(savedRoom)
-                            .date(date)
-                            .planType(PlanType.values()[i])
+                            .date(days[i])
+                            .planType(PlanType.values()[j])
                             .build();
 
                     schedules.add(schedule);
