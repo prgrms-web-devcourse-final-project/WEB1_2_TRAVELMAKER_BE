@@ -72,24 +72,20 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     @Override
     public ScheduleItemResponseDTO update(ScheduleItemUpdateDTO scheduleItemUpdateDTO) {
         // 수정한 ScheduleItem 조회
-        ScheduleItem scheduleItem = scheduleItemRepository.findById(scheduleItemUpdateDTO.getScheduleItemId())
+        ScheduleItem scheduleItem = scheduleItemRepository.findById(scheduleItemUpdateDTO.scheduleItemId())
                 .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
         // name 수정
-        if (scheduleItemUpdateDTO.getName() != null) {
-            scheduleItem.changeName(scheduleItemUpdateDTO.getName());
+        if (scheduleItemUpdateDTO.name() != null) {
+            scheduleItem.changeName(scheduleItemUpdateDTO.name());
         }
-        // address 수정
-//        if (scheduleItemUpdateDTO.getAddress() != null) {
-//            scheduleItem.changeAddress(scheduleItemUpdateDTO.getAddress());
-//        }
         // time 수정
-        if (scheduleItemUpdateDTO.getTime() != null) {
-            scheduleItem.changeTime(scheduleItemUpdateDTO.getTime());
+        if (scheduleItemUpdateDTO.time() != null) {
+            scheduleItem.changeTime(scheduleItemUpdateDTO.time());
         }
         // content 수정
-        if (scheduleItemUpdateDTO.getContent() != null) {
-            scheduleItem.changeContent(scheduleItemUpdateDTO.getContent());
+        if (scheduleItemUpdateDTO.content() != null) {
+            scheduleItem.changeContent(scheduleItemUpdateDTO.content());
         }
 
         // 수정한 ScheduleItem 저장
