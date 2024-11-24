@@ -45,11 +45,11 @@ public class MarkerServiceImpl implements MarkerService {
     @Override
     public MarkerResponseDTO create(MarkerRequestDTO markerRequestDTO) {
         // 마커 생성을 위한 Member 조회
-        Member member = memberRepository.findById(markerRequestDTO.getEmail())
+        Member member = memberRepository.findById(markerRequestDTO.email())
                 .orElseThrow(() -> new RuntimeException("Member not found"));
 
         // 마커 생성을 위한 Schedule 정보 조회
-        Schedule schedule = scheduleRepository.findById(markerRequestDTO.getScheduleId())
+        Schedule schedule = scheduleRepository.findById(markerRequestDTO.scheduleId())
                 .orElseThrow(() -> new RuntimeException("Schedule not found"));
 
         // 해당 멤버의 memberRoom.color 조회
@@ -144,10 +144,10 @@ public class MarkerServiceImpl implements MarkerService {
     @Override
     public MarkerResponseDTO update(MarkerUpdateDTO markerUpdateDTO) {
         // 수정할 Marker 조회
-        Marker foundMarker = markerRepository.findById(markerUpdateDTO.getMarkerId())
+        Marker foundMarker = markerRepository.findById(markerUpdateDTO.markerId())
                 .orElseThrow(MarkerException.NOT_FOUND::get);
 
-        if (markerUpdateDTO.getConfirm()) {
+        if (markerUpdateDTO.confirm()) {
             // true 로 변경 요청시 자식 scheduleItem 생성
             saveScheduleItem(foundMarker);
             // Marker 의 confirm 값 변경

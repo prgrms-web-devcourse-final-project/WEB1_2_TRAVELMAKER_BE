@@ -107,11 +107,12 @@ public class MarkerServiceTests {
     @Order(2)
     public void testCreateMarker() {
         for (int i=0; i<3; i++) {
-            MarkerRequestDTO markerRequestDTO = new MarkerRequestDTO();
-            markerRequestDTO.setEmail("member1@abc.com");
-            markerRequestDTO.setScheduleId(1L);
-            markerRequestDTO.setLat(37.552);
-            markerRequestDTO.setLng(126.988);
+            MarkerRequestDTO markerRequestDTO = new MarkerRequestDTO(
+                    "member1@abc.com",
+                    1L,
+                    37.552,
+                    126.988
+            );
 
             MarkerResponseDTO markerResponseDTO = markerService.create(markerRequestDTO);
 
@@ -153,10 +154,11 @@ public class MarkerServiceTests {
     @Test
     @Order(6)
     public void testUpdateMarkerTrue() {
-        MarkerUpdateDTO markerUpdateDTO = new MarkerUpdateDTO();
-        markerUpdateDTO.setMarkerId(1L);
-        markerUpdateDTO.setConfirm(true);
-        markerUpdateDTO.setEmail("member1@abc.com");
+        MarkerUpdateDTO markerUpdateDTO = new MarkerUpdateDTO(
+                1L,
+                true,
+                "member1@abc.com"
+        );
 
         System.out.println("6. 마커 확정 테스트");
         System.out.println(markerService.update(markerUpdateDTO));
