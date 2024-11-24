@@ -8,7 +8,6 @@ public record ScheduleItemResponseDTO(
         Long markerId,
         String name,
         String address,
-        Time time,
         String content,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
