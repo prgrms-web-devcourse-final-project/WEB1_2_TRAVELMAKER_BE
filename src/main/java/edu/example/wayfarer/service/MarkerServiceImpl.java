@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.sql.Time;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -177,8 +176,6 @@ public class MarkerServiceImpl implements MarkerService {
 
     // Marker 의 자식 ScheduleItem 생성 메서드
     private void saveScheduleItem(Marker marker) {
-        // 임의의 날짜 생성
-        Time time = Time.valueOf("00:00:00");
 
         // Marker 의 위도, 경도 값으로 주소 조회
         String address = geocodingUtil.reverseGeocoding(marker.getLat(), marker.getLng());
@@ -189,7 +186,6 @@ public class MarkerServiceImpl implements MarkerService {
                 .name(address) // 최초 생성시 주소로 제목 생성
                 .content("내용")
                 .address(address)
-                .time(time)
                 .build();
 
         try {
