@@ -10,7 +10,6 @@ public class ScheduleItemConverter {
                 scheduleItem.getMarker().getMarkerId(),
                 scheduleItem.getName(),
                 scheduleItem.getAddress(),
-                scheduleItem.getTime(),
                 scheduleItem.getContent(),
                 scheduleItem.getCreatedAt(),
                 scheduleItem.getUpdatedAt()

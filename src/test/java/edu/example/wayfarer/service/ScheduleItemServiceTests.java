@@ -52,8 +52,7 @@ public class ScheduleItemServiceTests {
         ScheduleItemUpdateDTO updateDTO = new ScheduleItemUpdateDTO(
                 1L,
                 "Updated Name",
-                Time.valueOf(localTime),
-                ""
+                "Updated Content"
         );
 
         ScheduleItemResponseDTO result = scheduleItemService.update(updateDTO);

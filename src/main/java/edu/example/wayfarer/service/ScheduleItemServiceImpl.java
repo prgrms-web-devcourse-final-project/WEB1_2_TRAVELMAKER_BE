@@ -79,10 +79,6 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         if (scheduleItemUpdateDTO.name() != null) {
             scheduleItem.changeName(scheduleItemUpdateDTO.name());
         }
-        // time 수정
-        if (scheduleItemUpdateDTO.time() != null) {
-            scheduleItem.changeTime(scheduleItemUpdateDTO.time());
-        }
         // content 수정
         if (scheduleItemUpdateDTO.content() != null) {
             scheduleItem.changeContent(scheduleItemUpdateDTO.content());
