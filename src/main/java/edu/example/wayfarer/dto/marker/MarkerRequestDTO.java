@@ -1,13 +1,9 @@
 package edu.example.wayfarer.dto.marker;
 
-import lombok.Data;
+public record MarkerRequestDTO(
+        String email,
+        Long scheduleId,
+        double lat,
+        double lng
+) {}
 
-@Data
-public class MarkerRequestDTO {
-    private String email;
-    private Long scheduleId;
-    private double lat;
-    private double lng;
-
-
-}
