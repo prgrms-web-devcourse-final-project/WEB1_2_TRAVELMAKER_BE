@@ -59,7 +59,6 @@ public class RoomServiceImpl implements RoomService {
         System.out.println("Saved Room ID: " + savedRoom.getRoomId());
         System.out.println("Host email: " + room.getHostEmail());
 
-
         //memberRoom 저장
         // 방장을 찾는다
         Member foundMember = memberRepository.findById(room.getHostEmail()).orElseThrow();
