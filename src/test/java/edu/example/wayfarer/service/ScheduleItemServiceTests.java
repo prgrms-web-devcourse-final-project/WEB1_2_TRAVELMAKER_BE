@@ -10,9 +10,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.sql.Time;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -48,7 +45,6 @@ public class ScheduleItemServiceTests {
     @Test
     @Order(3)
     public void testUpdate() {
-        LocalTime localTime = LocalTime.now();
         ScheduleItemUpdateDTO updateDTO = new ScheduleItemUpdateDTO(
                 1L,
                 "Updated Name",
