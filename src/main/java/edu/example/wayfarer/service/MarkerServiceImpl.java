@@ -135,9 +135,8 @@ public class MarkerServiceImpl implements MarkerService {
 
     /**
      * 마커 상태 변경 메서드
-     * Marker 의 confirm 을 true or false 로 변경하는 메서드
+     * Marker 의 confirm 을 true 로 변경하는 메서드
      * - true 로 변경 요청시 해당 Marker 의 자식으로 임의의 scheduleItem 생성
-     * - false 로 변경 요청시 해당 Marker 의 자식 scheduleItem 삭제
      *
      * @param markerUpdateDTO Marker 변경 요청 데이터
      * @return MarkerResponseDTO 수정된 Marker 응답 데이터
@@ -155,18 +154,6 @@ public class MarkerServiceImpl implements MarkerService {
             foundMarker.changeConfirm(true);
             // Marker 의 color 를 확정 컬러로 변경
             foundMarker.changeColor(Color.RED);
-        } else {
-            // false 로 변경 요청시 자식 scheduleItem 삭제
-            deleteScheduleItem(markerUpdateDTO.getMarkerId());
-            // Marker 의 confirm 값 변경
-            foundMarker.changeConfirm(false);
-            // Marker 의 color 를 memberRoom 의 컬러로 변경
-            foundMarker.changeColor(
-                    findColor(
-                            foundMarker.getMember().getEmail(),
-                            foundMarker.getSchedule().getRoom().getRoomId()
-                    )
-            );
         }
         
         // 수정한 Marker 를 저장 후 MarkerResponseDTO 로 변환하여 반환
@@ -188,11 +175,12 @@ public class MarkerServiceImpl implements MarkerService {
         markerRepository.delete(foundMarker);
     }
 
+    // Marker 의 자식 ScheduleItem 생성 메서드
     private void saveScheduleItem(Marker marker) {
         // 임의의 날짜 생성
         Time time = Time.valueOf("00:00:00");
 
-        // Marker 의 위도, 경도 값으로 주소 생성
+        // Marker 의 위도, 경도 값으로 주소 조회
         String address = geocodingUtil.reverseGeocoding(marker.getLat(), marker.getLng());
 
         // scheduleItem 생성
@@ -213,19 +201,7 @@ public class MarkerServiceImpl implements MarkerService {
         }
     }
 
-    // 마커 확정 취소시 아이템삭제가 안되는 오류
-    public void deleteScheduleItem(Long markerId) {
-        // 삭제할 ScheduleItem 의 부모 마커 조회
-        Marker foundMarker = markerRepository.findById(markerId)
-                .orElseThrow(MarkerException.NOT_FOUND::get);
-
-        // Marker 자식 관계 끊고 orphanRemoval = true 를 이용해 자동 삭제
-        if(foundMarker.getScheduleItem() != null) {
-            foundMarker.changeScheduleItem(null);
-            markerRepository.save(foundMarker);
-        }
-    }
-
+    // 마커 작성자의 color 조회 메서드
     private Color findColor(String email, String roomId) {
         // 특정 방 사용자의 color 값 가져오기
         return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)

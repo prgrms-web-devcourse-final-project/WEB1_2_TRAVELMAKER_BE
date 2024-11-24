@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application-test.properties")
+//@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MarkerServiceTests {
     @Autowired
@@ -164,48 +164,10 @@ public class MarkerServiceTests {
     }
 
     @Test
-    @Order(7)
-    public void testUpdateMarkerFalse() {
-        MarkerUpdateDTO markerUpdateDTO = new MarkerUpdateDTO();
-        markerUpdateDTO.setMarkerId(1L);
-        markerUpdateDTO.setConfirm(false);
-        markerUpdateDTO.setEmail("member1@abc.com");
-
-        System.out.println("7. 마커 확정 취소 테스트");
-        System.out.println(markerService.update(markerUpdateDTO));
-//        System.out.println(scheduleItemService.read(1L));
-    }
-
-    @Test
     @Order(8)
     public void testDeleteMarker() {
         Long markerId = 3L;
         markerService.delete(markerId);
-    }
-
-    @Test
-    @Order(9)
-    public void testDeleteItem() {
-//        Long markerId = 1L;
-//
-//        Marker foundMarker = markerRepository.findById(markerId).orElseThrow(RuntimeException::new);
-//
-//        if(foundMarker.getScheduleItem() != null ) {
-//            foundMarker.changeScheduleItem(null);
-//            markerRepository.save(foundMarker);
-//        }
-
-//        ScheduleItem scheduleItem = scheduleItemRepository.findByMarker_MarkerId(markerId)
-//                .orElseThrow(() -> new RuntimeException("ScheduleItem not found"));
-//        System.out.println(ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem));
-//
-//        // 엔티티 상태 확인
-//        boolean isManaged = entityManager.contains(scheduleItem);
-//        System.out.println("Is scheduleItem managed: " + isManaged);
-//        System.out.println("Transaction active: " + TransactionSynchronizationManager.isActualTransactionActive());
-//
-//        scheduleItemRepository.deleteById(scheduleItem.getScheduleItemId());
-
     }
 
 }
