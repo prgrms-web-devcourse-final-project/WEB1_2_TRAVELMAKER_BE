@@ -9,6 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.sql.Time;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 // 해당 테스트는 MarkerServiceTests 를 수행 후 생성된 객체를 가지고 수행합니다.
@@ -43,10 +48,13 @@ public class ScheduleItemServiceTests {
     @Test
     @Order(3)
     public void testUpdate() {
-        ScheduleItemUpdateDTO updateDTO = new ScheduleItemUpdateDTO();
-        updateDTO.setScheduleItemId(1L);
-        updateDTO.setName("Updated Name");
-        updateDTO.setContent("Updated Content");
+        LocalTime localTime = LocalTime.now();
+        ScheduleItemUpdateDTO updateDTO = new ScheduleItemUpdateDTO(
+                1L,
+                "Updated Name",
+                Time.valueOf(localTime),
+                ""
+        );
 
         ScheduleItemResponseDTO result = scheduleItemService.update(updateDTO);
         System.out.println(result);
