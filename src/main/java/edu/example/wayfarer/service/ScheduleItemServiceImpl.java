@@ -3,8 +3,13 @@ package edu.example.wayfarer.service;
 import edu.example.wayfarer.converter.ScheduleItemConverter;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemUpdateDTO;
+import edu.example.wayfarer.entity.Marker;
 import edu.example.wayfarer.entity.ScheduleItem;
+import edu.example.wayfarer.entity.enums.Color;
+import edu.example.wayfarer.exception.MarkerException;
 import edu.example.wayfarer.exception.ScheduleItemException;
+import edu.example.wayfarer.repository.MarkerRepository;
+import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.ScheduleItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +24,8 @@ import java.util.stream.Collectors;
 public class ScheduleItemServiceImpl implements ScheduleItemService {
 
     private final ScheduleItemRepository scheduleItemRepository;
+    private final MarkerRepository markerRepository;
+    private final MemberRoomRepository memberRoomRepository;
 
     /**
      * 스케쥴 아이템 조회 메서드
@@ -91,8 +98,44 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         return ScheduleItemConverter.toScheduleItemResponseDTO(savedScheduleItem);
     }
 
-    // 독립적으로 ScheduleItem 이 생성되고 삭제되는 경우는 없기 때문에 create delete 는 생략
-    // create -> Marker 의 confirm true 요청시 생성
-    // delete -> Marker 의 confirm false 요청시 삭제
+    /**
+     * ScheduleItem 삭제 메서드
+     * ScheduleItem 을 삭제하고
+     * 부모 Marker 의 confirm 을 false 로, color 를 작성자 color 로 변경
+     *
+     * @param scheduleItemId 삭제할 ScheduleItem 의 PK
+     */
+    @Override
+    public void delete(Long scheduleItemId) {
+        // 삭제할 ScheduleItem 의 부모 Marker 조회
+        Marker foundMarker = markerRepository.findByScheduleItem_ScheduleItemId(scheduleItemId)
+                .orElseThrow(MarkerException.NOT_FOUND::get);
+
+        // Marker 자식 관계 끊고 orphanRemoval = true 를 이용해 자동 삭제
+        foundMarker.changeScheduleItem(null);
+
+        // Marker 의 confirm 을 false 로 변경
+        foundMarker.changeConfirm(false);
+
+        // Marker 의 color 를 작성자의 색상으로 변경
+        foundMarker.changeColor(
+                findColor(
+                        foundMarker.getMember().getEmail(),
+                        foundMarker.getSchedule().getRoom().getRoomId()
+                )
+        );
+        
+        // 변경사항 저장
+        markerRepository.save(foundMarker);
+    }
+
+    // 마커 작성자의 color 조회 메서드
+    private Color findColor(String email, String roomId) {
+        // 특정 방 사용자의 color 값 가져오기
+        return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
+                .orElseThrow(()-> new RuntimeException("memberRoom not found"))
+                .getColor();
+    }
+
 
 }

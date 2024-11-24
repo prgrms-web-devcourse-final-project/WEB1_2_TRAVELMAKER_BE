@@ -9,9 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import java.util.List;
 
+// 해당 테스트는 MarkerServiceTests 를 수행 후 생성된 객체를 가지고 수행합니다.
+// 추후 수정 예정
 @SpringBootTest
 //@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -49,5 +50,12 @@ public class ScheduleItemServiceTests {
 
         ScheduleItemResponseDTO result = scheduleItemService.update(updateDTO);
         System.out.println(result);
+    }
+
+    @Test
+    @Order(4)
+    public void testDelete() {
+        Long ScheduleItemId = 1L;
+        scheduleItemService.delete(ScheduleItemId);
     }
 }
