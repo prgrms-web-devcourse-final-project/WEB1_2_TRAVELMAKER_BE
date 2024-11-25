@@ -13,6 +13,8 @@ public interface ScheduleItemService {
 
     ScheduleItemResponseDTO update(ScheduleItemUpdateDTO scheduleItemUpdateDTO);
 
+    void delete(Long scheduleItemId);
+
     ScheduleItemResponseDTO readByMarkerId(Long markerId);
 
 }

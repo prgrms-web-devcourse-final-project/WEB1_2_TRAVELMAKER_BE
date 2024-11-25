@@ -5,8 +5,7 @@ import lombok.Data;
 
 import java.util.List;
 
-@Builder
-public class MarkerListDTO {
-    private Long scheduleId;
-    private List<MarkerResponseDTO> markerList;
-}
+public record MarkerListDTO(
+        Long scheduleId,
+        List<MarkerResponseDTO> markerList
+) {}
