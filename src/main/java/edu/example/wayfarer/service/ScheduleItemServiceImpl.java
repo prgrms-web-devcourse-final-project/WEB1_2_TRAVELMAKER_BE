@@ -83,6 +83,15 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         if (scheduleItemUpdateDTO.content() != null) {
             scheduleItem.changeContent(scheduleItemUpdateDTO.content());
         }
+        // itemOrder(순서) 수정
+        if (scheduleItemUpdateDTO.previousItemId() != null || scheduleItemUpdateDTO.nextItemId() != null) {
+            // itemOrder 수정 메서드 호출
+            updateItemOrder(
+                    scheduleItem,
+                    scheduleItemUpdateDTO.previousItemId(),
+                    scheduleItemUpdateDTO.nextItemId()
+            );
+        }
 
         // 수정한 ScheduleItem 저장
         ScheduleItem savedScheduleItem = scheduleItemRepository.save(scheduleItem);
@@ -127,6 +136,44 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
                 .orElseThrow(()-> new RuntimeException("memberRoom not found"))
                 .getColor();
+    }
+
+    // itemOrder 수정 메서드
+    private void updateItemOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
+
+        Double newItemOrder = 0.0;
+
+        if (previousItemId != null && nextItemId != null) {  // 두개의 일정 사이로 이동할 경우
+            // 앞의 ScheduleItem 조회
+            ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
+                    .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+            // 뒤의 ScheduleItem 조회
+            ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
+                    .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 앞과 뒤의 itemOrder 를 더한 값의 중간 값으로 새로운 itemOrder 생성
+            newItemOrder = (previousItem.getItemOrder() + nextItem.getItemOrder()) / 2.0;
+
+        } else if (previousItemId != null) {  // 제일 뒤로 이동할 경우
+            // 앞의 ScheduleItem 조회
+            ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
+                    .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 앞의 itemOrder 의 정수 부분에 1.0 을 더한 값으로 새로운 itemOrder 생성
+            newItemOrder = Math.floor(previousItem.getItemOrder()) + 1.0;
+        } else if (nextItemId != null) {  // 제일 앞으로 이동할 경우
+            // 뒤의 ScheduleItem 조회
+            ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
+                    .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 0 과 nextItem.itemOrder 의 중간 값으로 새로운 itemOrder 생성
+            newItemOrder = (0.0 + nextItem.getItemOrder()) / 2.0;
+        } else {
+            throw ScheduleItemException.INVALID_REQUEST.get();
+        }
+
+        // scheduleItem 객체의 itemOrder 변경
+        scheduleItem.changeItemOrder(newItemOrder);
     }
 
 
