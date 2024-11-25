@@ -1,6 +1,5 @@
-package edu.example.wayfarer.service;
+package edu.example.wayfarer.util;
 
-import edu.example.wayfarer.util.GeocodingUtil;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -10,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class GeocodingServiceTest {
+public class GeocodingUtilTest {
 
     @Autowired
     private GeocodingUtil geocodingUtil;

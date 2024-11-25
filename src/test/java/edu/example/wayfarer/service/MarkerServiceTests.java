@@ -6,6 +6,7 @@ import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
 import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
 import edu.example.wayfarer.entity.*;
 import edu.example.wayfarer.entity.enums.Color;
+import edu.example.wayfarer.entity.enums.Days;
 import edu.example.wayfarer.entity.enums.PlanType;
 import edu.example.wayfarer.repository.*;
 import org.junit.jupiter.api.*;
@@ -16,11 +17,12 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application-test.properties")
+//@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MarkerServiceTests {
     @Autowired
@@ -77,12 +79,14 @@ public class MarkerServiceTests {
             // 임의의 스케쥴 생성
             List<Schedule> schedules = new ArrayList<>();
 
-            for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-                for (int i = 0; i<2; i++) {
+            long daysBetween = ChronoUnit.DAYS.between(start, end)+1;
+            Days[] days = Days.values();
+            for (int i = 0; i < daysBetween; i++) {
+                for (int j = 0; j<2; j++) {
                     Schedule schedule = Schedule.builder()
                             .room(savedRoom)
-                            .date(date)
-                            .planType(PlanType.values()[i])
+                            .date(days[i])
+                            .planType(PlanType.values()[j])
                             .build();
 
                     schedules.add(schedule);
@@ -107,11 +111,12 @@ public class MarkerServiceTests {
     @Order(2)
     public void testCreateMarker() {
         for (int i=0; i<3; i++) {
-            MarkerRequestDTO markerRequestDTO = new MarkerRequestDTO();
-            markerRequestDTO.setEmail("member1@abc.com");
-            markerRequestDTO.setScheduleId(1L);
-            markerRequestDTO.setLat(37.552);
-            markerRequestDTO.setLng(126.988);
+            MarkerRequestDTO markerRequestDTO = new MarkerRequestDTO(
+                    "member1@abc.com",
+                    1L,
+                    37.552,
+                    126.988
+            );
 
             MarkerResponseDTO markerResponseDTO = markerService.create(markerRequestDTO);
 
@@ -153,10 +158,11 @@ public class MarkerServiceTests {
     @Test
     @Order(6)
     public void testUpdateMarkerTrue() {
-        MarkerUpdateDTO markerUpdateDTO = new MarkerUpdateDTO();
-        markerUpdateDTO.setMarkerId(1L);
-        markerUpdateDTO.setConfirm(true);
-        markerUpdateDTO.setEmail("member1@abc.com");
+        MarkerUpdateDTO markerUpdateDTO = new MarkerUpdateDTO(
+                1L,
+                true,
+                "member1@abc.com"
+        );
 
         System.out.println("6. 마커 확정 테스트");
         System.out.println(markerService.update(markerUpdateDTO));
@@ -164,48 +170,10 @@ public class MarkerServiceTests {
     }
 
     @Test
-    @Order(7)
-    public void testUpdateMarkerFalse() {
-        MarkerUpdateDTO markerUpdateDTO = new MarkerUpdateDTO();
-        markerUpdateDTO.setMarkerId(1L);
-        markerUpdateDTO.setConfirm(false);
-        markerUpdateDTO.setEmail("member1@abc.com");
-
-        System.out.println("7. 마커 확정 취소 테스트");
-        System.out.println(markerService.update(markerUpdateDTO));
-//        System.out.println(scheduleItemService.read(1L));
-    }
-
-    @Test
     @Order(8)
     public void testDeleteMarker() {
         Long markerId = 3L;
         markerService.delete(markerId);
-    }
-
-    @Test
-    @Order(9)
-    public void testDeleteItem() {
-//        Long markerId = 1L;
-//
-//        Marker foundMarker = markerRepository.findById(markerId).orElseThrow(RuntimeException::new);
-//
-//        if(foundMarker.getScheduleItem() != null ) {
-//            foundMarker.changeScheduleItem(null);
-//            markerRepository.save(foundMarker);
-//        }
-
-//        ScheduleItem scheduleItem = scheduleItemRepository.findByMarker_MarkerId(markerId)
-//                .orElseThrow(() -> new RuntimeException("ScheduleItem not found"));
-//        System.out.println(ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem));
-//
-//        // 엔티티 상태 확인
-//        boolean isManaged = entityManager.contains(scheduleItem);
-//        System.out.println("Is scheduleItem managed: " + isManaged);
-//        System.out.println("Transaction active: " + TransactionSynchronizationManager.isActualTransactionActive());
-//
-//        scheduleItemRepository.deleteById(scheduleItem.getScheduleItemId());
-
     }
 
 }

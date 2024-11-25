@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.sql.Time;
 import java.time.LocalDateTime;
 
 @AllArgsConstructor
@@ -30,7 +28,6 @@ public class ScheduleItem {
 
     private String name;
     private String address;
-    private Time time;
     private String content;
 
     @CreatedDate
@@ -41,14 +38,6 @@ public class ScheduleItem {
 
     public void changeName(String name) {
         this.name = name;
-    }
-
-    public void changeAddress(String address) {
-        this.address = address;
-    }
-
-    public void changeTime(Time time) {
-        this.time = time;
     }
 
     public void changeContent(String content) {
