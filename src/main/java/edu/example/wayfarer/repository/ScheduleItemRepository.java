@@ -18,18 +18,18 @@ public interface ScheduleItemRepository extends JpaRepository<ScheduleItem, Long
 
     void deleteByMarker_MarkerId(Long markerId);
 
-    // 최대 index 값 조회, null 일 경우 0 반환
-    @Query("SELECT COALESCE(MAX(si.index), 0) " +
+    // 최대 itemOrder 값 조회, null 일 경우 0 반환
+    @Query("SELECT COALESCE(MAX(si.itemOrder), 0) " +
             "FROM ScheduleItem si " +
             "WHERE si.marker.schedule.scheduleId = :scheduleId")
-    Double findMaxIndexByScheduleId(@Param("scheduleId") Long scheduleId);
+    Double findMaxItemOrderByScheduleId(@Param("scheduleId") Long scheduleId);
 
-    // 최소 index 값 조회, null 일 경우 0 반환
-    @Query("SELECT COALESCE(MIN(si.index), 0) " +
+    // 최소 itemOrder 값 조회, null 일 경우 0 반환
+    @Query("SELECT COALESCE(MIN(si.itemOrder), 0) " +
             "FROM ScheduleItem si " +
             "WHERE si.marker.schedule.scheduleId = :scheduleId")
-    Double findMinIndexByScheduleId(@Param("scheduleId") Long scheduleId);
+    Double findMinItemOrderByScheduleId(@Param("scheduleId") Long scheduleId);
 
-    List<ScheduleItem> findByMarker_Schedule_ScheduleIdAndIndexBetween(Long scheduleId, Double start, Double end);
+    List<ScheduleItem> findByMarker_Schedule_ScheduleIdAndItemOrderBetween(Long scheduleId, Double start, Double end);
 }
 

@@ -180,12 +180,19 @@ public class MarkerServiceImpl implements MarkerService {
         // Marker 의 위도, 경도 값으로 주소 조회
         String address = geocodingUtil.reverseGeocoding(marker.getLat(), marker.getLng());
 
+        // 최대 ItemOrder 값 조회
+        Double maxItemOrder = scheduleItemRepository.findMaxItemOrderByScheduleId(marker.getSchedule().getScheduleId());
+
+        // 새로운 ItemOrder 값 생성(maxItemOrder 의 정수 부분 + 1.0)
+        Double newItemOrder = Math.floor(maxItemOrder) + 1.0;
+
         // scheduleItem 생성
         ScheduleItem scheduleItem = ScheduleItem.builder()
                 .marker(marker)
                 .name(address) // 최초 생성시 주소로 제목 생성
                 .content("내용")
                 .address(address)
+                .itemOrder(newItemOrder)
                 .build();
 
         try {
