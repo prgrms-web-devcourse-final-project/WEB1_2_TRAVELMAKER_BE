@@ -29,6 +29,7 @@ public class ScheduleItem {
     private String name;
     private String address;
     private String content;
+    private Double index;
 
     @CreatedDate
     private LocalDateTime createdAt;
