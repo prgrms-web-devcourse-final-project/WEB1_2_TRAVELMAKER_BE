@@ -61,5 +61,13 @@ public class Room {
         this.country = country;
     }
 
+    public void changeStartDate(LocalDate startDate){
+        this.startDate = startDate;
+    }
+
+    public void changeEndDate(LocalDate endDate){
+        this.endDate = endDate;
+    }
+
 
 }
