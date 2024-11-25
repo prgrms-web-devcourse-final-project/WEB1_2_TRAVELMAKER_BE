@@ -30,6 +30,20 @@ public interface ScheduleItemRepository extends JpaRepository<ScheduleItem, Long
             "WHERE si.marker.schedule.scheduleId = :scheduleId")
     Double findMinItemOrderByScheduleId(@Param("scheduleId") Long scheduleId);
 
-    List<ScheduleItem> findByMarker_Schedule_ScheduleIdAndItemOrderBetween(Long scheduleId, Double start, Double end);
+    // scheduleId 로 scheduleItem 리스트 조회 및 itemOrder 로 정렬
+    // 메서드명 기반 쿼리를 사용하려다보니 엄청 길어졌다 이게맞나?
+    List<ScheduleItem> findByMarker_Schedule_ScheduleIdOrderByItemOrderAsc(Long scheduleId);
+
+    // 특정 scheduleId를 가지는 scheduleItem 들 중에서
+    // index 값을 구하고자하는 scheduleItem 보다 itemOrder 가 작은 데이터의 갯수를 COUNT
+    // 예) 1번아이템의 itemOrder 는 1.25, 2번은 3.0, 3번은 3.5 일 경우
+    //     - 2번 보다 작은 itemOrder 은 1개이므로 2번의 index 1을 반환
+    @Query("SELECT COUNT(si) " +
+            "FROM ScheduleItem si " +
+            "WHERE si.marker.schedule.scheduleId = :scheduleId " +
+            "AND si.itemOrder < (SELECT s.itemOrder FROM ScheduleItem s WHERE s.scheduleItemId = :scheduleItemId)")
+    int findIndexByScheduleItemId(@Param("scheduleItemId") Long scheduleItemId, @Param("scheduleId") Long scheduleId);
+
+
 }
 

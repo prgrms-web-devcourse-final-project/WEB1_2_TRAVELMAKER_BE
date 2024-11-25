@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,8 +41,11 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         ScheduleItem scheduleItem = scheduleItemRepository.findById(scheduleItemId)
                 .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
-        // 조회된 scheduleItem 을 ScheduleItemResponseDTO 로 변환 후 반환
-        return ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem);
+        // scheduleItem 의 index 를 구하는 메서드 호출
+        int itemOrderIndex = getIndex(scheduleItemId, scheduleItem.getMarker().getSchedule().getScheduleId());
+
+        // 조회된 scheduleItem 과 index 를 ScheduleItemResponseDTO 로 변환 후 반환
+        return ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem, itemOrderIndex);
     }
 
     /**
@@ -54,11 +58,19 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     @Override
     public List<ScheduleItemResponseDTO> getListBySchedule(Long scheduleId) {
         // scheduleId 를 기준으로 scheduleItem 리스트 조회
-        List<ScheduleItem> scheduleItems = scheduleItemRepository.findByMarker_Schedule_ScheduleId(scheduleId);
+        List<ScheduleItem> scheduleItems =
+                scheduleItemRepository.findByMarker_Schedule_ScheduleIdOrderByItemOrderAsc(scheduleId);
+
+        // 순차적인 정수 index 부여
+        AtomicInteger index = new AtomicInteger(0);
 
         // 조회된 ScheduleItem 리스트를 ScheduleItemResponseDTO 리스트로 변환하여 반환
         return scheduleItems.stream()
-                .map(ScheduleItemConverter::toScheduleItemResponseDTO)
+                .map(scheduleItem ->
+                        ScheduleItemConverter.toScheduleItemResponseDTO(
+                                scheduleItem, index.getAndIncrement()
+                        )
+                )
                 .collect(Collectors.toList());
     }
 
@@ -95,8 +107,15 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
 
         // 수정한 ScheduleItem 저장
         ScheduleItem savedScheduleItem = scheduleItemRepository.save(scheduleItem);
-        // 수정된 ScheduleItem 을 ScheduleItemResponseDTO 로 변환하여 반환
-        return ScheduleItemConverter.toScheduleItemResponseDTO(savedScheduleItem);
+
+        // ScheduleItem 의 index 를 구하는 메서드 호출
+        int itemOrderIndex = getIndex(
+                savedScheduleItem.getScheduleItemId(),
+                savedScheduleItem.getMarker().getSchedule().getScheduleId()
+        );
+
+        // 수정된 ScheduleItem 과 index 를 ScheduleItemResponseDTO 로 변환하여 반환
+        return ScheduleItemConverter.toScheduleItemResponseDTO(savedScheduleItem, itemOrderIndex);
     }
 
     /**
@@ -176,5 +195,9 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         scheduleItem.changeItemOrder(newItemOrder);
     }
 
+    // scheduleItem 의 index 를 구하는 메서드
+    public int getIndex(Long scheduleItemId, Long scheduleId) {
+        return scheduleItemRepository.findIndexByScheduleItemId(scheduleItemId, scheduleId);
+    }
 
 }
