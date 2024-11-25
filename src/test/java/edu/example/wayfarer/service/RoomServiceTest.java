@@ -30,8 +30,8 @@ public class RoomServiceTest {
         RoomRequestDTO roomRequestDTO = new RoomRequestDTO();
         roomRequestDTO.setTitle("크리스마스 흐흐");
         roomRequestDTO.setCountry("서울");
-        roomRequestDTO.setStartDate(LocalDate.of(2024,12,24));
-        roomRequestDTO.setEndDate(LocalDate.of(2024,12,25));
+        roomRequestDTO.setStartDate(LocalDate.of(2024,12,23));
+        roomRequestDTO.setEndDate(LocalDate.of(2024,12,27));
         roomRequestDTO.setHostEmail("aa@aa.com");
 
         RoomResponseDTO result = roomService.create(roomRequestDTO);
@@ -40,7 +40,7 @@ public class RoomServiceTest {
 
     @Test
     public void testReadRoom(){
-        String roomId = "xu688Ljt";
+        String roomId = "8FQ7Cjc9";
 
         RoomResponseDTO result = roomService.read(roomId);
         assertNotNull(result);
@@ -51,11 +51,13 @@ public class RoomServiceTest {
     @Transactional
     @Commit
     public void testUpdateRoom() {
-        String roomId = "xu688Ljt";
+        String roomId = "TSNAnwj4";
         RoomUpdateDTO roomUpdateDTO = new RoomUpdateDTO();
         roomUpdateDTO.setRoomId(roomId);
         roomUpdateDTO.setCountry("중국");
         roomUpdateDTO.setTitle("후후탕후루를먹자");
+        roomUpdateDTO.setStartDate(LocalDate.of(2025,1,1));
+        roomUpdateDTO.setEndDate(LocalDate.of(2025,1,3));
 
         RoomResponseDTO result = roomService.update(roomUpdateDTO);
         assertNotNull(result);
