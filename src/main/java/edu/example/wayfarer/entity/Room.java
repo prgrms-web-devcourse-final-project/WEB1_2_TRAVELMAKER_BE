@@ -44,7 +44,7 @@ public class Room {
 
     // Room 생성시 랜덤 roomId 할당
     @PrePersist // when generating unique identifiers
-    public void generateRoomId(){
+    public void generateRoomIdAndRoomCode(){
         if(this.roomId == null || this.roomId.isBlank()){
             this.roomId = RandomStringGenerator.generateRandomString(8);
         }

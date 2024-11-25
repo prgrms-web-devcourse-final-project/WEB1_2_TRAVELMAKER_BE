@@ -2,6 +2,7 @@ package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomResponseDTO;
+import edu.example.wayfarer.dto.room.RoomListDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -24,11 +25,11 @@ public class MemberRoomServiceTests {
     @Transactional
     @Commit
     public void testCreateMemberRoom() {
-        MemberRoomRequestDTO memberRoomRequestDTO = new MemberRoomRequestDTO();
-        memberRoomRequestDTO.setRoomId("LEhvP36I");
-        memberRoomRequestDTO.setRoomCode("jNSLpIlO");
-        memberRoomRequestDTO.setEmail("jj@jj.com");
-
+        MemberRoomRequestDTO memberRoomRequestDTO = new MemberRoomRequestDTO(
+                "SMAZCett",
+                "nyNqsifP",
+                "aa@aa.com"
+        );
         memberRoomService.create(memberRoomRequestDTO);
     }
 
@@ -51,8 +52,8 @@ public class MemberRoomServiceTests {
 
     @Test
     public void testListByEmail(){
-        String email = "jj@jj.com";
-        List<MemberRoomResponseDTO> rooms = memberRoomService.listByEmail(email);
+        String email = "aa@aa.com";
+        List<RoomListDTO> rooms = memberRoomService.listByEmail(email);
         System.out.println(rooms);
     }
 

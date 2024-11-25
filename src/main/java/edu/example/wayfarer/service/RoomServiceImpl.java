@@ -54,29 +54,42 @@ public class RoomServiceImpl implements RoomService {
     @Transactional
     public RoomResponseDTO create(RoomRequestDTO roomRequestDTO) {
         // 여행 끝 날짜가 더 나중이 맞는지 확인
-        if(roomRequestDTO.getStartDate().isAfter(roomRequestDTO.getEndDate())) {
+        if(roomRequestDTO.startDate().isAfter(roomRequestDTO.endDate())) {
             throw RoomException.INVALID_DATE.get();
         }
 
         //여행 기간이 30일 이내인지 확인
-        long daysBetween = ChronoUnit.DAYS.between(roomRequestDTO.getStartDate(), roomRequestDTO.getEndDate()) + 1;
+        long daysBetween = ChronoUnit.DAYS.between(roomRequestDTO.startDate(), roomRequestDTO.endDate()) + 1;
         if(daysBetween > 30) {
             throw RoomException.OVER_30DAYS.get();
         }
 
-        // room 저장
-        Room room = modelMapper.map(roomRequestDTO, Room.class);
-        System.out.println("Host email: " + room.getHostEmail());
+        System.out.println("RoomRequestDTO hostEmail: " + roomRequestDTO.hostEmail());
+
+        // 이 모델매퍼가 hostEmail을 전달을 못해줘서 일단 주석처리해뒀습니다.
+//        Room room = modelMapper.map(roomRequestDTO, Room.class);
+//        System.out.println("Mapped Room: " + room.toString());
+//        System.out.println("Host email: " + room.getHostEmail());
+
+        Room room = Room.builder()
+                .title(roomRequestDTO.title())
+                .country(roomRequestDTO.country())
+                .startDate(roomRequestDTO.startDate())
+                .endDate(roomRequestDTO.endDate())
+                .hostEmail(roomRequestDTO.hostEmail())
+                .build();
 
         // roomId 생성하고 중복 확인
         String roomId;
+        String roomCode;
         do{
-            room.generateRoomId();
+            room.generateRoomIdAndRoomCode();
             roomId = room.getRoomId();
+            roomCode = room.getRoomCode();
         }while (roomRepository.existsById(roomId));
+        room.setRoomId(roomId);
+        room.setRoomCode(roomCode);
         Room savedRoom = roomRepository.save(room);
-        System.out.println("Saved Room ID: " + savedRoom.getRoomId());
-        System.out.println("Host email: " + room.getHostEmail());
 
         //memberRoom 저장
         // 방장을 찾는다
@@ -132,17 +145,19 @@ public class RoomServiceImpl implements RoomService {
      */
     @Override
     public RoomResponseDTO update(RoomUpdateDTO roomUpdateDTO) {
-        Room room = roomRepository.findById(roomUpdateDTO.getRoomId())
+        Room room = roomRepository.findById(roomUpdateDTO.roomId())
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
 
-        room.changeCountry(roomUpdateDTO.getCountry());
-        room.changeTitle(roomUpdateDTO.getTitle());
+        // 로그인한 사용자가 해당 방의 방장이 맞는지 아닌지 확인 해야함.
+
+        room.changeCountry(roomUpdateDTO.country());
+        room.changeTitle(roomUpdateDTO.title());
 
         long oldSession = ChronoUnit.DAYS.between(room.getStartDate(), room.getEndDate())+1;
-        long newSession = ChronoUnit.DAYS.between(roomUpdateDTO.getStartDate(), roomUpdateDTO.getEndDate())+1;
+        long newSession = ChronoUnit.DAYS.between(roomUpdateDTO.startDate(), roomUpdateDTO.endDate())+1;
 
-        room.changeStartDate(roomUpdateDTO.getStartDate());
-        room.changeEndDate(roomUpdateDTO.getEndDate());
+        room.changeStartDate(roomUpdateDTO.startDate());
+        room.changeEndDate(roomUpdateDTO.endDate());
 
         if(newSession > oldSession){
             for(long i = oldSession + 1; i <= newSession; i++){
@@ -175,6 +190,8 @@ public class RoomServiceImpl implements RoomService {
     public void delete(String roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new NoSuchElementException("삭제할 방이 존재하지 않습니다."));
+
+        // 로그인한 사용자와 room.HostEmail이 맞지 않으면 오류처리 : 방장만 삭제 가능합니다
 
         scheduleRepository.deleteByRoomId(roomId);
         memberRoomRepository.deleteByRoomId(roomId);
