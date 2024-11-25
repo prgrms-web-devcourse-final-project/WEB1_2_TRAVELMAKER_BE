@@ -2,6 +2,7 @@ package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomResponseDTO;
+import edu.example.wayfarer.dto.room.RoomListDTO;
 
 import java.util.List;
 
@@ -13,6 +14,6 @@ public interface MemberRoomService {
 
     public List<MemberRoomResponseDTO> listByRoomId(String roomId);
 
-    public List<MemberRoomResponseDTO> listByEmail(String email);
+    public List<RoomListDTO> listByEmail(String email);
 
 }
