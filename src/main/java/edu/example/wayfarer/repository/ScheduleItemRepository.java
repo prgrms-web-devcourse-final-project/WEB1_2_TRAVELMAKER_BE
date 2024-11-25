@@ -15,6 +15,5 @@ public interface ScheduleItemRepository extends JpaRepository<ScheduleItem, Long
 
     void deleteByMarker_MarkerId(Long markerId);
 
-    ScheduleItem findByMarker_MarkerId(Long markerId);
 }
 

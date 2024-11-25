@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -131,12 +132,8 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
 
     @Override
     public ScheduleItemResponseDTO readByMarkerId(Long markerId) {
-        ScheduleItem scheduleItem = scheduleItemRepository.findByMarker_MarkerId(markerId);
-        return ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem);
+        return scheduleItemRepository.findByMarker_MarkerId(markerId)
+                .map(ScheduleItemConverter::toScheduleItemResponseDTO)
+                .orElseThrow(() -> new IllegalArgumentException("해당 마커 ID에 해당하는 ScheduleItem이 존재하지 않습니다: " + markerId));
     }
-
-    // 독립적으로 ScheduleItem 이 생성되고 삭제되는 경우는 없기 때문에 create delete 는 생략
-    // create -> Marker 의 confirm true 요청시 생성
-    // delete -> Marker 의 confirm false 요청시 삭제
-
 }

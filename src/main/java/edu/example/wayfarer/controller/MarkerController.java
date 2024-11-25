@@ -1,5 +1,6 @@
 package edu.example.wayfarer.controller;
 
+import edu.example.wayfarer.converter.WebSocketMessageConverter;
 import edu.example.wayfarer.dto.marker.MarkerRequestDTO;
 import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
 import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
@@ -55,27 +56,15 @@ public class MarkerController {
                 String email = (String) sessionAttributes.get("email");
 
                 //추출 한 값으로 MarkerRequestDTO 생성
-                MarkerRequestDTO markerRequestDTO = MarkerRequestDTO.builder()
-                        .email(email)
-                        .scheduleId(scheduleId)
-                        .lat(lat)
-                        .lng(lng)
-                        .build();
-
+                MarkerRequestDTO markerRequestDTO = new MarkerRequestDTO(email,scheduleId,lat,lng);
+                //MarkerRequestDTO로 markService.create() 실행
                 MarkerResponseDTO addedMarker = markerService.create(markerRequestDTO);
-                Map<String, Object> addedMarkerMessage = Map.of(
-                        "action", "ADDED_MARKER",
-                        "data", Map.of(
-                                "markerId", addedMarker.getMarkerId(),
-                                "email", addedMarker.getEmail(),
-                                "scheduleId", addedMarker.getScheduleId(),
-                                "lat", addedMarker.getLat(),
-                                "lng", addedMarker.getLng(),
-                                "color", addedMarker.getColor(),
-                                "confirm", addedMarker.getConfirm()
-                        )
-                );
+                //WebSocketMessageConverter를 사용해 메시지 객체 생성
+                WebSocketMessageConverter<MarkerResponseDTO> addConverter = new WebSocketMessageConverter<>();
+                WebSocketMessageConverter.WebsocketMessage<MarkerResponseDTO> addedMarkerMessage =
+                        addConverter.createMessage("ADDED_SCHEDULE", addedMarker);
 
+                //생성한 메시지를 "topic/schedule/{roomId}/map" 을 구독한 클라이언트들에게 브로드캐스팅합니다.
                 template.convertAndSend("/topic/room/" + roomId + "/map", addedMarkerMessage);
 
             case "UPDATE_MARKER":
@@ -83,43 +72,37 @@ public class MarkerController {
                 //클라이언트가 송신한 메시지인 markerPayload에서 markerId, confirm 값을 추출
                 Long markerId = (Long) ((Map<String, Object>) markerPayload.get("data")).get("markerId");
                 Boolean confirm = (Boolean) ((Map<String, Object>) markerPayload.get("data")).get("confirm");
+                String tempEmail = ((Map<String, Object>) markerPayload.get("data")).get("email").toString();
 
                 //추출 한 값으로 MarkerUpdateDTO 생성
-                MarkerUpdateDTO markerUpdateDTO = MarkerUpdateDTO.builder()
-                        .markerId(markerId)
-                        .confirm(confirm)
-                        .build();
+                MarkerUpdateDTO markerUpdateDTO = new MarkerUpdateDTO(markerId, confirm, tempEmail);
 
                 //마커 update는 확정변경만 존재한다.
                 MarkerResponseDTO updatedMarker = markerService.update(markerUpdateDTO);
-                Map<String, Object> updatedMarkerMessage = Map.of(
-                        "action", "UPDATED_MARKER",
-                        "data", Map.of(
-                                "message", "마커가 수정되었습니다.",
-                                "markerId", updatedMarker.getMarkerId(),
-                                "confirm", updatedMarker.getConfirm()
-                        )
-                );
+                //WebSocketMessageConverter를 사용해 메시지 객체 생성
+                WebSocketMessageConverter<MarkerResponseDTO> updateConverter = new WebSocketMessageConverter<>();
+                WebSocketMessageConverter.WebsocketMessage<MarkerResponseDTO> updatedMarkerMessage =
+                        updateConverter.createMessage("UPDATED_SCHEDULE", updatedMarker);
 
-                //전달 받은 confirm값이 true 이면
-                // markerService.update() 과정에서 등록된 scheduleItem의 값을 받아와
-                //ADDED_SCHEDULE 액션의 메시지를 송신한다
+
+                /*
+                전달 받은 confirm값이 true 이면
+                markerService.update() 과정에서 등록된 scheduleItem의 값을 받아와
+                ADDED_SCHEDULE 액션의 메시지를 송신한다
+                 */
                 if(confirm) {
                     ScheduleItemResponseDTO foundScheduleItem =  scheduleItemService.readByMarkerId(markerId);
-                    Map<String, Object> createdScheduleItemMessage = Map.of(
-                            "action", "ADDED_SCHEDULE",
-                            "data", Map.of(
-                                    "scheduleItemId", foundScheduleItem.getScheduleItemId(),
-                                    "markerId", foundScheduleItem.getMarkerId(),
-                                    "name", foundScheduleItem.getName(),
-                                    "address", foundScheduleItem.getAddress(),
-                                    "time", foundScheduleItem.getTime(),
-                                    "content", foundScheduleItem.getContent()
-                            )
-                    );
+
+                    //WebSocketMessageConverter를 사용해 메시지 객체 생성
+                    WebSocketMessageConverter<ScheduleItemResponseDTO> foundConverter = new WebSocketMessageConverter<>();
+                    WebSocketMessageConverter.WebsocketMessage<ScheduleItemResponseDTO> createdScheduleItemMessage =
+                            foundConverter.createMessage("ADDED_SCHEDULE", foundScheduleItem);
+
+                    //생성한 메시지를 "topic/schedule/{roomId}/schedule" 을 구독한 클라이언트들에게 브로드캐스팅합니다.
                     template.convertAndSend("/topic/room/" + roomId + "/schedule", createdScheduleItemMessage);
                 }
 
+                //생성한 메시지를 "topic/schedule/{roomId}/map" 을 구독한 클라이언트들에게 브로드캐스팅합니다.
                 template.convertAndSend("/topic/room/" + roomId + "/map", updatedMarkerMessage);
 
 
