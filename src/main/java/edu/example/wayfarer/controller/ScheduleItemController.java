@@ -39,7 +39,7 @@ public class ScheduleItemController {
                 Long scheduleId = (Long) ((Map<String, Object>) schedulePayload.get("data")).get("scheduleId");
                 List<ScheduleItemResponseDTO> scheduleItems = scheduleItemService.getListBySchedule(scheduleId);
 
-                WebSocketMessageConverter<List<ScheduleItemResponseDTO>> listConverter = new WebSocketMessageConverter<>(objectMapper);
+                WebSocketMessageConverter<List<ScheduleItemResponseDTO>> listConverter = new WebSocketMessageConverter<>();
 
                 WebSocketMessageConverter.WebsocketMessage<List<ScheduleItemResponseDTO>> listSchedulesMessage=
                 listConverter.createMessage("LIST_SCHEDULES", scheduleItems);
@@ -53,15 +53,9 @@ public class ScheduleItemController {
                 String name = ((Map<String, Object>) schedulePayload.get("data")).get("name").toString();
                 //String address = ((Map<String, Object>) schedulePayload.get("data")).get("address").toString();
                 Time time = (Time) ((Map<String, Object>) schedulePayload.get("data")).get("time");
-                String contet = ((Map<String, Object>) schedulePayload.get("data")).get("contet").toString();
+                String content = ((Map<String, Object>) schedulePayload.get("data")).get("contet").toString();
 
-                ScheduleItemUpdateDTO scheduleItemUpdateDTO = ScheduleItemUpdateDTO.builder()
-                        .scheduleItemId(scheduleItemId)
-                        .name(name)
-                        //.address(address)
-                        .time(time)
-                        .content(contet)
-                        .build();
+                ScheduleItemUpdateDTO scheduleItemUpdateDTO = new ScheduleItemUpdateDTO(scheduleItemId,name,content);
 
                 // ScheduleItemUpdateDTO로 scheduleItemService.update() 실행
                 ScheduleItemResponseDTO updatedScheduleItem = scheduleItemService.update(scheduleItemUpdateDTO);
@@ -76,20 +70,21 @@ public class ScheduleItemController {
 
             case "DELETE_SCHEDULE":
                 //1. 스케쥴 아이템 삭제
-                //2. 마커 컨펌: true->false, 마커 color: red-> 사용자색으로 변경
-                //3. 스케줄 아이템 삭제 메시지 전송, 마커 업데이트 메시지 전송
+                Long deleteScheduleItemId = (Long) ((Map<String, Object>) schedulePayload.get("data")).get("scheduleItemId");
+                scheduleItemService.delete(deleteScheduleItemId);
+                //2. 스케줄 아이템 삭제 메시지 전송, 마커 업데이트 메시지 전송
+                Map<String, Object> deletedScheduleItemMessage = Map.of(
+                        "action", "DELETED_SCHEDULE",
+                        "data", Map.of(
+                                "message", "일정이 삭제되었습니다."
+                        )
+                );
+                //3. 생성한 메시지를 "topic/schedule/{roomId}/schedule" 을 구독한 클라이언트들에게 브로드캐스팅합니다.
+                template.convertAndSend("/topic/schedule/" + roomId + "/schedule", deletedScheduleItemMessage);
+
 
             default:
                 throw new IllegalArgumentException("Invalid action: " + action);
-        }
-    }
-
-    public String convertListToJsonMessage(List<ScheduleItemResponseDTO> scheduleItems) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(scheduleItems);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to convert list to JSON", e);
         }
     }
 

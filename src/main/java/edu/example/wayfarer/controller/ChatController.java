@@ -22,7 +22,7 @@ public class ChatController {
             @Payload Map<String, Object> messagePayload
     ) {
         String action = (String) messagePayload.get("action");
-
+        System.out.println("action: " + action);
 
         if("ENTER_ROOM".equals(action)) {
             String email = (String) ((Map<String, Object>) messagePayload.get("data")).get("sender");
@@ -36,6 +36,7 @@ public class ChatController {
                     )
             );
 
+            System.out.println(welcomeMessage);
             template.convertAndSend("/topic/room/" + roomId, welcomeMessage);
         } else if ("SEND_MESSAGE".equals(action)) {
             template.convertAndSend("/topic/room/" + roomId, messagePayload);
