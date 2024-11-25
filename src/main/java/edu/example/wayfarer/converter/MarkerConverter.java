@@ -21,34 +21,34 @@ public class MarkerConverter {
         return Marker.builder()
                 .member(member)
                 .schedule(schedule)
-                .lat(markerRequestDTO.getLat())
-                .lng(markerRequestDTO.getLng())
+                .lat(markerRequestDTO.lat())
+                .lng(markerRequestDTO.lng())
                 .color(color)
                 .confirm(false)
                 .build();
     }
 
     public static MarkerResponseDTO toMarkerResponseDTO(Marker marker) {
-        return MarkerResponseDTO.builder()
-                .markerId(marker.getMarkerId())
-                .email(marker.getMember().getEmail())
-                .scheduleId(marker.getSchedule().getScheduleId())
-                .lat(marker.getLat())
-                .lng(marker.getLng())
-                .color(marker.getColor().getHexCode())
-                .confirm(marker.getConfirm())
-                .createdAt(marker.getCreatedAt())
-                .updatedAt(marker.getUpdatedAt())
-                .build();
+        return new MarkerResponseDTO(
+                marker.getMarkerId(),
+                marker.getMember().getEmail(),
+                marker.getSchedule().getScheduleId(),
+                marker.getLat(),
+                marker.getLng(),
+                marker.getColor().getHexCode(),
+                marker.getConfirm(),
+                marker.getCreatedAt(),
+                marker.getUpdatedAt()
+        );
     }
 
     public static MarkerListDTO toMarkerListDTO(
             Long scheduleId,
             List<MarkerResponseDTO> markerList
     ) {
-        return MarkerListDTO.builder()
-                .scheduleId(scheduleId)
-                .markerList(markerList)
-                .build();
+        return new MarkerListDTO(
+                scheduleId,
+                markerList
+        );
     }
 }
