@@ -27,6 +27,12 @@ public class MainController {
         return ResponseEntity.ok(roomService.create(roomRequestDTO));
     }
 
+    //단일 방 정보 조회
+    @GetMapping("/{roomId}")
+    public ResponseEntity<RoomResponseDTO> readRoom(@PathVariable("roomId") String roomId) {
+        return ResponseEntity.ok(roomService.read(roomId));
+    }
+
     // 방 정보 수정
     @PutMapping
     public ResponseEntity<RoomResponseDTO> updateRoom(@RequestBody RoomUpdateDTO roomUpdateDTO) {
