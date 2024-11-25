@@ -170,6 +170,11 @@ public class MarkerServiceImpl implements MarkerService {
         Marker foundMarker = markerRepository.findById(markerId)
                 .orElseThrow(MarkerException.NOT_FOUND::get);
 
+        // 확정마커일 경우 삭제 불가
+        if (foundMarker.getConfirm()) {
+            throw MarkerException.DELETE_FAIL.get();
+        }
+
         // Marker 삭제
         markerRepository.delete(foundMarker);
     }
