@@ -90,6 +90,7 @@ public class MarkerController {
                         .confirm(confirm)
                         .build();
 
+                //마커 update는 확정변경만 존재한다.
                 MarkerResponseDTO updatedMarker = markerService.update(markerUpdateDTO);
                 Map<String, Object> updatedMarkerMessage = Map.of(
                         "action", "UPDATED_MARKER",
@@ -100,7 +101,10 @@ public class MarkerController {
                         )
                 );
 
-                if(confirm == true) {
+                //전달 받은 confirm값이 true 이면
+                // markerService.update() 과정에서 등록된 scheduleItem의 값을 받아와
+                //ADDED_SCHEDULE 액션의 메시지를 송신한다
+                if(confirm) {
                     ScheduleItemResponseDTO foundScheduleItem =  scheduleItemService.readByMarkerId(markerId);
                     Map<String, Object> createdScheduleItemMessage = Map.of(
                             "action", "ADDED_SCHEDULE",
