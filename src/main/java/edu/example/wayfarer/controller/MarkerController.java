@@ -77,8 +77,7 @@ public class MarkerController {
             case "UPDATE_MARKER":
 
                 //클라이언트가 송신한 메시지인 markerPayload에서 markerId, confirm 값을 추출
-                Integer intMarkerId = (Integer) ((Map<String, Object>) markerPayload.get("data")).get("markerId");
-                Long markerId = intMarkerId.longValue();
+                Long markerId = ((Number) ((Map<String, Object>) markerPayload.get("data")).get("markerId")).longValue();
                 Boolean confirm = (Boolean) ((Map<String, Object>) markerPayload.get("data")).get("confirm");
 
                 //추출 한 값으로 MarkerUpdateDTO 생성
@@ -118,8 +117,7 @@ public class MarkerController {
 
             case "DELETE_MARKER":
                 //클라이언트가 송신한 메시지인 markerPayload에서 markerId 값을 추출
-                Integer intdeleteMarkerId = (Integer) ((Map<String, Object>) markerPayload.get("data")).get("markerId");
-                Long deleteMarkerId = intdeleteMarkerId.longValue();
+                Long deleteMarkerId = ((Number) ((Map<String, Object>) markerPayload.get("data")).get("markerId")).longValue();
                 //추출한 markerId를 매개변수로 delete 메서드 실행
                 markerService.delete(deleteMarkerId);
                 Map<String, Object> deletedMarkerMessage = new LinkedHashMap<>();

@@ -160,8 +160,7 @@ public class MarkerServiceTests {
     public void testUpdateMarkerTrue() {
         MarkerUpdateDTO markerUpdateDTO = new MarkerUpdateDTO(
                 1L,
-                true,
-                "member1@abc.com"
+                true
         );
 
         System.out.println("6. 마커 확정 테스트");
