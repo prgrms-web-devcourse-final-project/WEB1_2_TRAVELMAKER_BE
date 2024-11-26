@@ -5,7 +5,6 @@ import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemUpdateDTO;
 import edu.example.wayfarer.service.ScheduleItemService;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -18,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/scheduleItem")
 @RequiredArgsConstructor
-public class ScheduleItemController {
+public class ScheduleItemAPIController {
     private final ScheduleItemService scheduleItemService;
 
     @GetMapping("/{scheduleItemId}")

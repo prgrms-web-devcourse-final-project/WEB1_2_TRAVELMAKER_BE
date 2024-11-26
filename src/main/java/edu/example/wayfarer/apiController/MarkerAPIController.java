@@ -15,7 +15,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/marker")
 @RequiredArgsConstructor
-public class MarkerController {
+public class MarkerAPIController {
 
     private final MarkerService markerService;
 
