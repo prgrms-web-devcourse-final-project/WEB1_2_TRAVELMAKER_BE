@@ -1,4 +1,4 @@
-package edu.example.wayfarer.api_controller;
+package edu.example.wayfarer.apiController;
 
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemUpdateDTO;

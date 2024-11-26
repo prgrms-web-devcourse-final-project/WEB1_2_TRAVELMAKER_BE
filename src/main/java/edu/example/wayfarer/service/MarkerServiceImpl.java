@@ -43,6 +43,12 @@ public class MarkerServiceImpl implements MarkerService {
      */
     @Override
     public MarkerResponseDTO create(MarkerRequestDTO markerRequestDTO) {
+        // 스케쥴의 마커 갯수가 100개 이상일 경우 예외
+        Long totalMakerCount = markerRepository.countBySchedule_ScheduleId(markerRequestDTO.scheduleId());
+        if (totalMakerCount >= 100) {
+            throw MarkerException.MAX_LIMIT_EXCEEDED.get();
+        }
+
         // 마커 생성을 위한 Member 조회
         Member member = memberRepository.findById(markerRequestDTO.email())
                 .orElseThrow(() -> new RuntimeException("Member not found"));
@@ -181,7 +187,11 @@ public class MarkerServiceImpl implements MarkerService {
 
     // Marker 의 자식 ScheduleItem 생성 메서드
     private void saveScheduleItem(Marker marker) {
-
+        // 스케쥴의 확정 마커 갯수가 50개 이상일 경우 예외
+        Long confirmedCount = markerRepository.countBySchedule_ScheduleIdAndConfirmTrue(marker.getSchedule().getScheduleId());
+        if (confirmedCount >= 50) {
+            throw MarkerException.CONFIRMED_LIMIT_EXCEEDED.get();
+        }
         // Marker 의 위도, 경도 값으로 주소 조회
         String address = geocodingUtil.reverseGeocoding(marker.getLat(), marker.getLng());
 
