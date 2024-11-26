@@ -8,6 +8,7 @@ public record ScheduleItemResponseDTO(
         String name,
         String address,
         String content,
+        int itemOrder,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {}
