@@ -18,5 +18,7 @@ public interface ScheduleItemService {
 
     void delete(Long scheduleItemId);
 
+    ScheduleItemResponseDTO readByMarkerId(Long markerId);
+
     Page<ScheduleItemResponseDTO> getPageBySchedule(Long scheduleId, PageRequestDTO pageRequestDTO);
 }

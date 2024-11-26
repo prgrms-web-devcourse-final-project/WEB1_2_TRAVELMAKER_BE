@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -180,7 +181,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
                         foundMarker.getSchedule().getRoom().getRoomId()
                 )
         );
-        
+
         // 변경사항 저장
         markerRepository.save(foundMarker);
     }
@@ -191,6 +192,14 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
                 .orElseThrow(()-> new RuntimeException("memberRoom not found"))
                 .getColor();
+    }
+
+
+    @Override
+    public ScheduleItemResponseDTO readByMarkerId(Long markerId) {
+        return scheduleItemRepository.findByMarker_MarkerId(markerId)
+                .map(ScheduleItemConverter::toScheduleItemResponseDTO)
+                .orElseThrow(() -> new IllegalArgumentException("해당 마커 ID에 해당하는 ScheduleItem이 존재하지 않습니다: " + markerId));
     }
 
     // itemOrder 수정 메서드
@@ -235,5 +244,6 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     public int getIndex(Long scheduleItemId, Long scheduleId) {
         return scheduleItemRepository.findIndexByScheduleItemId(scheduleItemId, scheduleId);
     }
+
 
 }
