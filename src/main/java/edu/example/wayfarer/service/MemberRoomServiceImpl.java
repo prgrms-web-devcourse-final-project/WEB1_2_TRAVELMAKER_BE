@@ -87,7 +87,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
         return new MemberRoomResponseDTO(memberRoom);
     }
 
-    /* delete 설명
+    /* delete 설명 (퇴장)
     1. 방을 퇴장하려는 사용자가 방장이 아닐 경우, memberRoom 데이터 하나만 삭제
     2. 방을 퇴장하려는 사용자가 방장일 경우, 방장은 그 다음 Color인 사람으로 바뀌고 memberRoom 데이터 하나만 삭제
      */
