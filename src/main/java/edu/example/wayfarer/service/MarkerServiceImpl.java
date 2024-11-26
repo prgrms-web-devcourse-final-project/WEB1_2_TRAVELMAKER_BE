@@ -50,6 +50,7 @@ public class MarkerServiceImpl implements MarkerService {
         }
 
         // 마커 생성을 위한 Member 조회
+        // 로그인 구현 이후 수정 예정
         Member member = memberRepository.findById(markerRequestDTO.email())
                 .orElseThrow(() -> new RuntimeException("Member not found"));
 
