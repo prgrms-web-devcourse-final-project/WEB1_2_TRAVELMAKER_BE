@@ -27,13 +27,13 @@ public class RoomServiceTest {
     @Transactional
     @Commit
     public void testCreateRoom() {
-        RoomRequestDTO roomRequestDTO = new RoomRequestDTO();
-        roomRequestDTO.setTitle("크리스마스 흐흐");
-        roomRequestDTO.setCountry("서울");
-        roomRequestDTO.setStartDate(LocalDate.of(2024,12,23));
-        roomRequestDTO.setEndDate(LocalDate.of(2024,12,27));
-        roomRequestDTO.setHostEmail("aa@aa.com");
-
+        RoomRequestDTO roomRequestDTO = new RoomRequestDTO(
+                "고향",
+                "캐나다",
+                LocalDate.of(2024, 11, 29),
+                LocalDate.of(2024, 11, 30),
+                "jj@jj.com" // 임시 이메일
+        );
         RoomResponseDTO result = roomService.create(roomRequestDTO);
         assertNotNull(result);
     }
@@ -52,17 +52,17 @@ public class RoomServiceTest {
     @Commit
     public void testUpdateRoom() {
         String roomId = "TSNAnwj4";
-        RoomUpdateDTO roomUpdateDTO = new RoomUpdateDTO();
-        roomUpdateDTO.setRoomId(roomId);
-        roomUpdateDTO.setCountry("중국");
-        roomUpdateDTO.setTitle("후후탕후루를먹자");
-        roomUpdateDTO.setStartDate(LocalDate.of(2025,1,1));
-        roomUpdateDTO.setEndDate(LocalDate.of(2025,1,3));
-
+        RoomUpdateDTO roomUpdateDTO = new RoomUpdateDTO(
+                "TSNAnwj4", // roomId
+                "후후탕후루를먹자", // title
+                "중국", // country
+                LocalDate.of(2025, 1, 1), // startDate
+                LocalDate.of(2025, 1, 3)  // endDate
+        );
         RoomResponseDTO result = roomService.update(roomUpdateDTO);
         assertNotNull(result);
-        assertEquals("중국", result.getCountry());
-        assertEquals("후후탕후루를먹자", result.getTitle());
+        assertEquals("중국", result.country());
+        assertEquals("후후탕후루를먹자", result.title());
     }
 
     @Test

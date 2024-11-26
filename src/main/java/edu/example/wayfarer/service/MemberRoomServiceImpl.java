@@ -2,11 +2,13 @@ package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomResponseDTO;
+import edu.example.wayfarer.dto.room.RoomListDTO;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.MemberRoom;
 import edu.example.wayfarer.entity.Room;
 import edu.example.wayfarer.entity.enums.Color;
 import edu.example.wayfarer.exception.MemberRoomException;
+import edu.example.wayfarer.exception.RoomException;
 import edu.example.wayfarer.repository.MemberRepository;
 import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.RoomRepository;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,23 +41,21 @@ public class MemberRoomServiceImpl implements MemberRoomService {
      */
     @Override
     public MemberRoomResponseDTO create(MemberRoomRequestDTO memberRoomRequestDTO) {
-        Room room = roomRepository.findById(memberRoomRequestDTO.getRoomId())
+        Room room = roomRepository.findById(memberRoomRequestDTO.roomId())
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
 
         // MemberRoomRequestDTO에 있는 roomId와 roomCode가 맞는지 확인
-        if(!room.getRoomCode().equals(memberRoomRequestDTO.getRoomCode())) {
-            System.out.println(room.getRoomCode());
-            System.out.println(memberRoomRequestDTO.getRoomCode());
+        if(!room.getRoomCode().equals(memberRoomRequestDTO.roomCode())) {
             throw MemberRoomException.INVALID_ROOMCODE.get();
         }
 
         // Member currentUser 임시 대체
-        Member member = memberRepository.findById(memberRoomRequestDTO.getEmail())
+        Member member = memberRepository.findById(memberRoomRequestDTO.email())
                 .orElseThrow(()-> new NoSuchElementException("해당 유저는 없는 유저입니다."));
 
-        boolean memberExistsInRoom = memberRoomRepository.findAllByRoom_RoomId(memberRoomRequestDTO.getRoomId())
+        boolean memberExistsInRoom = memberRoomRepository.findAllByRoom_RoomId(memberRoomRequestDTO.roomId())
                 .stream()
-                .anyMatch(existingMemberRoom -> existingMemberRoom.getMember().getEmail().equals(memberRoomRequestDTO.getEmail()));
+                .anyMatch(existingMemberRoom -> existingMemberRoom.getMember().getEmail().equals(memberRoomRequestDTO.email()));
 
         if(memberExistsInRoom) { // -> 나중엔 뭐 currentUser.getEmail() 이런식으로 받겠죠?
             throw MemberRoomException.DUPLICATED_MEMBER.get();
@@ -65,7 +66,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
         Color[] colors = Color.values();
         for (int i = 1; i< colors.length; i++) {
             Color color = colors[i];
-            if(!memberRoomRepository.existsByRoom_RoomIdAndColor(memberRoomRequestDTO.getRoomId(), color)){
+            if(!memberRoomRepository.existsByRoom_RoomIdAndColor(memberRoomRequestDTO.roomId(), color)){
                 assignedColor = color;
                 break;  // 사용 가능한 첫 번째 Color 발견
             }
@@ -133,12 +134,23 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     }
 
     @Override
-    public List<MemberRoomResponseDTO> listByEmail(String email) {
-        List<MemberRoom> memberRooms = memberRoomRepository.findAllByMember_Email(email);
+    public List<RoomListDTO> listByEmail(String email) {
+        try {
+            List<MemberRoom> memberRooms = memberRoomRepository.findAllByMember_Email(email);
 
-        return memberRooms.stream()
-                .map(MemberRoomResponseDTO::new)
-                .toList();
+            List<RoomListDTO> roomListDTOS = memberRooms.stream()
+                    .map(memberRoom -> {
+                        Room room = roomRepository.findById(memberRoom.getRoom().getRoomId())
+                                .orElseThrow(RoomException.DOESNT_EXIST::get);
+                        return new RoomListDTO(room);
+                    })
+                    .collect(Collectors.toList());
+
+            return roomListDTOS;
+        }catch (Exception e) {
+            throw RoomException.DOESNT_EXIST.get();
+        }
+
     }
 
 
