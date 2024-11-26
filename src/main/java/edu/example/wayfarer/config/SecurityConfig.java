@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 //임시 config 파일입니다.
+
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -26,4 +27,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }

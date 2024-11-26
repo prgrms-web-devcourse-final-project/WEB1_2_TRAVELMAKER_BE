@@ -12,14 +12,14 @@
 ## 💻 FE_Team
 |👑방정배|👨🏻‍💻전나영|👨🏻‍💻김현빈|
 |:---:|:---:|:---:|
-|FE_TeamLeader & GitAdmin|FE_Developer|FE_Developer|
+|TeamLeader & Git_Admin|Developer|Developer|
 |[jeongbaebang](https://github.com/jeongbaebang)|[jny4867](https://github.com/jny4867)|[hyunbin78](https://github.com/hyunbin78)
 |![](https://avatars.githubusercontent.com/u/57677452?v=4)|![](https://avatars.githubusercontent.com/u/147975027?v=4)|![](https://avatars.githubusercontent.com/u/101693956?v=4)|
 
 ## 💻 BE_Team
 |👑허찬솔|📝박현우|👨🏻‍💻김세현|👨🏻‍💻임현규|👨🏻‍💻이용민|
 |:---:|:---:|:---:|:---:|:---:|
-|BE_TeamLeader|PM|BE_GitAdmin|BE_Developer|BE_Developer|
+|TeamLeader|PM & AWS_Admin|Git_Admin|Developer|Developer|
 |[iamnahc](https://github.com/iamnahc)|[ObjectGipi](https://github.com/ObjectGipi)|[chadoli27](https://github.com/chadoli27)|[LimHyeonGyu](https://github.com/LimHyeonGyu)|[lǐ_róng_mín](https://github.com/Yi-YongMin)|
 |![](https://avatars.githubusercontent.com/u/90306923?v=4)|![](https://avatars.githubusercontent.com/u/177755524?v=4)|![](https://avatars.githubusercontent.com/u/148460430?v=4)|![](https://avatars.githubusercontent.com/u/90891022?v=4)|![](https://avatars.githubusercontent.com/u/96493001?v=4)|
 
