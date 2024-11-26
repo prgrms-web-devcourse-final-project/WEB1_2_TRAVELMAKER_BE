@@ -34,8 +34,7 @@ public class ScheduleItemController {
 
         switch (action) {
             case "LIST_SCHEDULES":
-                Integer intScheduleId = (Integer) ((Map<String, Object>) schedulePayload.get("data")).get("scheduleId");
-                Long scheduleId = intScheduleId.longValue();
+                Long scheduleId = ((Number) ((Map<String, Object>) schedulePayload.get("data")).get("scheduleId")).longValue();
                 List<ScheduleItemResponseDTO> scheduleItems = scheduleItemService.getListBySchedule(scheduleId);
 
                 WebSocketMessageConverter<List<ScheduleItemResponseDTO>> listConverter = new WebSocketMessageConverter<>();
@@ -54,8 +53,11 @@ public class ScheduleItemController {
                 Long scheduleItemId = intScheduleItemId.longValue();
                 String name = ((Map<String, Object>) schedulePayload.get("data")).get("name").toString();
                 String content = ((Map<String, Object>) schedulePayload.get("data")).get("content").toString();
+                Long previousItemId = ((Number) ((Map<String, Object>) schedulePayload.get("data")).get("previousItemId")).longValue();
+                Long nextItemId = ((Number) ((Map<String, Object>) schedulePayload.get("data")).get("nextItemId")).longValue();
 
-                ScheduleItemUpdateDTO scheduleItemUpdateDTO = new ScheduleItemUpdateDTO(scheduleItemId,name,content);
+
+                ScheduleItemUpdateDTO scheduleItemUpdateDTO = new ScheduleItemUpdateDTO(scheduleItemId,name,content,previousItemId,nextItemId);
 
                 // ScheduleItemUpdateDTO로 scheduleItemService.update() 실행
                 ScheduleItemResponseDTO updatedScheduleItem = scheduleItemService.update(scheduleItemUpdateDTO);

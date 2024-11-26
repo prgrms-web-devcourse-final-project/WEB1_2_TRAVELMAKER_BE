@@ -197,9 +197,10 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
 
     @Override
     public ScheduleItemResponseDTO readByMarkerId(Long markerId) {
-        return scheduleItemRepository.findByMarker_MarkerId(markerId)
-                .map(ScheduleItemConverter::toScheduleItemResponseDTO)
-                .orElseThrow(() -> new IllegalArgumentException("해당 마커 ID에 해당하는 ScheduleItem이 존재하지 않습니다: " + markerId));
+        Optional<ScheduleItem> scheduleItem = scheduleItemRepository.findByMarker_MarkerId(markerId);
+        ScheduleItem item = scheduleItem.orElseThrow(() -> new IllegalArgumentException("해당 마커 ID에 해당하는 ScheduleItem이 존재하지 않습니다: " + markerId));
+        int itemIndex = getIndex(scheduleItem.get().getScheduleItemId(), scheduleItem.get().getMarker().getSchedule().getScheduleId());
+        return ScheduleItemConverter.toScheduleItemResponseDTO(item, itemIndex);
     }
 
     // itemOrder 수정 메서드
