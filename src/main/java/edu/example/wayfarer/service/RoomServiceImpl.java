@@ -132,6 +132,9 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponseDTO read(String roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
+
+        List<MemberRoom> members = memberRoomRepository.findAllByRoom_RoomId(roomId);
+        room.setMemberRooms(members);
         return new RoomResponseDTO(room);
     }
 
