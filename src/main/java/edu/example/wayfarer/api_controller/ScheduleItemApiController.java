@@ -17,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/scheduleItem")
 @RequiredArgsConstructor
-public class ScheduleItemAPIController {
+public class ScheduleItemApiController {
     private final ScheduleItemService scheduleItemService;
 
     @GetMapping("/{scheduleItemId}")
