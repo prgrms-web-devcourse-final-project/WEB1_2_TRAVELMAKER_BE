@@ -1,7 +1,6 @@
-package edu.example.wayfarer.apiController;
+package edu.example.wayfarer.api_controller;
 
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
-import edu.example.wayfarer.dto.memberRoom.MemberRoomResponseDTO;
 import edu.example.wayfarer.dto.room.RoomListDTO;
 import edu.example.wayfarer.dto.room.RoomRequestDTO;
 import edu.example.wayfarer.dto.room.RoomResponseDTO;
