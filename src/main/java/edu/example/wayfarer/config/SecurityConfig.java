@@ -24,6 +24,9 @@ public class SecurityConfig {
         http.csrf((auth) -> auth.disable()); // CSRF 비활성화
         http.formLogin((auth) -> auth.disable()); // Form Login 비활성화
         http.httpBasic((auth) -> auth.disable()); // HTTP Basic 비활성화
+        http
+                .authorizeRequests()
+                .requestMatchers("/**").permitAll();
 
         return http.build();
     }

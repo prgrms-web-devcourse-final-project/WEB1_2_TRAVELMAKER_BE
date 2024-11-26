@@ -34,8 +34,7 @@ public class ScheduleItemController {
 
         switch (action) {
             case "LIST_SCHEDULES":
-                Integer intScheduleId = (Integer) ((Map<String, Object>) schedulePayload.get("data")).get("scheduleId");
-                Long scheduleId = intScheduleId.longValue();
+                Long scheduleId = ((Number) ((Map<String, Object>) schedulePayload.get("data")).get("scheduleId")).longValue();
                 List<ScheduleItemResponseDTO> scheduleItems = scheduleItemService.getListBySchedule(scheduleId);
 
                 WebSocketMessageConverter<List<ScheduleItemResponseDTO>> listConverter = new WebSocketMessageConverter<>();
