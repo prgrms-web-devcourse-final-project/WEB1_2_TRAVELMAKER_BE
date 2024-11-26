@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Controller
@@ -27,14 +28,13 @@ public class ChatController {
         if("ENTER_ROOM".equals(action)) {
             String email = (String) ((Map<String, Object>) messagePayload.get("data")).get("sender");
 
-            Map<String, Object> welcomeMessage = Map.of(
-                    "action", "WELCOME_MESSAGE",
-                    "data", Map.of(
-                            "sender", "System",
-                            "message", email + " 님이 입장하셨습니다.",
-                            "timestamp", new Date().toString()
-                    )
-            );
+            Map<String, Object> welcomeMessage = new LinkedHashMap<>();
+            welcomeMessage.put("action", "WELCOME_MESSAGE");
+            welcomeMessage.put("data", Map.of(
+                    "sender", "System",
+                    "message", email+" 님이 입장하셨습니다.",
+                    "timestamp", new Date().toString()
+            ));
 
             System.out.println(welcomeMessage);
             template.convertAndSend("/topic/room/" + roomId, welcomeMessage);
