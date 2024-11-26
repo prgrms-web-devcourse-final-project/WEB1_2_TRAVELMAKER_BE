@@ -48,7 +48,9 @@ public class ScheduleItemServiceTests {
         ScheduleItemUpdateDTO updateDTO = new ScheduleItemUpdateDTO(
                 1L,
                 "Updated Name",
-                "Updated Content"
+                "Updated Content",
+                null,
+                null
         );
 
         ScheduleItemResponseDTO result = scheduleItemService.update(updateDTO);

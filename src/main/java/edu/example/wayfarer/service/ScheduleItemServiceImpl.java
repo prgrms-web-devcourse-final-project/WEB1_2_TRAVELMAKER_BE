@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,8 +42,11 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         ScheduleItem scheduleItem = scheduleItemRepository.findById(scheduleItemId)
                 .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
-        // 조회된 scheduleItem 을 ScheduleItemResponseDTO 로 변환 후 반환
-        return ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem);
+        // scheduleItem 의 index 를 구하는 메서드 호출
+        int itemOrderIndex = getIndex(scheduleItemId, scheduleItem.getMarker().getSchedule().getScheduleId());
+
+        // 조회된 scheduleItem 과 index 를 ScheduleItemResponseDTO 로 변환 후 반환
+        return ScheduleItemConverter.toScheduleItemResponseDTO(scheduleItem, itemOrderIndex);
     }
 
     /**
@@ -55,11 +59,19 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     @Override
     public List<ScheduleItemResponseDTO> getListBySchedule(Long scheduleId) {
         // scheduleId 를 기준으로 scheduleItem 리스트 조회
-        List<ScheduleItem> scheduleItems = scheduleItemRepository.findByMarker_Schedule_ScheduleId(scheduleId);
+        List<ScheduleItem> scheduleItems =
+                scheduleItemRepository.findByMarker_Schedule_ScheduleIdOrderByItemOrderAsc(scheduleId);
+
+        // 순차적인 정수 index 부여
+        AtomicInteger index = new AtomicInteger(0);
 
         // 조회된 ScheduleItem 리스트를 ScheduleItemResponseDTO 리스트로 변환하여 반환
         return scheduleItems.stream()
-                .map(ScheduleItemConverter::toScheduleItemResponseDTO)
+                .map(scheduleItem ->
+                        ScheduleItemConverter.toScheduleItemResponseDTO(
+                                scheduleItem, index.getAndIncrement()
+                        )
+                )
                 .collect(Collectors.toList());
     }
 
@@ -84,11 +96,27 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         if (scheduleItemUpdateDTO.content() != null) {
             scheduleItem.changeContent(scheduleItemUpdateDTO.content());
         }
+        // itemOrder(순서) 수정
+        if (scheduleItemUpdateDTO.previousItemId() != null || scheduleItemUpdateDTO.nextItemId() != null) {
+            // itemOrder 수정 메서드 호출
+            updateItemOrder(
+                    scheduleItem,
+                    scheduleItemUpdateDTO.previousItemId(),
+                    scheduleItemUpdateDTO.nextItemId()
+            );
+        }
 
         // 수정한 ScheduleItem 저장
         ScheduleItem savedScheduleItem = scheduleItemRepository.save(scheduleItem);
-        // 수정된 ScheduleItem 을 ScheduleItemResponseDTO 로 변환하여 반환
-        return ScheduleItemConverter.toScheduleItemResponseDTO(savedScheduleItem);
+
+        // ScheduleItem 의 index 를 구하는 메서드 호출
+        int itemOrderIndex = getIndex(
+                savedScheduleItem.getScheduleItemId(),
+                savedScheduleItem.getMarker().getSchedule().getScheduleId()
+        );
+
+        // 수정된 ScheduleItem 과 index 를 ScheduleItemResponseDTO 로 변환하여 반환
+        return ScheduleItemConverter.toScheduleItemResponseDTO(savedScheduleItem, itemOrderIndex);
     }
 
     /**
@@ -130,10 +158,56 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
                 .getColor();
     }
 
+
     @Override
     public ScheduleItemResponseDTO readByMarkerId(Long markerId) {
         return scheduleItemRepository.findByMarker_MarkerId(markerId)
                 .map(ScheduleItemConverter::toScheduleItemResponseDTO)
                 .orElseThrow(() -> new IllegalArgumentException("해당 마커 ID에 해당하는 ScheduleItem이 존재하지 않습니다: " + markerId));
     }
+
+    // itemOrder 수정 메서드
+    private void updateItemOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
+
+        Double newItemOrder = 0.0;
+
+        if (previousItemId != null && nextItemId != null) {  // 두개의 일정 사이로 이동할 경우
+            // 앞의 ScheduleItem 조회
+            ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
+                    .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+            // 뒤의 ScheduleItem 조회
+            ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
+                    .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 앞과 뒤의 itemOrder 를 더한 값의 중간 값으로 새로운 itemOrder 생성
+            newItemOrder = (previousItem.getItemOrder() + nextItem.getItemOrder()) / 2.0;
+
+        } else if (previousItemId != null) {  // 제일 뒤로 이동할 경우
+            // 앞의 ScheduleItem 조회
+            ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
+                    .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 앞의 itemOrder 의 정수 부분에 1.0 을 더한 값으로 새로운 itemOrder 생성
+            newItemOrder = Math.floor(previousItem.getItemOrder()) + 1.0;
+        } else if (nextItemId != null) {  // 제일 앞으로 이동할 경우
+            // 뒤의 ScheduleItem 조회
+            ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
+                    .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 0 과 nextItem.itemOrder 의 중간 값으로 새로운 itemOrder 생성
+            newItemOrder = (0.0 + nextItem.getItemOrder()) / 2.0;
+        } else {
+            throw ScheduleItemException.INVALID_REQUEST.get();
+        }
+
+        // scheduleItem 객체의 itemOrder 변경
+        scheduleItem.changeItemOrder(newItemOrder);
+    }
+
+    // scheduleItem 의 index 를 구하는 메서드
+    public int getIndex(Long scheduleItemId, Long scheduleId) {
+        return scheduleItemRepository.findIndexByScheduleItemId(scheduleItemId, scheduleId);
+    }
+
+
 }

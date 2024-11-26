@@ -30,6 +30,7 @@ public class ScheduleItem {
     private String name;
     private String address;
     private String content;
+    private Double itemOrder;
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -43,6 +44,10 @@ public class ScheduleItem {
 
     public void changeContent(String content) {
         this.content = content;
+    }
+
+    public void changeItemOrder(Double itemOrder) {
+        this.itemOrder = itemOrder;
     }
 
 }
