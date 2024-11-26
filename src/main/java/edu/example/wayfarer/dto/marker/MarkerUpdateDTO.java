@@ -2,6 +2,5 @@ package edu.example.wayfarer.dto.marker;
 
 public record MarkerUpdateDTO(
         Long markerId,
-        Boolean confirm,
-        String email
+        Boolean confirm
 ) {}
