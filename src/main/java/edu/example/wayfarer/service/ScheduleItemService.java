@@ -1,7 +1,10 @@
 package edu.example.wayfarer.service;
 
+import edu.example.wayfarer.dto.common.PageRequestDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemUpdateDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -14,4 +17,6 @@ public interface ScheduleItemService {
     ScheduleItemResponseDTO update(ScheduleItemUpdateDTO scheduleItemUpdateDTO);
 
     void delete(Long scheduleItemId);
+
+    Page<ScheduleItemResponseDTO> getPageBySchedule(Long scheduleId, PageRequestDTO pageRequestDTO);
 }
