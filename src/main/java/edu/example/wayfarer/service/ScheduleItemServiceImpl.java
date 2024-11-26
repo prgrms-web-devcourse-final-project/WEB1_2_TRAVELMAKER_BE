@@ -206,30 +206,53 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     // itemOrder 수정 메서드
     private void updateItemOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
 
+        Long scheduleId = scheduleItem.getMarker().getSchedule().getScheduleId();
         Double newItemOrder = 0.0;
 
         if (previousItemId != null && nextItemId != null) {  // 두개의 일정 사이로 이동할 경우
-            // 앞의 ScheduleItem 조회
+            // 앞에 위치할 ScheduleItem 조회
             ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
-            // 뒤의 ScheduleItem 조회
+            // 뒤에 이치할 ScheduleItem 조회
             ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 두개의 아이템 사이에 다른 아이템이 없는지 체크
+            Boolean exists = scheduleItemRepository.existsBetweenItemOrders(
+                    scheduleId,
+                    previousItem.getItemOrder(),
+                    nextItem.getItemOrder()
+            );
+            if (exists) {
+                throw ScheduleItemException.IDS_INVALID.get();
+            }
 
             // 앞과 뒤의 itemOrder 를 더한 값의 중간 값으로 새로운 itemOrder 생성
             newItemOrder = (previousItem.getItemOrder() + nextItem.getItemOrder()) / 2.0;
 
         } else if (previousItemId != null) {  // 제일 뒤로 이동할 경우
-            // 앞의 ScheduleItem 조회
+            // 앞에 위치할 ScheduleItem 조회
             ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 조회한 객체가 제일 마지막 순서 인지 체크
+            Double maxItemOrder = scheduleItemRepository.findMaxItemOrderByScheduleId(scheduleId);
+            if (previousItem.getItemOrder() < maxItemOrder) {
+                throw ScheduleItemException.IDS_INVALID.get();
+            }
 
             // 앞의 itemOrder 의 정수 부분에 1.0 을 더한 값으로 새로운 itemOrder 생성
             newItemOrder = Math.floor(previousItem.getItemOrder()) + 1.0;
         } else if (nextItemId != null) {  // 제일 앞으로 이동할 경우
-            // 뒤의 ScheduleItem 조회
+            // 뒤에 위치할 ScheduleItem 조회
             ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 조회한 객체가 제일 첫번째 순서 인지 체크
+            Double minItemOrder = scheduleItemRepository.findMinItemOrderByScheduleId(scheduleId);
+            if (nextItem.getItemOrder() > minItemOrder) {
+                throw ScheduleItemException.IDS_INVALID.get();
+            }
 
             // 0 과 nextItem.itemOrder 의 중간 값으로 새로운 itemOrder 생성
             newItemOrder = (0.0 + nextItem.getItemOrder()) / 2.0;
