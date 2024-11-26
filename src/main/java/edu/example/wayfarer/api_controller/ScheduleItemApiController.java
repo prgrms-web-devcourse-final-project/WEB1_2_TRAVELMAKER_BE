@@ -14,7 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/scheduleItem")
 @RequiredArgsConstructor
-public class ScheduleItemController {
+public class ScheduleItemApiController {
     private final ScheduleItemService scheduleItemService;
 
     @GetMapping("/{scheduleItemId}")
@@ -45,3 +45,5 @@ public class ScheduleItemController {
         return ResponseEntity.ok(Map.of("message", "success delete"));
     }
 }
+
+
