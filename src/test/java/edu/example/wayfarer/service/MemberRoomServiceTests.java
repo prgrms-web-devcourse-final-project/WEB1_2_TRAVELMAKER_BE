@@ -27,8 +27,7 @@ public class MemberRoomServiceTests {
     public void testCreateMemberRoom() {
         MemberRoomRequestDTO memberRoomRequestDTO = new MemberRoomRequestDTO(
                 "SMAZCett",
-                "nyNqsifP",
-                "aa@aa.com"
+                "nyNqsifP"
         );
         memberRoomService.create(memberRoomRequestDTO);
     }
@@ -40,7 +39,7 @@ public class MemberRoomServiceTests {
         String email = "aa@aa.com";
         String roomId = "xu688Ljt";
 
-        memberRoomService.delete(email, roomId);
+        memberRoomService.delete(roomId);
     }
 
     @Test
@@ -53,7 +52,7 @@ public class MemberRoomServiceTests {
     @Test
     public void testListByEmail(){
         String email = "aa@aa.com";
-        List<RoomListDTO> rooms = memberRoomService.listByEmail(email);
+        List<RoomListDTO> rooms = memberRoomService.listByEmail();
         System.out.println(rooms);
     }
 

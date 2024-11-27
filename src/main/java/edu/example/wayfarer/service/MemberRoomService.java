@@ -14,6 +14,6 @@ public interface MemberRoomService {
 
     public List<MemberRoomResponseDTO> listByRoomId(String roomId);
 
-    public List<RoomListDTO> listByEmail(String email);
+    public List<RoomListDTO> listByEmail();
 
 }

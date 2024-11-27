@@ -136,9 +136,10 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     }
 
     @Override
-    public List<RoomListDTO> listByEmail(String email) {
+    public List<RoomListDTO> listByEmail() {
         try {
-            List<MemberRoom> memberRooms = memberRoomRepository.findAllByMember_Email(email);
+            Member currentUser = securityUtil.getCurrentUser();
+            List<MemberRoom> memberRooms = memberRoomRepository.findAllByMember_Email(currentUser.getEmail());
 
             List<RoomListDTO> roomListDTOS = memberRooms.stream()
                     .map(memberRoom -> {

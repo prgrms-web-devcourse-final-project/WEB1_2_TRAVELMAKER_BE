@@ -30,9 +30,7 @@ public class SecurityUtil {
 
     public Member getCurrentUser(){
         Authentication authentication = getAuthentication();
-        System.out.println("authentication = " + authentication);
         Object principal = authentication.getPrincipal();
-        System.out.println("principal = " + principal);
 
         if(principal instanceof PrincipalDetails){
             PrincipalDetails principalDetails = (PrincipalDetails) principal;
