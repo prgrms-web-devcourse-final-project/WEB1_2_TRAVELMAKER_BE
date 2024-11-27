@@ -144,16 +144,18 @@ public class AuthServiceImpl implements AuthService {
         // JWT Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
         accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(false); // 프로덕션에서는 true로 설정
+        accessTokenCookie.setSecure(true); // 프로덕션 환경에서는 반드시 true, 로컬에서는 false로 테스트 가능
         accessTokenCookie.setPath("/");
         accessTokenCookie.setMaxAge((int) jwtUtil.getAccessTokenValiditySeconds());
+        accessTokenCookie.setComment("SameSite=None; Secure"); // 중요: 크로스 사이트 쿠키 허용을 위해 설정
         httpServletResponse.addCookie(accessTokenCookie);
 
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
         refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(false); // 프로덕션에서는 true로 설정
+        refreshTokenCookie.setSecure(true); // 프로덕션 환경에서는 반드시 true, 로컬에서는 false로 테스트 가능
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge((int) jwtUtil.getRefreshTokenValiditySeconds());
+        refreshTokenCookie.setComment("SameSite=None; Secure"); // 중요: 크로스 사이트 쿠키 허용을 위해 설정
         httpServletResponse.addCookie(refreshTokenCookie);
 
         return member;

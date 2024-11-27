@@ -4,6 +4,7 @@ import edu.example.wayfarer.auth.constant.SecurityConstants;
 import edu.example.wayfarer.auth.filter.*;
 import edu.example.wayfarer.auth.userdetails.PrincipalDetailsService;
 import edu.example.wayfarer.auth.util.JwtUtil;
+import edu.example.wayfarer.service.AuthService; // AuthService 추가
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +28,7 @@ public class SecurityConfig {
     private final PrincipalDetailsService principalDetailsService;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
-    // PasswordEncoerder Been 등록
+    // PasswordEncoder Bean 등록
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -47,7 +48,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthService authService) throws Exception { // AuthService 추가
 
         // cors disable
         http.cors(cors -> cors
@@ -84,7 +85,7 @@ public class SecurityConfig {
         );
 
         // JwtFilter를 UsernamePasswordAuthenticationFilter 이전에 추가
-        http.addFilterBefore(new JwtFilter(jwtUtil, principalDetailsService),
+        http.addFilterBefore(new JwtFilter(jwtUtil, principalDetailsService, authService),
                 UsernamePasswordAuthenticationFilter.class);
 
         // JwtExceptionFilter를 JwtFilter 이후에 추가

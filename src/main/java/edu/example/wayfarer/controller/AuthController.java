@@ -11,6 +11,7 @@ import edu.example.wayfarer.service.AuthService;
 import edu.example.wayfarer.auth.util.GoogleUtil;
 import edu.example.wayfarer.auth.util.JwtUtil;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,7 @@ public class AuthController {
 
     // Google 및 Kakao 콜백 엔드포인트 통합
     @GetMapping("/{provider}/callback")
-    public BaseResponse<MemberResponseDTO.JoinResultDTO> socialCallback(@PathVariable("provider") String provider,
+    public void socialCallback(@PathVariable("provider") String provider,
                                                                         @RequestParam("code") String accessCode,
                                                                         HttpServletResponse httpServletResponse) {
         Member member;
@@ -77,25 +78,34 @@ public class AuthController {
         } else {
             throw new AuthHandler(ErrorStatus._INVALID_PROVIDER);
         }
-        return BaseResponse.onSuccess(MemberConverter.toJoinResultDTO(member));
+        //return BaseResponse.onSuccess(MemberConverter.toJoinResultDTO(member));
+        try {
+            // 로그인 성공 후 메인 페이지로 리다이렉트
+            httpServletResponse.sendRedirect("http://localhost:8080/");
+        } catch (IOException e) {
+            log.error("Redirect Error: {}", e.getMessage());
+            throw new AuthHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
+        }
     }
 
-    // Refresh Token을 이용해 Access Token 갱신 엔드포인트 통합
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshAccessToken(@RequestBody Map<String, String> request, HttpServletResponse response) {
-        String refreshToken = request.get("refreshToken");
+    public ResponseEntity<?> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = getRefreshTokenFromCookies(request);
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Refresh Token not found"));
+        }
+
         try {
             String newAccessToken = authService.refreshAccessToken(refreshToken);
             String email = jwtUtil.getEmailFromRefreshToken(refreshToken);
             String newRefreshToken = jwtUtil.createRefreshToken(email);
 
-            // 새로운 토큰을 HttpOnly 쿠키에 설정
+            // 새로운 Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
             setCookie(response, "accessToken", newAccessToken, jwtUtil.getAccessTokenValiditySeconds());
             setCookie(response, "refreshToken", newRefreshToken, jwtUtil.getRefreshTokenValiditySeconds());
 
             return ResponseEntity.ok(Map.of(
-                    "accessToken", newAccessToken,
-                    "refreshToken", newRefreshToken
+                    "accessToken", newAccessToken // Refresh Token은 쿠키에 저장되므로 응답 본문에 포함하지 않음
             ));
         } catch (AuthHandler e) {
             log.error("Refresh Token Error: {}", e.getMessage());
@@ -103,6 +113,17 @@ public class AuthController {
                     "message", e.getMessage()
             ));
         }
+    }
+
+    // 쿠키에서 Refresh Token 추출 메서드 추가
+    private String getRefreshTokenFromCookies(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+        for (Cookie cookie : request.getCookies()) {
+            if ("refreshToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 
     // 단일 통합 로그아웃 엔드포인트

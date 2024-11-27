@@ -120,15 +120,4 @@ public class KakaoUtil {
             throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
         }
     }
-
-    // 추가된 메서드: Access Token으로부터 이메일 추출
-    public String getEmailFromAccessToken(String accessToken) {
-        KakaoDTO.KakaoProfile profile = requestProfile(new KakaoDTO.OAuthToken() {{
-            setAccess_token(accessToken);
-        }});
-        if (profile != null && profile.getKakao_account() != null && profile.getKakao_account().getEmail() != null) {
-            return profile.getKakao_account().getEmail();
-        }
-        return null;
-    }
 }
