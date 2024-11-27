@@ -1,5 +1,6 @@
 package edu.example.wayfarer.service;
 
+import edu.example.wayfarer.apiPayload.exception.AuthorizationException;
 import edu.example.wayfarer.auth.util.KakaoUtil;
 import edu.example.wayfarer.auth.util.SecurityUtil;
 import edu.example.wayfarer.dto.room.RoomRequestDTO;
@@ -159,7 +160,10 @@ public class RoomServiceImpl implements RoomService {
                 .orElseThrow(() -> new NoSuchElementException("삭제할 방이 존재하지 않습니다."));
 
         // 로그인한 사용자와 room.HostEmail이 맞지 않으면 오류처리 : 방장만 삭제 가능합니다
-
+        Member currentUser = securityUtil.getCurrentUser();
+        if(!currentUser.getEmail().equals(room.getHostEmail())){
+            throw new AuthorizationException("권한이 없습니다.");
+        }
         scheduleRepository.deleteByRoomId(roomId);
         memberRoomRepository.deleteByRoomId(roomId);
         roomRepository.delete(room);
