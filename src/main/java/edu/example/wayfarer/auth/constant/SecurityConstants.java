@@ -12,12 +12,14 @@ public class SecurityConstants {
             "/login",
             "/auth/kakao/callback/**",
             "/auth/login/google", // 구글 경로 추가
-            "/login/oauth2/code/google", // OAuth 리다이렉트 경로 추가
+            //"/login/oauth2/code/google", // OAuth 리다이렉트 경로 추가
             "/logout",
             "/refresh",
             "/favicon.ico",
-            "/", // 메인페이지
-            "/auth/logout"
+            "/auth/logout",
+            "/auth/refresh",
+            //"/index.html"
+            //"/", // 메인페이지
      };
 
     // 허용 Urls
