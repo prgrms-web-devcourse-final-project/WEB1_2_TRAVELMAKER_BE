@@ -37,8 +37,8 @@ public class RoomController {
     }
 
     // 방 퇴장
-    @DeleteMapping("/leave")
-    public ResponseEntity<Map<String, String>> leaveRoom(@RequestParam("roomId") String roomId) {
+    @DeleteMapping("/leave/{roomId}")
+    public ResponseEntity<Map<String, String>> leaveRoom(@PathVariable("roomId") String roomId) {
         memberRoomService.delete(roomId);
         return ResponseEntity.ok(Map.of("message", "퇴장하였습니다."));
     }
