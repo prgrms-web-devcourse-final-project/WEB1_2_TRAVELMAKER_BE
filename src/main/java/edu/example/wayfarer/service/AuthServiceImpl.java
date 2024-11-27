@@ -80,19 +80,8 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.save(token);
 
         // JWT Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
-        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(false); // 프로덕션에서는 true로 설정
-        accessTokenCookie.setPath("/");
-        accessTokenCookie.setMaxAge((int) jwtUtil.getAccessTokenValiditySeconds());
-        httpServletResponse.addCookie(accessTokenCookie);
-
-        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(false); // 프로덕션에서는 true로 설정
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge((int) jwtUtil.getRefreshTokenValiditySeconds());
-        httpServletResponse.addCookie(refreshTokenCookie);
+        setCookie(httpServletResponse, "accessToken", accessToken, jwtUtil.getAccessTokenValiditySeconds(), false);
+        setCookie(httpServletResponse, "refreshToken", refreshToken, jwtUtil.getRefreshTokenValiditySeconds(), false);
 
         return member;
     }
@@ -142,23 +131,24 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.save(token);
 
         // JWT Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
-        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(true); // 프로덕션 환경에서는 반드시 true, 로컬에서는 false로 테스트 가능
-        accessTokenCookie.setPath("/");
-        accessTokenCookie.setMaxAge((int) jwtUtil.getAccessTokenValiditySeconds());
-        accessTokenCookie.setComment("SameSite=None; Secure"); // 중요: 크로스 사이트 쿠키 허용을 위해 설정
-        httpServletResponse.addCookie(accessTokenCookie);
-
-        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true); // 프로덕션 환경에서는 반드시 true, 로컬에서는 false로 테스트 가능
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge((int) jwtUtil.getRefreshTokenValiditySeconds());
-        refreshTokenCookie.setComment("SameSite=None; Secure"); // 중요: 크로스 사이트 쿠키 허용을 위해 설정
-        httpServletResponse.addCookie(refreshTokenCookie);
+        setCookie(httpServletResponse, "accessToken", accessToken, jwtUtil.getAccessTokenValiditySeconds(), false);
+        setCookie(httpServletResponse, "refreshToken", refreshToken, jwtUtil.getRefreshTokenValiditySeconds(), false);
 
         return member;
+    }
+
+    // 공통 쿠키 설정 메서드
+    private void setCookie(HttpServletResponse response, String name, String value, long maxAge, boolean isSecure) {
+        Cookie cookie = new Cookie(name, value);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(isSecure); // 프로덕션 환경에서는 true로 설정
+        cookie.setPath("/");
+        cookie.setMaxAge((int) maxAge);
+        // 쿠키에 SameSite 속성 설정
+        response.addHeader("Set-Cookie",
+                String.format("%s=%s; Max-Age=%d; Path=%s; HttpOnly; %s",
+                        name, value, maxAge, "/", (isSecure ? "Secure; " : "") + "SameSite=None"));
+        response.addCookie(cookie);
     }
 
     @Override

@@ -19,7 +19,7 @@ public class SecurityConstants {
             "/auth/logout",
             "/auth/refresh",
             //"/index.html"
-            "/", // 메인페이지
+            //"/", // 메인페이지
      };
 
     // 허용 Urls
