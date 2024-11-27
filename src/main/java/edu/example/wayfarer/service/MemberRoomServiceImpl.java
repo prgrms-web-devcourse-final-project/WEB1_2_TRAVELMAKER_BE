@@ -1,5 +1,6 @@
 package edu.example.wayfarer.service;
 
+import edu.example.wayfarer.auth.util.SecurityUtil;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomResponseDTO;
 import edu.example.wayfarer.dto.room.RoomListDTO;
@@ -29,6 +30,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     private final MemberRoomRepository memberRoomRepository;
     private final RoomRepository roomRepository;
     private final MemberRepository memberRepository;
+    private final SecurityUtil securityUtil;
 
     /*
     create 설명
@@ -49,15 +51,12 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             throw MemberRoomException.INVALID_ROOMCODE.get();
         }
 
-        // Member currentUser 임시 대체
-        Member member = memberRepository.findById(memberRoomRequestDTO.email())
-                .orElseThrow(()-> new NoSuchElementException("해당 유저는 없는 유저입니다."));
-
+        Member currentUser = securityUtil.getCurrentUser();
         boolean memberExistsInRoom = memberRoomRepository.findAllByRoom_RoomId(memberRoomRequestDTO.roomId())
                 .stream()
-                .anyMatch(existingMemberRoom -> existingMemberRoom.getMember().getEmail().equals(memberRoomRequestDTO.email()));
+                .anyMatch(existingMemberRoom -> existingMemberRoom.getMember().getEmail().equals(currentUser.getEmail()));
 
-        if(memberExistsInRoom) { // -> 나중엔 뭐 currentUser.getEmail() 이런식으로 받겠죠?
+        if(memberExistsInRoom) {
             throw MemberRoomException.DUPLICATED_MEMBER.get();
         }
 
@@ -79,7 +78,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
         MemberRoom memberRoom = MemberRoom.builder()
                 .room(room)
-                .member(member)
+                .member(currentUser)
                 .color(assignedColor).build();
 
         room.getMemberRooms().add(memberRoom);
@@ -94,18 +93,19 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     2. 방을 퇴장하려는 사용자가 방장일 경우, 방장은 그 다음 Color인 사람으로 바뀌고 memberRoom 데이터 하나만 삭제
      */
     @Override
-    public void delete(String email, String roomId) {
+    public void delete(String roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
 
-        if(room.getHostEmail().equals(email)) {
+        Member currentUser = securityUtil.getCurrentUser();
+        if(room.getHostEmail().equals(currentUser.getEmail())) {
             // 현재 방장의 MemberRoom 조회
-            MemberRoom currentHost = memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
+            MemberRoom currentHost = memberRoomRepository.findByMember_EmailAndRoom_RoomId(currentUser.getEmail(), roomId)
                     .orElseThrow(() -> new NoSuchElementException("이미 없는 회원입니다.")); // 여기 사실 방장이 없으면 안되는 건데..
 
             // 다음 방장 선정: 남은 멤버 중 Color 인덱스가 가장 작은 사람
             MemberRoom nextHost = memberRoomRepository.findAllByRoom_RoomId(roomId).stream()
-                    .filter(memberRoom -> !memberRoom.getMember().getEmail().equals(email)) // 방장 제외
+                    .filter(memberRoom -> !memberRoom.getMember().getEmail().equals(room.getHostEmail())) // 방장 제외
                     .min(Comparator.comparingInt(memberRoom -> memberRoom.getColor().ordinal())) // Color 인덱스 기준 정렬
                     .orElseThrow(() -> new IllegalStateException("방에 남아 있는 회원이 없어 방을 유지할 수 없습니다."));
 
@@ -116,7 +116,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             // 기존 방장의 MemberRoom 삭제
             memberRoomRepository.delete(currentHost);
         }else {
-            MemberRoom memberRoom = memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
+            MemberRoom memberRoom = memberRoomRepository.findByMember_EmailAndRoom_RoomId(currentUser.getEmail(), roomId)
                     .orElseThrow(()-> new NoSuchElementException("이미 없는 회원입니다."));
             memberRoomRepository.delete(memberRoom);
         }
