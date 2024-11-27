@@ -13,4 +13,9 @@ public interface MarkerRepository extends JpaRepository<Marker, Long> {
     Optional<Marker> findByScheduleItem_ScheduleItemId(Long scheduleItemId);
 
     Boolean existsBySchedule_ScheduleId(Long scheduleId);
+
+    Long countBySchedule_ScheduleId(Long scheduleId);
+
+    Long countBySchedule_ScheduleIdAndConfirmTrue(Long scheduleId);
+
 }
