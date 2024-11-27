@@ -4,6 +4,7 @@ import edu.example.wayfarer.apiPayload.code.status.ErrorStatus;
 import edu.example.wayfarer.apiPayload.exception.handler.AuthHandler;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,22 +34,27 @@ public class JwtUtil {
         this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
     }
 
-    // HTTP 요청의 'Authorization' 헤더에서 JWT 액세스 토큰을 검색
+    // HTTP 요청의 'Authorization' 헤더 또는 쿠키에서 JWT 액세스 토큰을 검색
     public String resolveAccessToken(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
 
-        if (authorization == null) {
-            log.warn("[*] Authorization header is null");
-        } else if (!authorization.startsWith("Bearer ")) {
-            log.warn("[*] Authorization header does not start with Bearer");
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            log.info("[*] Token found in header");
+            return authorization.split(" ")[1];
         }
 
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            log.warn("[*] No Token in req");
-            throw new AuthHandler(ErrorStatus._TOKEN_NOT_FOUND);
+        // 헤더에 없으면 쿠키에서 검색
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    log.info("[*] Token found in cookies: {}", cookie.getValue());
+                    return cookie.getValue();
+                }
+            }
         }
-        log.info("[*] Token exists");
-        return authorization.split(" ")[1];
+
+        log.warn("[*] No Access Token found in request");
+        return null;
     }
 
     // Access Token 생성

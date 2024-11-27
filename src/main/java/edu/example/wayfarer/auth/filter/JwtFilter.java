@@ -49,17 +49,6 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             String accessToken = jwtUtil.resolveAccessToken(request);
 
-            // Access Token이 헤더에 없는 경우 쿠키에서 가져오기
-            if (accessToken == null || accessToken.isEmpty()) {
-                log.info("Access Token not found in header, attempting to retrieve from cookies.");
-                accessToken = resolveAccessTokenFromCookies(request);
-                if (accessToken != null) {
-                    log.info("Access Token successfully retrieved from cookies.");
-                } else {
-                    log.warn("Access Token not found in cookies.");
-                }
-            }
-
             if (accessToken != null && jwtUtil.isAccessTokenValid(accessToken)) {
                 String email = jwtUtil.getEmail(accessToken);
                 UserDetails userDetails = principalDetailsService.loadUserByUsername(email);
@@ -72,6 +61,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 } else {
                     throw new AuthHandler(ErrorStatus._NOT_FOUND_MEMBER);
                 }
+            } else {
+                log.warn("Access token is invalid or not present");
             }
         } catch (AuthHandler e) {
             handleAuthError(e, response);
