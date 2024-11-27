@@ -30,7 +30,6 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     private final MemberRoomRepository memberRoomRepository;
     private final RoomRepository roomRepository;
     private final MemberRepository memberRepository;
-    private final SecurityUtil securityUtil;
 
     /*
     create 설명
@@ -51,7 +50,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             throw MemberRoomException.INVALID_ROOMCODE.get();
         }
 
-        Member currentUser = securityUtil.getCurrentUser();
+        Member currentUser = memberRepository.findByEmail(memberRoomRequestDTO.email()).get();
         boolean memberExistsInRoom = memberRoomRepository.findAllByRoom_RoomId(memberRoomRequestDTO.roomId())
                 .stream()
                 .anyMatch(existingMemberRoom -> existingMemberRoom.getMember().getEmail().equals(currentUser.getEmail()));
@@ -93,14 +92,13 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     2. 방을 퇴장하려는 사용자가 방장일 경우, 방장은 그 다음 Color인 사람으로 바뀌고 memberRoom 데이터 하나만 삭제
      */
     @Override
-    public void delete(String roomId) {
+    public void delete(Member member, String roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
 
-        Member currentUser = securityUtil.getCurrentUser();
-        if(room.getHostEmail().equals(currentUser.getEmail())) {
+        if(room.getHostEmail().equals(member.getEmail())) {
             // 현재 방장의 MemberRoom 조회
-            MemberRoom currentHost = memberRoomRepository.findByMember_EmailAndRoom_RoomId(currentUser.getEmail(), roomId)
+            MemberRoom currentHost = memberRoomRepository.findByMember_EmailAndRoom_RoomId(member.getEmail(), roomId)
                     .orElseThrow(() -> new NoSuchElementException("이미 없는 회원입니다.")); // 여기 사실 방장이 없으면 안되는 건데..
 
             // 다음 방장 선정: 남은 멤버 중 Color 인덱스가 가장 작은 사람
@@ -116,7 +114,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             // 기존 방장의 MemberRoom 삭제
             memberRoomRepository.delete(currentHost);
         }else {
-            MemberRoom memberRoom = memberRoomRepository.findByMember_EmailAndRoom_RoomId(currentUser.getEmail(), roomId)
+            MemberRoom memberRoom = memberRoomRepository.findByMember_EmailAndRoom_RoomId(member.getEmail(), roomId)
                     .orElseThrow(()-> new NoSuchElementException("이미 없는 회원입니다."));
             memberRoomRepository.delete(memberRoom);
         }
@@ -136,10 +134,9 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     }
 
     @Override
-    public List<RoomListDTO> listByEmail() {
+    public List<RoomListDTO> listByEmail(Member member) {
         try {
-            Member currentUser = securityUtil.getCurrentUser();
-            List<MemberRoom> memberRooms = memberRoomRepository.findAllByMember_Email(currentUser.getEmail());
+            List<MemberRoom> memberRooms = memberRoomRepository.findAllByMember_Email(member.getEmail());
 
             List<RoomListDTO> roomListDTOS = memberRooms.stream()
                     .map(memberRoom -> {
