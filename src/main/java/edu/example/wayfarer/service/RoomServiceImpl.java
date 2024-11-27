@@ -1,5 +1,8 @@
 package edu.example.wayfarer.service;
 
+import edu.example.wayfarer.apiPayload.exception.AuthorizationException;
+import edu.example.wayfarer.auth.util.KakaoUtil;
+import edu.example.wayfarer.auth.util.SecurityUtil;
 import edu.example.wayfarer.dto.room.RoomRequestDTO;
 import edu.example.wayfarer.dto.room.RoomResponseDTO;
 import edu.example.wayfarer.dto.room.RoomUpdateDTO;
@@ -11,10 +14,7 @@ import edu.example.wayfarer.entity.enums.Color;
 import edu.example.wayfarer.entity.enums.Days;
 import edu.example.wayfarer.entity.enums.PlanType;
 import edu.example.wayfarer.exception.RoomException;
-import edu.example.wayfarer.repository.MemberRepository;
-import edu.example.wayfarer.repository.MemberRoomRepository;
-import edu.example.wayfarer.repository.RoomRepository;
-import edu.example.wayfarer.repository.ScheduleRepository;
+import edu.example.wayfarer.repository.*;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +33,9 @@ public class RoomServiceImpl implements RoomService {
     private final MemberRepository memberRepository;
     private final MemberRoomRepository memberRoomRepository;
     private final ScheduleRepository scheduleRepository;
+    private final KakaoUtil kakaoUtil;
+    private final TokenRepository tokenRepository;
+    private final SecurityUtil securityUtil;
 
     /*
     create 설명
@@ -52,12 +55,14 @@ public class RoomServiceImpl implements RoomService {
         // 날짜 유효성 검사
         validateDates(roomRequestDTO);
 
+        Member currentUser = securityUtil.getCurrentUser();
+
         Room room = Room.builder()
                 .title(roomRequestDTO.title())
                 .country(roomRequestDTO.country())
                 .startDate(roomRequestDTO.startDate())
                 .endDate(roomRequestDTO.endDate())
-                .hostEmail(roomRequestDTO.hostEmail())
+                .hostEmail(currentUser.getEmail())
                 .memberRooms(new ArrayList<>())
                 .build();
 
@@ -71,12 +76,12 @@ public class RoomServiceImpl implements RoomService {
 
         //memberRoom 저장
         // currentUser로 지정 나중에
-        Member foundMember = memberRepository.findById(room.getHostEmail()).orElseThrow();
+//        Member foundMember = memberRepository.findById(room.getHostEmail()).orElseThrow();
         // Color enum을 배열화
         Color[] colors = Color.values();
         // memberRoom을 build
         MemberRoom memberRoom = MemberRoom.builder()
-                .member(foundMember)
+                .member(currentUser)
                 .room(savedRoom)
                 .color(colors[1]).build();
         savedRoom.getMemberRooms().add(memberRoom);
@@ -111,7 +116,11 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(roomUpdateDTO.roomId())
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
 
-        // 로그인한 사용자가 해당 방의 방장이 맞는지 아닌지 확인 해야함.
+        // 로그인한 사용자가 해당 방의 방장이 맞는지 아닌지 확인
+        Member currentUser = securityUtil.getCurrentUser();
+        if(!currentUser.getEmail().equals(room.getHostEmail())){
+            throw new AuthorizationException("권한이 없습니다.");
+        }
 
         room.changeCountry(roomUpdateDTO.country());
         room.changeTitle(roomUpdateDTO.title());
@@ -155,7 +164,10 @@ public class RoomServiceImpl implements RoomService {
                 .orElseThrow(() -> new NoSuchElementException("삭제할 방이 존재하지 않습니다."));
 
         // 로그인한 사용자와 room.HostEmail이 맞지 않으면 오류처리 : 방장만 삭제 가능합니다
-
+        Member currentUser = securityUtil.getCurrentUser();
+        if(!currentUser.getEmail().equals(room.getHostEmail())){
+            throw new AuthorizationException("권한이 없습니다.");
+        }
         scheduleRepository.deleteByRoomId(roomId);
         memberRoomRepository.deleteByRoomId(roomId);
         roomRepository.delete(room);

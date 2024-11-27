@@ -28,9 +28,9 @@ public class MainController {
     }
 
     // 방리스트 조회
-    @GetMapping("/list/{email}")
-    public ResponseEntity<List<RoomListDTO>> getListByEmail(@PathVariable("email") String email) {
-        List<RoomListDTO> rooms = memberRoomService.listByEmail(email);
+    @GetMapping("/list")
+    public ResponseEntity<List<RoomListDTO>> getListByEmail() {
+        List<RoomListDTO> rooms = memberRoomService.listByEmail();
         return ResponseEntity.ok(rooms);
     }
 
