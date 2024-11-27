@@ -82,6 +82,8 @@ public class MemberRoomServiceImpl implements MemberRoomService {
                 .member(member)
                 .color(assignedColor).build();
 
+        room.getMemberRooms().add(memberRoom);
+
         memberRoomRepository.save(memberRoom);
 
         return new MemberRoomResponseDTO(memberRoom);

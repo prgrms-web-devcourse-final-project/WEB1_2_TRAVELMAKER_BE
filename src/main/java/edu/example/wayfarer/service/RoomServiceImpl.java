@@ -17,11 +17,10 @@ import edu.example.wayfarer.repository.RoomRepository;
 import edu.example.wayfarer.repository.ScheduleRepository;
 
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,9 +33,6 @@ public class RoomServiceImpl implements RoomService {
     private final MemberRepository memberRepository;
     private final MemberRoomRepository memberRoomRepository;
     private final ScheduleRepository scheduleRepository;
-
-    @Autowired
-    private ModelMapper modelMapper;
 
     /*
     create 설명
@@ -53,23 +49,8 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional
     public RoomResponseDTO create(RoomRequestDTO roomRequestDTO) {
-        // 여행 끝 날짜가 더 나중이 맞는지 확인
-        if(roomRequestDTO.startDate().isAfter(roomRequestDTO.endDate())) {
-            throw RoomException.INVALID_DATE.get();
-        }
-
-        //여행 기간이 30일 이내인지 확인
-        long daysBetween = ChronoUnit.DAYS.between(roomRequestDTO.startDate(), roomRequestDTO.endDate()) + 1;
-        if(daysBetween > 30) {
-            throw RoomException.OVER_30DAYS.get();
-        }
-
-        System.out.println("RoomRequestDTO hostEmail: " + roomRequestDTO.hostEmail());
-
-        // 이 모델매퍼가 hostEmail을 전달을 못해줘서 일단 주석처리해뒀습니다.
-//        Room room = modelMapper.map(roomRequestDTO, Room.class);
-//        System.out.println("Mapped Room: " + room.toString());
-//        System.out.println("Host email: " + room.getHostEmail());
+        // 날짜 유효성 검사
+        validateDates(roomRequestDTO);
 
         Room room = Room.builder()
                 .title(roomRequestDTO.title())
@@ -77,22 +58,19 @@ public class RoomServiceImpl implements RoomService {
                 .startDate(roomRequestDTO.startDate())
                 .endDate(roomRequestDTO.endDate())
                 .hostEmail(roomRequestDTO.hostEmail())
+                .memberRooms(new ArrayList<>())
                 .build();
 
-        // roomId 생성하고 중복 확인
-        String roomId;
-        String roomCode;
-        do{
-            room.generateRoomIdAndRoomCode();
-            roomId = room.getRoomId();
-            roomCode = room.getRoomCode();
-        }while (roomRepository.existsById(roomId));
-        room.setRoomId(roomId);
-        room.setRoomCode(roomCode);
+        // 랜덤 roomId와 roomCode 생성
+        generateRoomIdAndCode(room);
+        // url 생성
+        String url = generateRoomUrl(room.getRoomId());
+        room.setUrl(url);
+        // 방 저장
         Room savedRoom = roomRepository.save(room);
 
         //memberRoom 저장
-        // 방장을 찾는다
+        // currentUser로 지정 나중에
         Member foundMember = memberRepository.findById(room.getHostEmail()).orElseThrow();
         // Color enum을 배열화
         Color[] colors = Color.values();
@@ -101,29 +79,11 @@ public class RoomServiceImpl implements RoomService {
                 .member(foundMember)
                 .room(savedRoom)
                 .color(colors[1]).build();
+        savedRoom.getMemberRooms().add(memberRoom);
         memberRoomRepository.save(memberRoom);
 
         // schedule 저장
-        List<Schedule> schedules = new ArrayList<>();
-
-        Days[] days = Days.values();
-        for(int i = 0; i < daysBetween; i++) {
-            for (PlanType planType : PlanType.values()){
-                schedules.add(Schedule.builder()
-                        .room(savedRoom)
-                        .planType(planType)
-                        .date(days[i])
-                        .build()
-                );
-            }
-        }
-        for (Schedule schedule : schedules) {
-            System.out.println("Schedule: date=" + schedule.getDate() +
-                    ", planType=" + schedule.getPlanType() +
-                    ", roomId=" + (schedule.getRoom() != null ? schedule.getRoom().getRoomId() : "null"));
-            // 이 시스템 아웃은 그냥 확인용으로 찍어본 것입니다
-            scheduleRepository.save(schedule);
-        }
+        saveSchedules(savedRoom, roomRequestDTO.startDate(), roomRequestDTO.endDate());
 
         return new RoomResponseDTO(savedRoom);
     }
@@ -199,6 +159,52 @@ public class RoomServiceImpl implements RoomService {
         scheduleRepository.deleteByRoomId(roomId);
         memberRoomRepository.deleteByRoomId(roomId);
         roomRepository.delete(room);
+    }
+
+    private void validateDates(RoomRequestDTO roomRequestDTO) {
+        if(roomRequestDTO.startDate().isAfter(roomRequestDTO.endDate())){
+            throw RoomException.INVALID_DATE.get();
+        }
+
+        long daysBetween = ChronoUnit.DAYS.between(roomRequestDTO.startDate(), roomRequestDTO.endDate()) + 1;
+        if(daysBetween > 30){
+            throw RoomException.OVER_30DAYS.get();
+        }
+    }
+
+    private void generateRoomIdAndCode(Room room){
+        String roomId;
+        String roomCode;
+        do {
+            room.generateRoomIdAndRoomCode();
+            roomId = room.getRoomId();
+            roomCode = room.getRoomCode();
+        } while (roomRepository.existsById(roomId));
+
+        room.setRoomId(roomId);
+        room.setRoomCode(roomCode);
+    }
+
+    private String generateRoomUrl(String roomId){
+        return "https://wayfarer.com/rooms/" + roomId;
+    }
+
+    private void saveSchedules(Room room, LocalDate startDate, LocalDate endDate) {
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        List<Schedule> schedules = new ArrayList<>();
+
+        Days[] days = Days.values();
+        for(int i = 0; i < daysBetween; i++) {
+            for (PlanType planType : PlanType.values()){
+                schedules.add(Schedule.builder()
+                        .room(room)
+                        .planType(planType)
+                        .date(days[i])
+                        .build()
+                );
+            }
+        }
+        scheduleRepository.saveAll(schedules);
     }
 
 }
