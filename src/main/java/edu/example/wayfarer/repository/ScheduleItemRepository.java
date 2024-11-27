@@ -1,6 +1,8 @@
 package edu.example.wayfarer.repository;
 
 import edu.example.wayfarer.entity.ScheduleItem;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +13,8 @@ import java.util.Optional;
 public interface ScheduleItemRepository extends JpaRepository<ScheduleItem, Long> {
 
     List<ScheduleItem> findByMarker_Schedule_ScheduleId(Long scheduleId);
+
+    Page<ScheduleItem> findByMarker_Schedule_ScheduleId(Long scheduleId, Pageable pageable);
 
     Optional<ScheduleItem> findByMarker_MarkerId(Long markerId);
 
@@ -44,6 +48,17 @@ public interface ScheduleItemRepository extends JpaRepository<ScheduleItem, Long
             "AND si.itemOrder < (SELECT s.itemOrder FROM ScheduleItem s WHERE s.scheduleItemId = :scheduleItemId)")
     int findIndexByScheduleItemId(@Param("scheduleItemId") Long scheduleItemId, @Param("scheduleId") Long scheduleId);
 
-
+    // scheduleId 로 조회 후
+    // 두개의 itemOrder 사이의 값을 가지는 데이터가 있는지 확인
+    @Query("SELECT CASE WHEN COUNT(si) > 0 THEN true ELSE false END " +
+            "FROM ScheduleItem si " +
+            "WHERE si.marker.schedule.scheduleId = :scheduleId " +
+            "AND si.itemOrder > :startItemOrder " +
+            "AND si.itemOrder < :endItemOrder")
+    Boolean existsBetweenItemOrders(
+            @Param("scheduleId") Long scheduleId,
+            @Param("startItemOrder") Double startItemOrder,
+            @Param("endItemOrder") Double endItemOrder
+    );
 }
 

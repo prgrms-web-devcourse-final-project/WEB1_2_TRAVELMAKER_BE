@@ -1,6 +1,7 @@
 package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.converter.ScheduleItemConverter;
+import edu.example.wayfarer.dto.common.PageRequestDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemUpdateDTO;
 import edu.example.wayfarer.entity.Marker;
@@ -12,6 +13,10 @@ import edu.example.wayfarer.repository.MarkerRepository;
 import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.ScheduleItemRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +55,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     }
 
     /**
-     * 스케쥴 아이템 목록 조회
+     * 스케쥴 아이템 목록 조회 1
      * scheduleId 를 기준으로 ScheduleItem 조회 후 ScheduleItemResponseDTO 리스트로 변환하여 반환
      *
      * @param scheduleId ScheduleItem 을 조회할 기준
@@ -73,6 +78,37 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
                         )
                 )
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 스케쥴 아이템 목록 조회 2
+     * scheduleId 를 기준으로 ScheduleItem 조회 후 ScheduleItemResponseDTO 페이지로 변환하여 반환
+     *
+     * @param scheduleId ScheduleItem 을 조회할 기준
+     * @param pageRequestDTO page, size 정보
+     * @return Page<ScheduleItemResponseDTO> 조회된 ScheduleItem 페이지의 응답 데이터
+     */
+    @Override
+    public Page<ScheduleItemResponseDTO> getPageBySchedule(Long scheduleId, PageRequestDTO pageRequestDTO) {
+        // Pageable 생성
+        Pageable pageable = pageRequestDTO.getPageable(Sort.by("itemOrder").ascending());
+
+        // ScheduleItem 조회
+        Page<ScheduleItem> scheduleItems
+                = scheduleItemRepository.findByMarker_Schedule_ScheduleId(scheduleId, pageable);
+
+        // 페이지의 시작 인덱스
+        // 예)page=1,size=5 일 경우 (0*5) 0부터 시작
+        // 예)page=2,size=5 일 경우 (1*5) 5부터 시작
+        int startIndex = pageable.getPageNumber() * pageable.getPageSize();
+
+        AtomicInteger index = new AtomicInteger(startIndex);
+
+        return scheduleItems.map(scheduleItem ->
+            ScheduleItemConverter.toScheduleItemResponseDTO(
+                    scheduleItem, index.getAndIncrement()
+            )
+        );
     }
 
     /**
@@ -170,30 +206,53 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     // itemOrder 수정 메서드
     private void updateItemOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
 
+        Long scheduleId = scheduleItem.getMarker().getSchedule().getScheduleId();
         Double newItemOrder = 0.0;
 
         if (previousItemId != null && nextItemId != null) {  // 두개의 일정 사이로 이동할 경우
-            // 앞의 ScheduleItem 조회
+            // 앞에 위치할 ScheduleItem 조회
             ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
-            // 뒤의 ScheduleItem 조회
+            // 뒤에 이치할 ScheduleItem 조회
             ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 두개의 아이템 사이에 다른 아이템이 없는지 체크
+            Boolean exists = scheduleItemRepository.existsBetweenItemOrders(
+                    scheduleId,
+                    previousItem.getItemOrder(),
+                    nextItem.getItemOrder()
+            );
+            if (exists) {
+                throw ScheduleItemException.IDS_INVALID.get();
+            }
 
             // 앞과 뒤의 itemOrder 를 더한 값의 중간 값으로 새로운 itemOrder 생성
             newItemOrder = (previousItem.getItemOrder() + nextItem.getItemOrder()) / 2.0;
 
         } else if (previousItemId != null) {  // 제일 뒤로 이동할 경우
-            // 앞의 ScheduleItem 조회
+            // 앞에 위치할 ScheduleItem 조회
             ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 조회한 객체가 제일 마지막 순서 인지 체크
+            Double maxItemOrder = scheduleItemRepository.findMaxItemOrderByScheduleId(scheduleId);
+            if (previousItem.getItemOrder() < maxItemOrder) {
+                throw ScheduleItemException.IDS_INVALID.get();
+            }
 
             // 앞의 itemOrder 의 정수 부분에 1.0 을 더한 값으로 새로운 itemOrder 생성
             newItemOrder = Math.floor(previousItem.getItemOrder()) + 1.0;
         } else if (nextItemId != null) {  // 제일 앞으로 이동할 경우
-            // 뒤의 ScheduleItem 조회
+            // 뒤에 위치할 ScheduleItem 조회
             ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+            // 조회한 객체가 제일 첫번째 순서 인지 체크
+            Double minItemOrder = scheduleItemRepository.findMinItemOrderByScheduleId(scheduleId);
+            if (nextItem.getItemOrder() > minItemOrder) {
+                throw ScheduleItemException.IDS_INVALID.get();
+            }
 
             // 0 과 nextItem.itemOrder 의 중간 값으로 새로운 itemOrder 생성
             newItemOrder = (0.0 + nextItem.getItemOrder()) / 2.0;

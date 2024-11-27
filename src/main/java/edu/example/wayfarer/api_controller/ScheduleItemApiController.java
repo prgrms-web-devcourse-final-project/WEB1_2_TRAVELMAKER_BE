@@ -1,10 +1,13 @@
 package edu.example.wayfarer.api_controller;
 
+import edu.example.wayfarer.dto.common.PageRequestDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemUpdateDTO;
 import edu.example.wayfarer.service.ScheduleItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,11 +26,19 @@ public class ScheduleItemApiController {
         return ResponseEntity.ok(scheduleItemService.read(scheduleItemId));
     }
 
-    @GetMapping("/schedule/{scheduleId}")
+    @GetMapping("/list/schedule/{scheduleId}")
     public ResponseEntity<List<ScheduleItemResponseDTO>> readScheduleItems(
             @PathVariable Long scheduleId
     ) {
         return ResponseEntity.ok(scheduleItemService.getListBySchedule(scheduleId));
+    }
+
+    @GetMapping("/page/schedule/{scheduleId}")
+    public ResponseEntity<Page<ScheduleItemResponseDTO>> readPage(
+            @PathVariable Long scheduleId,
+            @Validated PageRequestDTO pageRequestDTO
+    ) {
+        return ResponseEntity.ok(scheduleItemService.getPageBySchedule(scheduleId, pageRequestDTO));
     }
 
     @PutMapping
@@ -44,6 +55,8 @@ public class ScheduleItemApiController {
         scheduleItemService.delete(scheduleItemId);
         return ResponseEntity.ok(Map.of("message", "success delete"));
     }
+
+
 }
 
 
