@@ -116,7 +116,11 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(roomUpdateDTO.roomId())
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
 
-        // 로그인한 사용자가 해당 방의 방장이 맞는지 아닌지 확인 해야함.
+        // 로그인한 사용자가 해당 방의 방장이 맞는지 아닌지 확인
+        Member currentUser = securityUtil.getCurrentUser();
+        if(!currentUser.getEmail().equals(room.getHostEmail())){
+            throw new AuthorizationException("권한이 없습니다.");
+        }
 
         room.changeCountry(roomUpdateDTO.country());
         room.changeTitle(roomUpdateDTO.title());
