@@ -1,6 +1,7 @@
 package edu.example.wayfarer.auth.userdetails;
 
 import edu.example.wayfarer.entity.Member;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Getter
 @RequiredArgsConstructor
 public class PrincipalDetails implements UserDetails {
 
