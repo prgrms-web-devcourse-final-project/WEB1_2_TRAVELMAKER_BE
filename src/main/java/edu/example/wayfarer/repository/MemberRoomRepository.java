@@ -18,7 +18,7 @@ public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
     Optional<MemberRoom> findByMember_EmailAndRoom_RoomId(String email, String roomId);
 
     @Query("select mb from MemberRoom mb where mb.room.roomId = :roomId")
-    public MemberRoom findByRoomId(@Param("roomId") String roomId);
+    MemberRoom findByRoomId(@Param("roomId") String roomId);
 
     @Modifying
     @Transactional
