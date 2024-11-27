@@ -33,9 +33,6 @@ public class RoomServiceImpl implements RoomService {
     private final MemberRepository memberRepository;
     private final MemberRoomRepository memberRoomRepository;
     private final ScheduleRepository scheduleRepository;
-    private final KakaoUtil kakaoUtil;
-    private final TokenRepository tokenRepository;
-    private final SecurityUtil securityUtil;
 
     /*
     create 설명
@@ -55,14 +52,13 @@ public class RoomServiceImpl implements RoomService {
         // 날짜 유효성 검사
         validateDates(roomRequestDTO);
 
-        Member currentUser = securityUtil.getCurrentUser();
 
         Room room = Room.builder()
                 .title(roomRequestDTO.title())
                 .country(roomRequestDTO.country())
                 .startDate(roomRequestDTO.startDate())
                 .endDate(roomRequestDTO.endDate())
-                .hostEmail(currentUser.getEmail())
+                .hostEmail(roomRequestDTO.email())
                 .memberRooms(new ArrayList<>())
                 .build();
 
@@ -76,12 +72,12 @@ public class RoomServiceImpl implements RoomService {
 
         //memberRoom 저장
         // currentUser로 지정 나중에
-//        Member foundMember = memberRepository.findById(room.getHostEmail()).orElseThrow();
+        Member foundMember = memberRepository.findById(room.getHostEmail()).orElseThrow();
         // Color enum을 배열화
         Color[] colors = Color.values();
         // memberRoom을 build
         MemberRoom memberRoom = MemberRoom.builder()
-                .member(currentUser)
+                .member(foundMember)
                 .room(savedRoom)
                 .color(colors[1]).build();
         savedRoom.getMemberRooms().add(memberRoom);
@@ -117,8 +113,7 @@ public class RoomServiceImpl implements RoomService {
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
 
         // 로그인한 사용자가 해당 방의 방장이 맞는지 아닌지 확인
-        Member currentUser = securityUtil.getCurrentUser();
-        if(!currentUser.getEmail().equals(room.getHostEmail())){
+        if(!roomUpdateDTO.member().getEmail().equals(room.getHostEmail())){
             throw new AuthorizationException("권한이 없습니다.");
         }
 
@@ -159,13 +154,12 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public void delete(String roomId) {
+    public void delete(Member member, String roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new NoSuchElementException("삭제할 방이 존재하지 않습니다."));
 
         // 로그인한 사용자와 room.HostEmail이 맞지 않으면 오류처리 : 방장만 삭제 가능합니다
-        Member currentUser = securityUtil.getCurrentUser();
-        if(!currentUser.getEmail().equals(room.getHostEmail())){
+        if(!member.getEmail().equals(room.getHostEmail())){
             throw new AuthorizationException("권한이 없습니다.");
         }
         scheduleRepository.deleteByRoomId(roomId);
