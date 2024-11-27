@@ -10,7 +10,7 @@ public interface MemberRoomService {
 
     public MemberRoomResponseDTO create(MemberRoomRequestDTO memberRoomRequestDTO);
 
-    public void delete(String email, String roomId);
+    public void delete(String roomId);
 
     public List<MemberRoomResponseDTO> listByRoomId(String roomId);
 
