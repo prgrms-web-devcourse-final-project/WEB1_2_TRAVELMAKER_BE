@@ -1,5 +1,6 @@
 package edu.example.wayfarer.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -13,12 +14,19 @@ import java.util.List;
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
+    private static String allowedOrigin;
+
+    @Value("${cors.allowed.origin}")
+    public void setAllowedOrigin(String allowedOrigin) {
+        CorsConfig.allowedOrigin = allowedOrigin;
+    }
+
     @Bean
     public static CorsConfigurationSource apiConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 응답 허용할 ip
-        List<String> allowedOriginPatterns = Arrays.asList("http://localhost:8080");//setAllowCredentials(true)와 함께 사용할 경우 특정 Origin을 명시적으로 지정해야 합니다
+        List<String> allowedOriginPatterns = Arrays.asList(allowedOrigin);//setAllowCredentials(true)와 함께 사용할 경우 특정 Origin을 명시적으로 지정해야 합니다
         configuration.setAllowedOriginPatterns(allowedOriginPatterns);
 
         // 응답 허용할 HTTP Method
