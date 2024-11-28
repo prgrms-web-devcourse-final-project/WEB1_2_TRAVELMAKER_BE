@@ -2,11 +2,13 @@ package edu.example.wayfarer.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.example.wayfarer.converter.WebSocketMessageConverter;
+import edu.example.wayfarer.dto.schedule.ScheduleListDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemUpdateDTO;
 import edu.example.wayfarer.exception.WebSocketException;
 import edu.example.wayfarer.exception.WebSocketTaskException;
 import edu.example.wayfarer.service.ScheduleItemService;
+import edu.example.wayfarer.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -28,6 +30,7 @@ public class ScheduleItemController {
     private final SimpMessagingTemplate template;
     private final ScheduleItemService scheduleItemService;
     private final ObjectMapper objectMapper;
+    private final ScheduleService scheduleService;
 
     @MessageMapping("room/{roomId}/schedule")
     public void handleSchedule(
@@ -46,6 +49,16 @@ public class ScheduleItemController {
         Map<String, Object> data = (Map<String, Object>) schedulePayload.get("data");
 
         switch (action) {
+            case "LIST_SCHEDULES":
+                List<ScheduleListDTO> schedules = scheduleService.getScheduleListByRoomId(roomId);
+                WebSocketMessageConverter<List<ScheduleListDTO>> scheduleListConverter = new WebSocketMessageConverter<>();
+                WebSocketMessageConverter.WebsocketMessage<List<ScheduleListDTO>> listSchedulesMessage =
+                        scheduleListConverter.createMessage("LIST_SCHEDULES", schedules);
+
+                template.convertAndSend("/topic/room/" + roomId + "/schedule", listSchedulesMessage);
+
+                break;
+
             case "LIST_SCHEDULEITEMS":
                 Long scheduleId = ((Number) data.get("scheduleId")).longValue();
                 List<ScheduleItemResponseDTO> scheduleItems = scheduleItemService.getListBySchedule(scheduleId);
@@ -53,7 +66,7 @@ public class ScheduleItemController {
                 WebSocketMessageConverter<List<ScheduleItemResponseDTO>> listConverter = new WebSocketMessageConverter<>();
 
                 WebSocketMessageConverter.WebsocketMessage<List<ScheduleItemResponseDTO>> listScheduleItemsMessage =
-                listConverter.createMessage("LIST_SCHEDULEITEMS", scheduleItems);
+                        listConverter.createMessage("LIST_SCHEDULEITEMS", scheduleItems);
 
                 template.convertAndSend("/topic/room/" + roomId + "/schedule", listScheduleItemsMessage);
 

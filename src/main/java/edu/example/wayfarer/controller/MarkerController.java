@@ -77,6 +77,7 @@ public class MarkerController {
                 //생성한 메시지를 "topic/schedule/{roomId}/map" 을 구독한 클라이언트들에게 브로드캐스팅합니다.
                 template.convertAndSend("/topic/room/" + roomId + "/map", addedMarkerMessage);
                 break;
+
             case "LIST_MARKERS":
                 Long listScheduleId = ((Number) data.get("scheduleId")).longValue();
 
