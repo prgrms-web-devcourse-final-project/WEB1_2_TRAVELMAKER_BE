@@ -7,12 +7,11 @@ import edu.example.wayfarer.auth.util.JwtUtil;
 import edu.example.wayfarer.auth.util.KakaoUtil;
 import edu.example.wayfarer.converter.AuthConverter;
 import edu.example.wayfarer.dto.GoogleUserInfo;
-import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.dto.KakaoDTO;
+import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Token;
 import edu.example.wayfarer.repository.MemberRepository;
 import edu.example.wayfarer.repository.TokenRepository;
-import edu.example.wayfarer.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 기존 토큰 삭제
-        tokenRepository.deleteByMember_Email(member.getEmail());
+        tokenRepository.deleteByEmail(member.getEmail());
 
         // 새로운 Access Token과 Refresh Token 생성
         String accessToken = jwtUtil.createAccessToken(member.getEmail(), member.getRole());
@@ -69,11 +68,11 @@ public class AuthServiceImpl implements AuthService {
 
         // 토큰 저장
         Token token = Token.builder()
-                .member(member)
+                .email(member.getEmail())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .socialAccessToken(oAuthToken.getAccess_token())
-                .provider("kakao") // 소셜 제공자 설정
+                .provider("kakao")
                 .accessTokenExpiryDate(accessTokenExpiryDate)
                 .refreshTokenExpiryDate(refreshTokenExpiryDate)
                 .build();
@@ -105,7 +104,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 기존 토큰 삭제
-        tokenRepository.deleteByMember_Email(member.getEmail());
+        tokenRepository.deleteByEmail(member.getEmail());
 
         // 새로운 Access Token과 Refresh Token 생성
         String accessToken = jwtUtil.createAccessToken(member.getEmail(), member.getRole());
@@ -120,7 +119,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 토큰 저장
         Token token = Token.builder()
-                .member(member)
+                .email(member.getEmail())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .socialAccessToken(googleAccessToken)
@@ -144,10 +143,6 @@ public class AuthServiceImpl implements AuthService {
         cookie.setSecure(isSecure); // 프로덕션 환경에서는 true로 설정
         cookie.setPath("/");
         cookie.setMaxAge((int) maxAge);
-        // 쿠키에 SameSite 속성 설정
-        response.addHeader("Set-Cookie",
-                String.format("%s=%s; Max-Age=%d; Path=%s; HttpOnly; %s",
-                        name, value, maxAge, "/", (isSecure ? "Secure; " : "") + "SameSite=None"));
         response.addCookie(cookie);
     }
 
@@ -159,7 +154,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Refresh Token으로 사용자 이메일 추출
-        String email = jwtUtil.getEmailFromRefreshToken(refreshToken);
+        String email = jwtUtil.getEmail(refreshToken);
         Optional<Token> optionalToken = tokenRepository.findByRefreshToken(refreshToken);
 
         if (optionalToken.isEmpty()) {
@@ -174,7 +169,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 새로운 Access Token과 Refresh Token 생성
-        String newAccessToken = jwtUtil.createAccessToken(email, token.getMember().getRole());
+        String newAccessToken = jwtUtil.createAccessToken(email, token.getEmail());
         String newRefreshToken = jwtUtil.createRefreshToken(email);
 
         // 토큰 만료 시간 계산
@@ -189,27 +184,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void revokeAndDeleteToken(String email) throws AuthHandler { // 로그아웃
+    public void revokeAndDeleteToken(String email) throws AuthHandler {
         // 사용자에게 할당된 토큰 조회
-        Optional<Token> optionalToken = tokenRepository.findByMember_Email(email);
+        Optional<Token> optionalToken = tokenRepository.findByEmail(email);
         if (optionalToken.isEmpty()) {
             throw new AuthHandler(ErrorStatus._TOKEN_NOT_FOUND);
         }
 
         Token token = optionalToken.get();
-
-        String socialAccessToken = token.getSocialAccessToken();
-        String provider = token.getProvider();
-
-        if (socialAccessToken != null && !socialAccessToken.isEmpty()) {
-            if ("google".equalsIgnoreCase(provider)) {
-                // 구글 Access Token을 이용하여 로그아웃 처리 (토큰 폐기)
-                googleUtil.revokeToken(socialAccessToken);
-            } else if ("kakao".equalsIgnoreCase(provider)) {
-                // 카카오 Access Token을 이용하여 로그아웃 처리 (토큰 폐기)
-                kakaoUtil.revokeToken(socialAccessToken);
-            }
-        }
 
         // 토큰 삭제
         tokenRepository.delete(token);

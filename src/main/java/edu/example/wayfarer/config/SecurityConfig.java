@@ -91,9 +91,9 @@ public class SecurityConfig {
         // JwtExceptionFilter를 JwtFilter 이후에 추가
         http.addFilterAfter(new JwtExceptionFilter(), JwtFilter.class);
 
-        // LoginFilter를 UsernamePasswordAuthenticationFilter 위치에 추가
-        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),
-                UsernamePasswordAuthenticationFilter.class);
+//        // LoginFilter를 UsernamePasswordAuthenticationFilter 위치에 추가
+//        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),
+//                UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -68,6 +68,7 @@ public class JwtUtil {
     }
 
     private String createToken(String email, String role, long validitySeconds) {
+        //Claims 는 JWT의 헤더,페이로드,서명 중 페이로드 정보를 담고 있는 객체를 의미합니다.
         Claims claims = Jwts.claims();
         claims.put("email", email);
         if (role != null) {
@@ -85,17 +86,19 @@ public class JwtUtil {
                 .compact();
     }
 
+    //JWT 토큰을 파싱하여 Jws<Claims>를 반환
+    private Jws<Claims> getClaims(String token) {
+        return Jwts.parserBuilder() //Jwts는 JWT를 생성하거나 파싱할 수 있도록 도와주는 역할.
+                .setSigningKey(secretKey)//서명이 올바른지 검증하기 위해 우리가 설정한 secretKey를 세팅
+                .build().parseClaimsJws(token);//setSigningKey로 설정된 비밀 키를 사용하여 토큰의 서명을 검증하고, 토큰이 유효한지 확인
+    }
+
     // Access Token에서 이메일 추출
     public String getEmail(String token) {
-        return getClaims(token).getBody().get("email", String.class);
+        return getClaims(token).getBody()//페이로드 데이터에 접근
+                .get("email", String.class);
     }
 
-    // Refresh Token에서 이메일 추출
-    public String getEmailFromRefreshToken(String token) {
-        return getClaims(token).getBody().get("email", String.class);
-    }
-
-    // Access Token 유효성 검증
     public boolean isAccessTokenValid(String token) {
         return validateToken(token);
     }
@@ -108,10 +111,10 @@ public class JwtUtil {
     // 토큰 검증 메서드
     private boolean validateToken(String token) {
         try {
-            Jws<Claims> claims = getClaims(token);
+            Jws<Claims> claims = getClaims(token); //페이로드 부분을 claims로 가져오기
             Date expiredDate = claims.getBody().getExpiration();
             Date now = new Date();
-            return expiredDate.after(now);
+            return expiredDate.after(now); //만료기간이 현시점보다 뒤인지 확인
         } catch (ExpiredJwtException e) {
             log.info("[*] _AUTH_EXPIRE_TOKEN");
             throw new AuthHandler(ErrorStatus._AUTH_EXPIRE_TOKEN);
@@ -123,10 +126,6 @@ public class JwtUtil {
             log.info("[*] _AUTH_INVALID_TOKEN");
             throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
         }
-    }
-
-    private Jws<Claims> getClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
     }
 
 
