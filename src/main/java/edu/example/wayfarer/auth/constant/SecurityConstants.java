@@ -16,7 +16,7 @@ public class SecurityConstants {
             "/logout",
             "/refresh",
             "/favicon.ico",
-            "/auth/logout",
+            //"/auth/logout",
             "/auth/refresh",
             //"/index.html"
             //"/", // 메인페이지

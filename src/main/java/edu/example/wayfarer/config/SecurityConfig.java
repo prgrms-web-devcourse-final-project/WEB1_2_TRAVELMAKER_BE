@@ -36,7 +36,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {//시큐리티 인터페이스
         return configuration.getAuthenticationManager();
     }
 
@@ -91,7 +91,7 @@ public class SecurityConfig {
                 UsernamePasswordAuthenticationFilter.class);
 
         // JwtExceptionFilter를 JwtFilter 이후에 추가
-        http.addFilterAfter(new JwtExceptionFilter(), JwtFilter.class);
+        //http.addFilterAfter(new JwtExceptionFilter(), JwtFilter.class);
 
 //        // LoginFilter를 UsernamePasswordAuthenticationFilter 위치에 추가
 //        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),
