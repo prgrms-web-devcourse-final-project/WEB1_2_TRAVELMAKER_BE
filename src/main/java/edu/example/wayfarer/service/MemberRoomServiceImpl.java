@@ -1,6 +1,7 @@
 package edu.example.wayfarer.service;
 
-import edu.example.wayfarer.auth.util.SecurityUtil;
+import edu.example.wayfarer.converter.MemberRoomConverter;
+import edu.example.wayfarer.converter.RoomConverter;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomResponseDTO;
 import edu.example.wayfarer.dto.room.RoomListDTO;
@@ -50,7 +51,8 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             throw MemberRoomException.INVALID_ROOMCODE.get();
         }
 
-        Member currentUser = memberRepository.findByEmail(memberRoomRequestDTO.email()).get();
+        Member currentUser = memberRepository.findByEmail(memberRoomRequestDTO.email())
+                .orElseThrow();
         boolean memberExistsInRoom = memberRoomRepository.findAllByRoom_RoomId(memberRoomRequestDTO.roomId())
                 .stream()
                 .anyMatch(existingMemberRoom -> existingMemberRoom.getMember().getEmail().equals(currentUser.getEmail()));
@@ -84,7 +86,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
         memberRoomRepository.save(memberRoom);
 
-        return new MemberRoomResponseDTO(memberRoom);
+        return MemberRoomConverter.toMemberRoomResponseDTO(memberRoom);
     }
 
     /* delete 설명 (퇴장)
@@ -129,7 +131,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
         // 2. MemberRoom 엔티티를 MemberRoomResponseDTO로 변환
         return memberRooms.stream()
-                .map(MemberRoomResponseDTO::new)
+                .map(MemberRoomConverter::toMemberRoomResponseDTO)
                 .toList();
     }
 
@@ -142,7 +144,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
                     .map(memberRoom -> {
                         Room room = roomRepository.findById(memberRoom.getRoom().getRoomId())
                                 .orElseThrow(RoomException.DOESNT_EXIST::get);
-                        return new RoomListDTO(room);
+                        return RoomConverter.toRoomListDTO(room);
                     })
                     .collect(Collectors.toList());
 

@@ -9,6 +9,7 @@ import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.service.MemberRoomService;
 import edu.example.wayfarer.service.RoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,8 @@ public class MainController {
 
     // 방 생성
     @PostMapping
-    public ResponseEntity<RoomResponseDTO> createRoom(@RequestBody RoomRequestDTO roomRequestDTO) {
+    @ResponseStatus(HttpStatus.OK)
+    public RoomResponseDTO createRoom(@RequestBody RoomRequestDTO roomRequestDTO) {
         Member currentUser = securityUtil.getCurrentUser();
         RoomRequestDTO updatedDTO = new RoomRequestDTO(
                 currentUser.getEmail(),
@@ -35,7 +37,7 @@ public class MainController {
                 roomRequestDTO.startDate(),
                 roomRequestDTO.endDate()
         );
-        return ResponseEntity.ok(roomService.create(updatedDTO));
+        return roomService.create(updatedDTO);
     }
 
     // 방리스트 조회

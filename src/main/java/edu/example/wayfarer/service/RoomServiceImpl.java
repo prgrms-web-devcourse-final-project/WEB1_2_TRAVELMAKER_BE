@@ -1,8 +1,7 @@
 package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.apiPayload.exception.AuthorizationException;
-import edu.example.wayfarer.auth.util.KakaoUtil;
-import edu.example.wayfarer.auth.util.SecurityUtil;
+import edu.example.wayfarer.converter.RoomConverter;
 import edu.example.wayfarer.dto.room.RoomRequestDTO;
 import edu.example.wayfarer.dto.room.RoomResponseDTO;
 import edu.example.wayfarer.dto.room.RoomUpdateDTO;
@@ -86,7 +85,7 @@ public class RoomServiceImpl implements RoomService {
         // schedule 저장
         saveSchedules(savedRoom, roomRequestDTO.startDate(), roomRequestDTO.endDate());
 
-        return new RoomResponseDTO(savedRoom);
+        return RoomConverter.toRoomResponseDTO(savedRoom);
     }
 
     @Override
@@ -96,7 +95,7 @@ public class RoomServiceImpl implements RoomService {
 
         List<MemberRoom> members = memberRoomRepository.findAllByRoom_RoomId(roomId);
         room.setMemberRooms(members);
-        return new RoomResponseDTO(room);
+        return RoomConverter.toRoomResponseDTO(room);
     }
 
     /*
@@ -123,7 +122,6 @@ public class RoomServiceImpl implements RoomService {
         long oldSession = ChronoUnit.DAYS.between(room.getStartDate(), room.getEndDate())+1;
         long newSession = ChronoUnit.DAYS.between(roomUpdateDTO.startDate(), roomUpdateDTO.endDate())+1;
 
-        LocalDate oldStartDate = room.getStartDate();   // 이전 여행 시작일
         LocalDate newStartDate = roomUpdateDTO.startDate(); // 새로운 여행 시작일
 
         room.changeStartDate(roomUpdateDTO.startDate());
@@ -163,7 +161,7 @@ public class RoomServiceImpl implements RoomService {
                 scheduleRepository.deleteAll(schedulesToDelete);
             }
         }
-        return new RoomResponseDTO(roomRepository.save(room));
+        return RoomConverter.toRoomResponseDTO(roomRepository.save(room));
     }
 
     @Override
