@@ -29,14 +29,6 @@ public class WebSocketConnectController {
         // 세션에서 email 속성 추출
         String email = (String) headerAccessor.getSessionAttributes().get("email");
 
-        Map<String, Object> connectedMessage = new LinkedHashMap<>();
-        connectedMessage.put("action", "CONNECTED");
-        connectedMessage.put("data", Map.of(
-                "email", email,
-                "message", "연결이 완료되었습니다."
-        ));
-
-        template.convertAndSendToUser(email,"/queue/connect", connectedMessage);
         log.info("WebSocket Connected Email: " + email);
     }
 }
