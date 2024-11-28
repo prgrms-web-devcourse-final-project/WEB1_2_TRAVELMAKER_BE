@@ -23,7 +23,7 @@ public class RoomController {
 
     //단일 방 정보 조회
     @GetMapping("/{roomId}")
-    public ResponseEntity<RoomResponseDTO> readRoom(@PathVariable("roomId") String roomId) {
+    public ResponseEntity<RoomResponseDTO> readRoom(@PathVariable String roomId) {
         return ResponseEntity.ok(roomService.read(roomId));
     }
 
@@ -45,7 +45,7 @@ public class RoomController {
 
     // 방 삭제 (방장만 가능)
     @DeleteMapping("/{roomId}")
-    public ResponseEntity<Map<String, String>> deleteRoom(@PathVariable("roomId") String roomId) {
+    public ResponseEntity<Map<String, String>> deleteRoom(@PathVariable String roomId) {
         Member currentUser = securityUtil.getCurrentUser();
         roomService.delete(currentUser, roomId);
         return ResponseEntity.ok(Map.of("message", "삭제되었습니다."));
@@ -53,7 +53,7 @@ public class RoomController {
 
     // 방 퇴장
     @DeleteMapping("/leave/{roomId}")
-    public ResponseEntity<Map<String, String>> leaveRoom(@PathVariable("roomId") String roomId) {
+    public ResponseEntity<Map<String, String>> leaveRoom(@PathVariable String roomId) {
         Member currentUser = securityUtil.getCurrentUser();
         memberRoomService.delete(currentUser, roomId);
         return ResponseEntity.ok(Map.of("message", "퇴장하였습니다."));
