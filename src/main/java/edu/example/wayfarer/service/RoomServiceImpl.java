@@ -1,6 +1,7 @@
 package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.apiPayload.exception.AuthorizationException;
+import edu.example.wayfarer.converter.MemberRoomConverter;
 import edu.example.wayfarer.converter.RoomConverter;
 import edu.example.wayfarer.dto.room.RoomRequestDTO;
 import edu.example.wayfarer.dto.room.RoomResponseDTO;
@@ -50,16 +51,7 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponseDTO create(RoomRequestDTO roomRequestDTO) {
         // 날짜 유효성 검사
         validateDates(roomRequestDTO);
-
-
-        Room room = Room.builder()
-                .title(roomRequestDTO.title())
-                .country(roomRequestDTO.country())
-                .startDate(roomRequestDTO.startDate())
-                .endDate(roomRequestDTO.endDate())
-                .hostEmail(roomRequestDTO.email())
-                .memberRooms(new ArrayList<>())
-                .build();
+        Room room = RoomConverter.toRoom(roomRequestDTO);
 
         // 랜덤 roomId와 roomCode 생성
         generateRoomIdAndCode(room);
@@ -70,15 +62,10 @@ public class RoomServiceImpl implements RoomService {
         Room savedRoom = roomRepository.save(room);
 
         //memberRoom 저장
-        // currentUser로 지정 나중에
         Member foundMember = memberRepository.findById(room.getHostEmail()).orElseThrow();
         // Color enum을 배열화
         Color[] colors = Color.values();
-        // memberRoom을 build
-        MemberRoom memberRoom = MemberRoom.builder()
-                .member(foundMember)
-                .room(savedRoom)
-                .color(colors[1]).build();
+        MemberRoom memberRoom = MemberRoomConverter.toMemberRoom(savedRoom, foundMember, colors[1]);
         savedRoom.getMemberRooms().add(memberRoom);
         memberRoomRepository.save(memberRoom);
 

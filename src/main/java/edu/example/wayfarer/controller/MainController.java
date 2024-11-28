@@ -1,4 +1,4 @@
-package edu.example.wayfarer.api_controller;
+package edu.example.wayfarer.controller;
 
 import edu.example.wayfarer.auth.util.SecurityUtil;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;

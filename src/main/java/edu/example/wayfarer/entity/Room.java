@@ -3,6 +3,7 @@ package edu.example.wayfarer.entity;
 
 
 import edu.example.wayfarer.util.RandomStringGenerator;
+import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -11,7 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -46,10 +46,10 @@ public class Room {
     // Room 생성시 랜덤 roomId 할당
     @PrePersist // when generating unique identifiers
     public void generateRoomIdAndRoomCode(){
-        if(this.roomId == null || this.roomId.isBlank()){
+        if(StringUtils.isEmpty(roomId)){
             this.roomId = RandomStringGenerator.generateRandomString(8);
         }
-        if (this.roomCode == null || this.roomCode.isBlank()) {
+        if (StringUtils.isEmpty(roomCode)) {
             this.roomCode = RandomStringGenerator.generateRandomString(8);
         }
     }
