@@ -1,22 +1,21 @@
 package edu.example.wayfarer.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.example.wayfarer.converter.WebSocketMessageConverter;
 import edu.example.wayfarer.dto.marker.MarkerRequestDTO;
 import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
 import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
 import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
-import edu.example.wayfarer.repository.ScheduleItemRepository;
+import edu.example.wayfarer.exception.WebSocketException;
+import edu.example.wayfarer.exception.WebSocketTaskException;
 import edu.example.wayfarer.service.MarkerService;
 import edu.example.wayfarer.service.ScheduleItemService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.util.LinkedHashMap;
@@ -24,6 +23,7 @@ import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
+@Log4j2
 public class MarkerController {
     private final SimpMessagingTemplate template;
     private final MarkerService markerService;
@@ -33,10 +33,21 @@ public class MarkerController {
     public void handleMarker(
             @DestinationVariable String roomId,
             @Payload Map<String, Object> markerPayload,
-            StompHeaderAccessor headerAccessor
+            SimpMessageHeaderAccessor headerAccessor
     ) {
 
+        // WebSocket 세션에서 email 값을 가져오기
+        String email = (String) headerAccessor.getSessionAttributes().get("email");
+        // email이 null일 경우 예외 처리
+        if (email == null) {
+            throw new WebSocketTaskException(WebSocketException.INVALID_EMAIL);
+        }
+
         String action = (String) markerPayload.get("action");
+        log.debug("action: {}", action);
+
+        Map<String, Object> data = (Map<String, Object>) markerPayload.get("data");
+
         /*
         클라이언트에서 송신한 메시지의 "action" 항목으로 기능 구분
         MarkerService의 메서드 리턴값인 MarkerResponseDTO의 내용으로
@@ -47,18 +58,10 @@ public class MarkerController {
             case "ADD_MARKER":
 
                 //클라이언트가 송신한 메시지인 markerPayload에서 scheduleId, lat, lng 값을 추출
-                Long scheduleId = ((Number) ((Map<String, Object>) markerPayload.get("data")).get("scheduleId")).longValue();
-                Double lat = ((Number) ((Map<String, Object>) markerPayload.get("data")).get("lat")).doubleValue();
-                Double lng = ((Number) ((Map<String, Object>) markerPayload.get("data")).get("lng")).doubleValue();
-
-                //세션에 저장해놓은 email 값을 추출
-//                Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
-//                if (sessionAttributes == null || !sessionAttributes.containsKey("email")) {
-//                    throw new IllegalArgumentException("Email not found in session");
-//                }
-//                String email = (String) sessionAttributes.get("email");
-
-                String email = "member1@abc.com";
+                Long scheduleId = ((Number) data.get("scheduleId")).longValue();
+                Double lat = ((Number) data.get("lat")).doubleValue();
+                Double lng = ((Number) data.get("lng")).doubleValue();
+//                email = "member1@abc.com";
 
                 //추출 한 값으로 MarkerRequestDTO 생성
                 MarkerRequestDTO markerRequestDTO = new MarkerRequestDTO(email,scheduleId,lat,lng);
@@ -77,8 +80,8 @@ public class MarkerController {
             case "UPDATE_MARKER":
 
                 //클라이언트가 송신한 메시지인 markerPayload에서 markerId, confirm 값을 추출
-                Long markerId = ((Number) ((Map<String, Object>) markerPayload.get("data")).get("markerId")).longValue();
-                Boolean confirm = (Boolean) ((Map<String, Object>) markerPayload.get("data")).get("confirm");
+                Long markerId = ((Number) data.get("markerId")).longValue();
+                Boolean confirm = (Boolean) data.get("confirm");
 
                 //추출 한 값으로 MarkerUpdateDTO 생성
                 MarkerUpdateDTO markerUpdateDTO = new MarkerUpdateDTO(markerId, confirm);
@@ -117,7 +120,7 @@ public class MarkerController {
 
             case "DELETE_MARKER":
                 //클라이언트가 송신한 메시지인 markerPayload에서 markerId 값을 추출
-                Long deleteMarkerId = ((Number) ((Map<String, Object>) markerPayload.get("data")).get("markerId")).longValue();
+                Long deleteMarkerId = ((Number) data.get("markerId")).longValue();
                 //추출한 markerId를 매개변수로 delete 메서드 실행
                 markerService.delete(deleteMarkerId);
                 Map<String, Object> deletedMarkerMessage = new LinkedHashMap<>();
@@ -130,7 +133,7 @@ public class MarkerController {
                 break;
 
             default:
-                throw new IllegalArgumentException("Invalid action: " + action);
+                throw new WebSocketTaskException(WebSocketException.INVALID_ACTION);
         }
 
 
