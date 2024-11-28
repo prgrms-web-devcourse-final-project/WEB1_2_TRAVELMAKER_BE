@@ -19,6 +19,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -76,6 +77,19 @@ public class MarkerController {
                 //생성한 메시지를 "topic/schedule/{roomId}/map" 을 구독한 클라이언트들에게 브로드캐스팅합니다.
                 template.convertAndSend("/topic/room/" + roomId + "/map", addedMarkerMessage);
                 break;
+            case "LIST_MARKERS":
+                Long listScheduleId = ((Number) data.get("scheduleId")).longValue();
+
+                List<MarkerResponseDTO> markers = markerService.getListBySchedule(listScheduleId);
+
+                //WebSocketMessageConverter로 List message 생성
+                WebSocketMessageConverter<List<MarkerResponseDTO>> listConverter = new WebSocketMessageConverter<>();
+                WebSocketMessageConverter.WebsocketMessage<List<MarkerResponseDTO>> listMarkersMessage =
+                        listConverter.createMessage("LIST_MARKERS", markers);
+
+                //생성한 메시지를 "topic/schedule/{roomId}/map" 을 구독한 클라이언트들에게 브로드캐스팅합니다.
+                template.convertAndSend("/topic/room/" + roomId + "/map", listMarkersMessage);
+                break;
 
             case "UPDATE_MARKER":
 
@@ -105,7 +119,7 @@ public class MarkerController {
                     //WebSocketMessageConverter를 사용해 메시지 객체 생성
                     WebSocketMessageConverter<ScheduleItemResponseDTO> foundConverter = new WebSocketMessageConverter<>();
                     WebSocketMessageConverter.WebsocketMessage<ScheduleItemResponseDTO> createdScheduleItemMessage =
-                            foundConverter.createMessage("ADDED_SCHEDULE", foundScheduleItem);
+                            foundConverter.createMessage("ADDED_SCHEDULEITEM", foundScheduleItem);
 
                     System.out.println("createdScheduleItemMessage: " + createdScheduleItemMessage);
                     //생성한 메시지를 "topic/schedule/{roomId}/schedule" 을 구독한 클라이언트들에게 브로드캐스팅합니다.

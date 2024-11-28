@@ -46,21 +46,21 @@ public class ScheduleItemController {
         Map<String, Object> data = (Map<String, Object>) schedulePayload.get("data");
 
         switch (action) {
-            case "LIST_SCHEDULES":
+            case "LIST_SCHEDULEITEMS":
                 Long scheduleId = ((Number) data.get("scheduleId")).longValue();
                 List<ScheduleItemResponseDTO> scheduleItems = scheduleItemService.getListBySchedule(scheduleId);
 
                 WebSocketMessageConverter<List<ScheduleItemResponseDTO>> listConverter = new WebSocketMessageConverter<>();
 
-                WebSocketMessageConverter.WebsocketMessage<List<ScheduleItemResponseDTO>> listSchedulesMessage=
-                listConverter.createMessage("LIST_SCHEDULES", scheduleItems);
+                WebSocketMessageConverter.WebsocketMessage<List<ScheduleItemResponseDTO>> listScheduleItemsMessage =
+                listConverter.createMessage("LIST_SCHEDULEITEMS", scheduleItems);
 
-                template.convertAndSend("/topic/room/" + roomId + "/schedule", listSchedulesMessage);
+                template.convertAndSend("/topic/room/" + roomId + "/schedule", listScheduleItemsMessage);
 
                 break;
 
 
-            case "UPDATE_SCHEDULE":
+            case "UPDATE_SCHEDULEITEM":
                 //schedulePayload로 받아온 값으로 ScheduleItemUpdateDTO 생성
                 Long scheduleItemId = ((Number) data.get("scheduleItemId")).longValue();
                 String name = data.get("name").toString();
@@ -83,21 +83,21 @@ public class ScheduleItemController {
                 // WebSocketMessageConverter를 사용해 메시지 객체 생성
                 WebSocketMessageConverter<ScheduleItemResponseDTO> updateConverter = new WebSocketMessageConverter<>();
                 WebSocketMessageConverter.WebsocketMessage<ScheduleItemResponseDTO> updatedScheduleItemMessage =
-                        updateConverter.createMessage("UPDATED_SCHEDULE", updatedScheduleItem);
+                        updateConverter.createMessage("UPDATED_SCHEDULEITEM", updatedScheduleItem);
 
                 //생성한 메시지를 "topic/schedule/{roomId}/schedule" 을 구독한 클라이언트들에게 브로드캐스팅합니다.
                 template.convertAndSend("/topic/room/" + roomId + "/schedule", updatedScheduleItemMessage);
 
                 break;
 
-            case "DELETE_SCHEDULE":
+            case "DELETE_SCHEDULEITEM":
                 //1. 스케쥴 아이템 삭제
                 Long deleteScheduleItemId = ((Number) data.get("scheduleItemId")).longValue();
                 scheduleItemService.delete(deleteScheduleItemId);
 
                 //2. 스케줄 아이템 삭제 메시지 전송, 마커 업데이트 메시지 전송
                 Map<String, Object> deletedScheduleItemMessage = new LinkedHashMap<>();
-                deletedScheduleItemMessage.put("action", "DELETED_SCHEDULE");
+                deletedScheduleItemMessage.put("action", "DELETED_SCHEDULEITEM");
                 deletedScheduleItemMessage.put("data", Map.of(
                         "message", "일정이 삭제되었습니다."
                 ));
