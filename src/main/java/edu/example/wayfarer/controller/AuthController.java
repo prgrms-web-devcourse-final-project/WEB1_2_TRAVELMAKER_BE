@@ -92,12 +92,13 @@ public class AuthController {
     public ResponseEntity<?> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = getRefreshTokenFromCookies(request);
         if (refreshToken == null || refreshToken.isEmpty()) {
+            log.error("Refresh Token not found in request");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Refresh Token not found"));
         }
 
         try {
             String newAccessToken = authService.refreshAccessToken(refreshToken);
-            String email = jwtUtil.getEmailFromRefreshToken(refreshToken);
+            String email = jwtUtil.getEmail(refreshToken);
             String newRefreshToken = jwtUtil.createRefreshToken(email);
 
             // 새로운 Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
@@ -126,7 +127,6 @@ public class AuthController {
         return null;
     }
 
-    // 단일 통합 로그아웃 엔드포인트
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String authorization, HttpServletResponse response) {
         try {
@@ -135,6 +135,11 @@ public class AuthController {
                 throw new AuthHandler(ErrorStatus._TOKEN_NOT_FOUND);
             }
             String accessToken = authorization.split(" ")[1];
+
+            // Access Token 유효성 검증
+            if (!jwtUtil.isAccessTokenValid(accessToken)) {
+                throw new AuthHandler(ErrorStatus._AUTH_EXPIRE_TOKEN);
+            }
 
             // Access Token에서 이메일 추출
             String email = jwtUtil.getEmail(accessToken);

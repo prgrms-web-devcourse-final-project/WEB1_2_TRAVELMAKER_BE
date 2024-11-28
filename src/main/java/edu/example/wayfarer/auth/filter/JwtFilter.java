@@ -35,9 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        boolean shouldSkip = path.startsWith("/login/oauth2/code/google") ||
-                path.startsWith("/auth/google/callback") ||
-                Arrays.stream(SecurityConstants.allowedUrls)
+        boolean shouldSkip = Arrays.stream(SecurityConstants.allowedUrls)
                         .anyMatch(pattern -> antPathMatcher.match(pattern, path));
 
         log.info("Should skip JwtFilter for path {}: {}", path, shouldSkip); // 추가된 로그
@@ -47,16 +45,17 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            String accessToken = jwtUtil.resolveAccessToken(request);
+            String accessToken = jwtUtil.resolveAccessToken(request);//헤더나 쿠키에서 액세스 토큰 가져오기
 
-            if (accessToken != null && jwtUtil.isAccessTokenValid(accessToken)) {
-                String email = jwtUtil.getEmail(accessToken);
-                UserDetails userDetails = principalDetailsService.loadUserByUsername(email);
+            if (accessToken != null && jwtUtil.isAccessTokenValid(accessToken)) { //액세스 토큰이 존재하고 유효하다면
+                String email = jwtUtil.getEmail(accessToken); //email 가져오기
+                UserDetails userDetails = principalDetailsService.loadUserByUsername(email); //유저 디테일 가져오기
+                log.info(userDetails.toString());
 
-                if (userDetails != null) {
+                if (userDetails != null) {//
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(
-                                    userDetails, "", userDetails.getAuthorities());
+                                    userDetails, "", userDetails.getAuthorities());//사용자정보,비밀번호,권한 -> OAuth때문에 비밀번호는 사용되지 않음
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 } else {
                     throw new AuthHandler(ErrorStatus._NOT_FOUND_MEMBER);
@@ -69,7 +68,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(request, response);//다음 필터로 요청 전달 ->마지막 필터였으면 컨트롤러로
     }
 
     private void handleAuthError(AuthHandler e, HttpServletResponse response) throws IOException {

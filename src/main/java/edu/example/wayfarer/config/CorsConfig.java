@@ -1,5 +1,6 @@
 package edu.example.wayfarer.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -12,6 +13,13 @@ import java.util.List;
 
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
+
+    private static String allowedOrigin;
+
+    @Value("${cors.allowed.origin}")
+    public void setAllowedOrigin(String allowedOrigin) {
+        CorsConfig.allowedOrigin = allowedOrigin;
+    }
 
     @Bean
     public static CorsConfigurationSource apiConfigurationSource() {
