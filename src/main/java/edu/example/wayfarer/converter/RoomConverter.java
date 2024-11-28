@@ -6,7 +6,21 @@ import edu.example.wayfarer.dto.room.RoomResponseDTO;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Room;
 
+import java.util.ArrayList;
+
 public class RoomConverter {
+
+    public static Room toRoom(RoomRequestDTO roomRequestDTO) {
+        return Room.builder()
+                .title(roomRequestDTO.title())
+                .country(roomRequestDTO.country())
+                .startDate(roomRequestDTO.startDate())
+                .endDate(roomRequestDTO.endDate())
+                .hostEmail(roomRequestDTO.email())
+                .memberRooms(new ArrayList<>())
+                .build();
+    }
+
     public static RoomListDTO toRoomListDTO(Room room) {
         return new RoomListDTO(
                 room.getTitle(),

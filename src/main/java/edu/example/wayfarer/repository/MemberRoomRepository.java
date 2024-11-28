@@ -28,8 +28,9 @@ public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
     // 특정 Room에 해당 Color가 이미 사용중인지 확인
     boolean existsByRoom_RoomIdAndColor(String roomId, Color color);
 
-    void findByRoom(Room room);
 
-    List<MemberRoom> findAllByRoom_RoomId(String roomId);   // Room에 속한 모든 MemberRoom 조회
-    List<MemberRoom> findAllByMember_Email(String email);   // 한 사용자가 참여하고 있는 모든방
+    /* Room에 속한 모든 MemberRoom 조회 */
+    List<MemberRoom> findAllByRoom_RoomId(String roomId);
+    /* 한 사용자가 참여하고 있는 모든방 */
+    List<MemberRoom> findAllByMember_Email(String email);
 }
