@@ -44,7 +44,7 @@ public class Room {
     private List<MemberRoom> memberRooms;
 
     // Room 생성시 랜덤 roomId 할당
-    @PrePersist // when generating unique identifiers
+    @PrePersist
     public void generateRoomIdAndRoomCode(){
         if(StringUtils.isEmpty(roomId)){
             this.roomId = RandomStringGenerator.generateRandomString(8);
