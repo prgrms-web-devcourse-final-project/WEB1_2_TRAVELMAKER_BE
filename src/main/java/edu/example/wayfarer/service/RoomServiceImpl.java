@@ -11,7 +11,7 @@ import edu.example.wayfarer.entity.MemberRoom;
 import edu.example.wayfarer.entity.Room;
 import edu.example.wayfarer.entity.Schedule;
 import edu.example.wayfarer.entity.enums.Color;
-import edu.example.wayfarer.entity.enums.Days;
+//import edu.example.wayfarer.entity.enums.Days;
 import edu.example.wayfarer.entity.enums.PlanType;
 import edu.example.wayfarer.exception.RoomException;
 import edu.example.wayfarer.repository.*;
@@ -124,15 +124,15 @@ public class RoomServiceImpl implements RoomService {
 
         if(newSession > oldSession){
             for(long i = oldSession + 1; i <= newSession; i++){
-                String dayValue = "DAY" + i;
-                Days day = Days.valueOf(dayValue);
+//                String dayValue = "DAY" + i;
+//                Days day = Days.valueOf(dayValue);
 
                 LocalDate actualDate = newStartDate.plusDays(i-1);  // 새로운 시작 날짜 기준으로 actualDate 계산
 
                 for (PlanType planType : PlanType.values()){
                     Schedule newSchedule = Schedule.builder()
                             .room(room)
-                            .date(day)
+//                            .date(day)
                             .actualDate(actualDate)
                             .planType(planType)
                             .build();
@@ -141,10 +141,12 @@ public class RoomServiceImpl implements RoomService {
             }
         }else if(newSession < oldSession){
             for(long i = newSession + 1; i <= oldSession; i++){
-                String dayValue = "DAY" + i;
-                Days day = Days.valueOf(dayValue);
+//                String dayValue = "DAY" + i;
+//                Days day = Days.valueOf(dayValue);
 
-                List<Schedule> schedulesToDelete = scheduleRepository.findByRoomAndDate(room, day);
+                LocalDate actualDate = newStartDate.plusDays(i-1);
+                List<Schedule> schedulesToDelete = scheduleRepository.findByRoomAndActualDate(room, actualDate);
+//                List<Schedule> schedulesToDelete = scheduleRepository.findByRoomAndDate(room, day);
                 scheduleRepository.deleteAll(schedulesToDelete);
             }
         }
@@ -197,14 +199,14 @@ public class RoomServiceImpl implements RoomService {
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         List<Schedule> schedules = new ArrayList<>();
 
-        Days[] days = Days.values();
+//        Days[] days = Days.values();
         for(int i = 0; i < daysBetween; i++) {
             LocalDate currentDate = startDate.plusDays(i);
             for (PlanType planType : PlanType.values()){
                 schedules.add(Schedule.builder()
                         .room(room)
                         .planType(planType)
-                        .date(days[i])
+//                        .date(days[i])
                         .actualDate(currentDate)
                         .build()
                 );
