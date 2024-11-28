@@ -19,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -64,8 +65,14 @@ public class ScheduleItemController {
                 Long scheduleItemId = ((Number) data.get("scheduleItemId")).longValue();
                 String name = data.get("name").toString();
                 String content = data.get("content").toString();
-                Long previousItemId = ((Number) data.get("previousItemId")).longValue();
-                Long nextItemId = ((Number) data.get("nextItemId")).longValue();
+                Long previousItemId = Optional.ofNullable((Number) data.get("previousItemId"))
+                        .map(Number::longValue)
+                        .orElse(null);
+
+                Long nextItemId = Optional.ofNullable((Number) data.get("nextItemId"))
+                        .map(Number::longValue)
+                        .orElse(null);
+
 
 
                 ScheduleItemUpdateDTO scheduleItemUpdateDTO = new ScheduleItemUpdateDTO(scheduleItemId,name,content,previousItemId,nextItemId);
