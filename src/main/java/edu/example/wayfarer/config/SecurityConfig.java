@@ -1,16 +1,16 @@
 package edu.example.wayfarer.config;
 
 import edu.example.wayfarer.auth.constant.SecurityConstants;
-import edu.example.wayfarer.auth.filter.*;
-import edu.example.wayfarer.auth.userdetails.PrincipalDetailsService;
+import edu.example.wayfarer.auth.filter.JwtAccessDeniedHandler;
+import edu.example.wayfarer.auth.filter.JwtFilter;
 import edu.example.wayfarer.auth.util.JwtUtil;
-import edu.example.wayfarer.service.AuthService; // AuthService 추가
+import edu.example.wayfarer.repository.TokenRepository;
+import edu.example.wayfarer.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,8 +26,9 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JwtUtil jwtUtil;
-    private final PrincipalDetailsService principalDetailsService;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final TokenRepository tokenRepository;
+    //private final AuthService authService;
 
     // PasswordEncoder Bean 등록
     @Bean
@@ -36,41 +37,32 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {//시큐리티 인터페이스
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(principalDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        provider.setHideUserNotFoundExceptions(false);
-        return provider;
-    }
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthService authService) throws Exception { // AuthService 추가
-
-        // cors disable
+        // CORS 설정
         http.cors(cors -> cors
                 .configurationSource(CorsConfig.apiConfigurationSource()));
 
-        // csrf disable
+        // CSRF 비활성화: REST API 서버에서는 세션 기반이 아닌 토큰 기반의 인증을 사용하므로 CSRF를 비활성화합니다.
         http.csrf(AbstractHttpConfigurer::disable);
 
-        // form 로그인 방식 disable
+        // 폼 로그인 비활성화
         http.formLogin(AbstractHttpConfigurer::disable);
 
-        // http basic 인증 방식 disable
+        // HTTP Basic 인증 비활성화
         http.httpBasic(AbstractHttpConfigurer::disable);
 
-        // Session Stateless하게 관리
-        http.sessionManagement((session) -> session
+        // 세션 사용 비활성화 (Stateless)
+        http.sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         );
 
-        // 경로별 인가
+        // 경로별 인가 설정
         http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
                 .requestMatchers(HttpMethod.POST, "/api/v1/members").permitAll()
                 .requestMatchers(SecurityConstants.allowedUrls).permitAll()
@@ -79,25 +71,15 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
         );
 
-        http.exceptionHandling(
-                (configurer ->
-                        configurer
-                                .accessDeniedHandler(jwtAccessDeniedHandler)
-                )
+        // 예외 처리 핸들러 설정
+        http.exceptionHandling(configurer ->
+                configurer.accessDeniedHandler(jwtAccessDeniedHandler)
         );
 
         // JwtFilter를 UsernamePasswordAuthenticationFilter 이전에 추가
-        http.addFilterBefore(new JwtFilter(jwtUtil, principalDetailsService, authService),
+        http.addFilterBefore(new JwtFilter(jwtUtil, tokenRepository),
                 UsernamePasswordAuthenticationFilter.class);
-
-        // JwtExceptionFilter를 JwtFilter 이후에 추가
-        //http.addFilterAfter(new JwtExceptionFilter(), JwtFilter.class);
-
-//        // LoginFilter를 UsernamePasswordAuthenticationFilter 위치에 추가
-//        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),
-//                UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 }
