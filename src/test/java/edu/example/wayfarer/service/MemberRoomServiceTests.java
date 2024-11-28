@@ -3,6 +3,8 @@ package edu.example.wayfarer.service;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomResponseDTO;
 import edu.example.wayfarer.dto.room.RoomListDTO;
+import edu.example.wayfarer.entity.Member;
+import edu.example.wayfarer.repository.MemberRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -20,6 +22,8 @@ public class MemberRoomServiceTests {
 
     @Autowired
     private MemberRoomService memberRoomService;
+    @Autowired
+    private MemberRepository memberRepository;
 
     @Test
     @Transactional
@@ -28,7 +32,7 @@ public class MemberRoomServiceTests {
         MemberRoomRequestDTO memberRoomRequestDTO = new MemberRoomRequestDTO(
                 "SMAZCett",
                 "nyNqsifP",
-                "aa@aa.com"
+                ""
         );
         memberRoomService.create(memberRoomRequestDTO);
     }
@@ -38,9 +42,10 @@ public class MemberRoomServiceTests {
     @Commit
     public void testDeleteMemberRoom() {
         String email = "aa@aa.com";
+        Member member = memberRepository.findByEmail(email).get();
         String roomId = "xu688Ljt";
 
-        memberRoomService.delete(email, roomId);
+        memberRoomService.delete(member, roomId);
     }
 
     @Test
@@ -53,7 +58,8 @@ public class MemberRoomServiceTests {
     @Test
     public void testListByEmail(){
         String email = "aa@aa.com";
-        List<RoomListDTO> rooms = memberRoomService.listByEmail(email);
+        Member member = memberRepository.findByEmail(email).get();
+        List<RoomListDTO> rooms = memberRoomService.listByEmail(member);
         System.out.println(rooms);
     }
 
