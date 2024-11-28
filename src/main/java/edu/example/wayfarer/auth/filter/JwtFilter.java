@@ -3,8 +3,9 @@ package edu.example.wayfarer.auth.filter;
 import edu.example.wayfarer.apiPayload.code.status.ErrorStatus;
 import edu.example.wayfarer.apiPayload.exception.handler.AuthHandler;
 import edu.example.wayfarer.auth.constant.SecurityConstants;
-import edu.example.wayfarer.auth.userdetails.PrincipalDetailsService;
 import edu.example.wayfarer.auth.util.JwtUtil;
+import edu.example.wayfarer.entity.Token;
+import edu.example.wayfarer.repository.TokenRepository;
 import edu.example.wayfarer.service.AuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,14 +22,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final PrincipalDetailsService principalDetailsService;
-    private final AuthService authService; // 액세스 갱신을 위해
+    private final TokenRepository tokenRepository;
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     @Override
@@ -44,18 +45,21 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            String accessToken = jwtUtil.resolveAccessToken(request);//헤더나 쿠키에서 액세스 토큰 가져오기
+            String accessToken = jwtUtil.resolveAccessToken(request); // 헤더나 쿠키에서 액세스 토큰 가져오기
 
-            if (accessToken != null && jwtUtil.isAccessTokenValid(accessToken)) { //액세스 토큰이 존재하고 유효하다면
-                String email = jwtUtil.getEmail(accessToken); //email 가져오기
-                UserDetails userDetails = principalDetailsService.loadUserByUsername(email); //유저 디테일 가져오기
-                log.info(userDetails.toString());
+            if (accessToken != null && jwtUtil.isAccessTokenValid(accessToken)) { // 액세스 토큰이 유효한 경우
+                String email = jwtUtil.getEmail(accessToken); // 이메일 추출
 
-                if (userDetails != null) {//
+                // Redis에서 사용자 정보 가져오기
+                Optional<Token> optionalToken = tokenRepository.findByEmail(email);
+                if (optionalToken.isPresent()) {
+                    // 인증 토큰 생성
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, userDetails.getAuthorities());//사용자정보,비밀번호,권한 -> OAuth때문에 비밀번호는 사용되지 않음
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                                    email, null, null); // 패스워드는 사용하지 않으므로 `null` 처리, 권한도 일단 `null`로 설정
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);//SecurityContextHolder는 현재 '스레드'의 보안 정보를 저장하고 관리하는 객체
+                } else {
+                    throw new AuthHandler(ErrorStatus._NOT_FOUND_MEMBER);
                 }
             }
         } catch (AuthHandler e) {
@@ -64,7 +68,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        filterChain.doFilter(request, response);//다음 필터로 요청 전달 ->마지막 필터였으면 컨트롤러로
+        filterChain.doFilter(request, response); // 다음 필터로 요청 전달
     }
 
     private void handleAuthError(AuthHandler e, HttpServletResponse response) throws IOException {
