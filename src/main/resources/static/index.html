@@ -16,20 +16,6 @@
         let stompClient; // stompClient 변수를 전역으로 설정
         let subscriptions = {}; // 구독 정보를 저장할 객체
 
-        function getTokenFromCookie(tokenName) {
-            const name = tokenName + "=";
-            const decodedCookie = decodeURIComponent(document.cookie);
-            const ca = decodedCookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) == ' ') c = c.substring(1);  // 공백 제거
-                if (c.indexOf(name) == 0) {
-                    return c.substring(name.length, c.length);  // 토큰 값 반환
-                }
-            }
-            return "";
-        }
-
         function connectWebSocket() {
             const url = $('#websocketUrl').val(); // 웹소켓 URL 가져오기
 
