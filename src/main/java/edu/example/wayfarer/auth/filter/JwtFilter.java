@@ -11,7 +11,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -55,16 +54,13 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (userDetails != null) {//
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(
-                                    userDetails, "", userDetails.getAuthorities());//사용자정보,비밀번호,권한 -> OAuth때문에 비밀번호는 사용되지 않음
+                                    userDetails, null, userDetails.getAuthorities());//사용자정보,비밀번호,권한 -> OAuth때문에 비밀번호는 사용되지 않음
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                } else {
-                    throw new AuthHandler(ErrorStatus._NOT_FOUND_MEMBER);
                 }
-            } else {
-                log.warn("Access token is invalid or not present");
             }
         } catch (AuthHandler e) {
-            handleAuthError(e, response);
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.getWriter().write("Unauthorized - " + e.getMessage());
             return;
         }
 
