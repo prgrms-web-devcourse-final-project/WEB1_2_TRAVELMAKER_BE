@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ScheduleItemServiceImpl implements ScheduleItemService {
 
     private final ScheduleItemRepository scheduleItemRepository;
@@ -62,10 +61,11 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
      * @return List<ScheduleItemResponseDTO> 조회된 ScheduleItem 리스트의 응답 데이터
      */
     @Override
+//    @Transactional(readOnly = true)
     public List<ScheduleItemResponseDTO> getListBySchedule(Long scheduleId) {
         // scheduleId 를 기준으로 scheduleItem 리스트 조회
         List<ScheduleItem> scheduleItems =
-                scheduleItemRepository.findByMarker_Schedule_ScheduleIdOrderByItemOrderAsc(scheduleId);
+                scheduleItemRepository.findByMarkerScheduleScheduleIdOrderByItemOrderAsc(scheduleId);
 
         // 순차적인 정수 index 부여
         AtomicInteger index = new AtomicInteger(0);
@@ -89,13 +89,14 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
      * @return Page<ScheduleItemResponseDTO> 조회된 ScheduleItem 페이지의 응답 데이터
      */
     @Override
+//    @Transactional(readOnly = true)
     public Page<ScheduleItemResponseDTO> getPageBySchedule(Long scheduleId, PageRequestDTO pageRequestDTO) {
         // Pageable 생성
         Pageable pageable = pageRequestDTO.getPageable(Sort.by("itemOrder").ascending());
 
         // ScheduleItem 조회
         Page<ScheduleItem> scheduleItems
-                = scheduleItemRepository.findByMarker_Schedule_ScheduleId(scheduleId, pageable);
+                = scheduleItemRepository.findByMarkerScheduleScheduleId(scheduleId, pageable);
 
         // 페이지의 시작 인덱스
         // 예)page=1,size=5 일 경우 (0*5) 0부터 시작
@@ -119,6 +120,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
      * @return ScheduleItemResponseDTO 수정된 ScheduleItem 의 응답 데이터
      */
     @Override
+    @Transactional
     public ScheduleItemResponseDTO update(ScheduleItemUpdateDTO scheduleItemUpdateDTO) {
         // 수정한 ScheduleItem 조회
         ScheduleItem scheduleItem = scheduleItemRepository.findById(scheduleItemUpdateDTO.scheduleItemId())
@@ -163,9 +165,10 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
      * @param scheduleItemId 삭제할 ScheduleItem 의 PK
      */
     @Override
+    @Transactional
     public void delete(Long scheduleItemId) {
         // 삭제할 ScheduleItem 의 부모 Marker 조회
-        Marker foundMarker = markerRepository.findByScheduleItem_ScheduleItemId(scheduleItemId)
+        Marker foundMarker = markerRepository.findByScheduleItemScheduleItemId(scheduleItemId)
                 .orElseThrow(MarkerException.NOT_FOUND::get);
 
         // Marker 자식 관계 끊고 orphanRemoval = true 를 이용해 자동 삭제
@@ -197,14 +200,15 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
 
     @Override
     public ScheduleItemResponseDTO readByMarkerId(Long markerId) {
-        Optional<ScheduleItem> scheduleItem = scheduleItemRepository.findByMarker_MarkerId(markerId);
+        Optional<ScheduleItem> scheduleItem = scheduleItemRepository.findByMarkerMarkerId(markerId);
         ScheduleItem item = scheduleItem.orElseThrow(() -> new IllegalArgumentException("해당 마커 ID에 해당하는 ScheduleItem이 존재하지 않습니다: " + markerId));
         int itemIndex = getIndex(scheduleItem.get().getScheduleItemId(), scheduleItem.get().getMarker().getSchedule().getScheduleId());
         return ScheduleItemConverter.toScheduleItemResponseDTO(item, itemIndex);
     }
 
     // itemOrder 수정 메서드
-    private void updateItemOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
+    @Transactional
+    protected void updateItemOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
 
         Long scheduleId = scheduleItem.getMarker().getSchedule().getScheduleId();
         Double newItemOrder = 0.0;
