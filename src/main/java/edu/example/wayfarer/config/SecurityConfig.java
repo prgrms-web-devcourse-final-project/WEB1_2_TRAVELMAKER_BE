@@ -28,7 +28,6 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final TokenRepository tokenRepository;
-    //private final AuthService authService;
 
     // PasswordEncoder Bean 등록
     @Bean
@@ -77,7 +76,7 @@ public class SecurityConfig {
         );
 
         // JwtFilter를 UsernamePasswordAuthenticationFilter 이전에 추가
-        http.addFilterBefore(new JwtFilter(jwtUtil, tokenRepository),
+        http.addFilterBefore(new JwtFilter(jwtUtil,tokenRepository),
                 UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
