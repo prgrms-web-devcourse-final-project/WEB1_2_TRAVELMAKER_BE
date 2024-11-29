@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MarkerServiceImpl implements MarkerService {
 
     private final MarkerRepository markerRepository;
@@ -42,6 +41,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return MarkerResponseDTO 생성된 Marker 응답 데이터
      */
     @Override
+    @Transactional
     public MarkerResponseDTO create(MarkerRequestDTO markerRequestDTO) {
         // 스케쥴의 마커 갯수가 100개 이상일 경우 예외
         Long totalMakerCount = markerRepository.countByScheduleScheduleId(markerRequestDTO.scheduleId());
@@ -100,6 +100,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return List<MarkerResponseDTO> 조회된 Marker 들의 응답데이터 리스트
      */
     @Override
+//    @Transactional(readOnly = true)
     public List<MarkerResponseDTO> getListBySchedule(Long scheduleId) {
         // scheduleId 로 Marker 리스트 조회
         List<Marker> markers = markerRepository.findByScheduleScheduleId(scheduleId);
@@ -122,6 +123,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return List<MarkerListDTO> 해당하는 Room 의 모든 Marker 들의 응답데이터 리스트
      */
     @Override
+//    @Transactional(readOnly = true)
     public List<MarkerListDTO> getListByRoom(String roomId) {
         // 1. roomId 에 해당하는 모든 Schedule 조회
         return scheduleRepository.findByRoom_RoomId(roomId).stream()
@@ -148,6 +150,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return MarkerResponseDTO 수정된 Marker 응답 데이터
      */
     @Override
+    @Transactional
     public MarkerResponseDTO update(MarkerUpdateDTO markerUpdateDTO) {
         // 수정할 Marker 조회
         Marker foundMarker = markerRepository.findById(markerUpdateDTO.markerId())
@@ -172,6 +175,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @param markerId 삭제할 Marker 의 PK
      */
     @Override
+    @Transactional
     public void delete(Long markerId) {
         // 삭제할 Marker 조회
         Marker foundMarker = markerRepository.findById(markerId)
@@ -187,7 +191,8 @@ public class MarkerServiceImpl implements MarkerService {
     }
 
     // Marker 의 자식 ScheduleItem 생성 메서드
-    private void saveScheduleItem(Marker marker) {
+    @Transactional
+    protected void saveScheduleItem(Marker marker) {
         // 스케쥴의 확정 마커 갯수가 50개 이상일 경우 예외
         Long confirmedCount = markerRepository.countByScheduleScheduleIdAndConfirmTrue(marker.getSchedule().getScheduleId());
         if (confirmedCount >= 50) {
