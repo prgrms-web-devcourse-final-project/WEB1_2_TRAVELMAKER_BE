@@ -54,9 +54,9 @@ public class MainController {
         Member currentUser = securityUtil.getCurrentUser();
 //        memberRoomRequestDTO.email() = currentUser.getEmail();
         MemberRoomRequestDTO updatedDTO = new MemberRoomRequestDTO(
-                currentUser.getEmail(),
                 memberRoomRequestDTO.roomId(),
-                memberRoomRequestDTO.roomCode()
+                memberRoomRequestDTO.roomCode(),
+                currentUser.getEmail()
         );
         memberRoomService.create(updatedDTO);
         return ResponseEntity.ok(Map.of("message", "방에 입장했습니다."));
