@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ScheduleItemServiceImpl implements ScheduleItemService {
 
     private final ScheduleItemRepository scheduleItemRepository;
@@ -62,6 +61,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
      * @return List<ScheduleItemResponseDTO> 조회된 ScheduleItem 리스트의 응답 데이터
      */
     @Override
+//    @Transactional(readOnly = true)
     public List<ScheduleItemResponseDTO> getListBySchedule(Long scheduleId) {
         // scheduleId 를 기준으로 scheduleItem 리스트 조회
         List<ScheduleItem> scheduleItems =
@@ -89,6 +89,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
      * @return Page<ScheduleItemResponseDTO> 조회된 ScheduleItem 페이지의 응답 데이터
      */
     @Override
+//    @Transactional(readOnly = true)
     public Page<ScheduleItemResponseDTO> getPageBySchedule(Long scheduleId, PageRequestDTO pageRequestDTO) {
         // Pageable 생성
         Pageable pageable = pageRequestDTO.getPageable(Sort.by("itemOrder").ascending());
@@ -119,6 +120,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
      * @return ScheduleItemResponseDTO 수정된 ScheduleItem 의 응답 데이터
      */
     @Override
+    @Transactional
     public ScheduleItemResponseDTO update(ScheduleItemUpdateDTO scheduleItemUpdateDTO) {
         // 수정한 ScheduleItem 조회
         ScheduleItem scheduleItem = scheduleItemRepository.findById(scheduleItemUpdateDTO.scheduleItemId())
@@ -163,6 +165,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
      * @param scheduleItemId 삭제할 ScheduleItem 의 PK
      */
     @Override
+    @Transactional
     public void delete(Long scheduleItemId) {
         // 삭제할 ScheduleItem 의 부모 Marker 조회
         Marker foundMarker = markerRepository.findByScheduleItemScheduleItemId(scheduleItemId)
@@ -204,7 +207,8 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     }
 
     // itemOrder 수정 메서드
-    private void updateItemOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
+    @Transactional
+    protected void updateItemOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
 
         Long scheduleId = scheduleItem.getMarker().getSchedule().getScheduleId();
         Double newItemOrder = 0.0;
