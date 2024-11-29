@@ -15,7 +15,6 @@ public class WebSocketMessageConverter<T> {
 
 
     @Getter
-    @Setter
     @RequiredArgsConstructor
     public static class WebsocketMessage<T> {
         private final String action;
