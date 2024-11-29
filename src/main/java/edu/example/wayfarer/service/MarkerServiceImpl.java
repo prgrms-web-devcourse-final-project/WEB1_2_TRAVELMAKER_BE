@@ -11,6 +11,7 @@ import edu.example.wayfarer.entity.Schedule;
 import edu.example.wayfarer.entity.ScheduleItem;
 import edu.example.wayfarer.entity.enums.Color;
 import edu.example.wayfarer.exception.MarkerException;
+import edu.example.wayfarer.exception.MemberException;
 import edu.example.wayfarer.exception.ScheduleItemException;
 import edu.example.wayfarer.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +52,7 @@ public class MarkerServiceImpl implements MarkerService {
         // 마커 생성을 위한 Member 조회
         // 로그인 구현 이후 수정 예정
         Member member = memberRepository.findById(markerRequestDTO.email())
-                .orElseThrow(() -> new RuntimeException("Member not found"));
+                .orElseThrow(MemberException.NOT_FOUND::get);
 
         // 마커 생성을 위한 Schedule 정보 조회
         Schedule schedule = scheduleRepository.findById(markerRequestDTO.scheduleId())
@@ -228,7 +229,7 @@ public class MarkerServiceImpl implements MarkerService {
     private Color findColor(String email, String roomId) {
         // 특정 방 사용자의 color 값 가져오기
         return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
-                .orElseThrow(()-> new RuntimeException("memberRoom not found"))
+                .orElseThrow(MarkerException.NOT_FOUND::get)
                 .getColor();
     }
 }
