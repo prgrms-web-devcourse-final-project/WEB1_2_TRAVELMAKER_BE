@@ -1,6 +1,5 @@
 package edu.example.wayfarer.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +29,16 @@ public class ScheduleItem {
     private String name;
     private String address;
     private String content;
-    private Double itemOrder;
+
+    private Integer orderIndex;  // ScheduleItem 의 순서
+
+    @OneToOne
+    @JoinColumn(name = "previous_item_id")
+    private ScheduleItem previousItem;  // 이전 항목
+
+    @OneToOne
+    @JoinColumn(name = "next_item_id")
+    private ScheduleItem nextItem;  // 다음 항목
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -46,8 +54,8 @@ public class ScheduleItem {
         this.content = content;
     }
 
-    public void changeItemOrder(Double itemOrder) {
-        this.itemOrder = itemOrder;
+    public void changeOrderIndex(Integer orderIndex) {
+        this.orderIndex = orderIndex;
     }
 
 }
