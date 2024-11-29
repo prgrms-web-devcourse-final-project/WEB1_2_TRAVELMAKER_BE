@@ -19,6 +19,6 @@ public class WebsocketControllerAdvice {
     @MessageExceptionHandler(Exception.class)
     @SendToUser("/queue/errors")
     public String handleGenericException(Exception e) {
-        return "Unexpected error: " + e.getMessage();
+        return "HTTP error: " + e.getMessage();
     }
 }
