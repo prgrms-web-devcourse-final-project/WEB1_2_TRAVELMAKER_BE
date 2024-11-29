@@ -1,4 +1,4 @@
-package edu.example.wayfarer.api_controller;
+package edu.example.wayfarer.controller;
 
 import edu.example.wayfarer.auth.util.SecurityUtil;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
@@ -9,6 +9,7 @@ import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.service.MemberRoomService;
 import edu.example.wayfarer.service.RoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,8 @@ public class MainController {
 
     // 방 생성
     @PostMapping
-    public ResponseEntity<RoomResponseDTO> createRoom(@RequestBody RoomRequestDTO roomRequestDTO) {
+    @ResponseStatus(HttpStatus.OK)
+    public RoomResponseDTO createRoom(@RequestBody RoomRequestDTO roomRequestDTO) {
         Member currentUser = securityUtil.getCurrentUser();
         RoomRequestDTO updatedDTO = new RoomRequestDTO(
                 currentUser.getEmail(),
@@ -35,7 +37,7 @@ public class MainController {
                 roomRequestDTO.startDate(),
                 roomRequestDTO.endDate()
         );
-        return ResponseEntity.ok(roomService.create(updatedDTO));
+        return roomService.create(updatedDTO);
     }
 
     // 방리스트 조회
@@ -52,9 +54,9 @@ public class MainController {
         Member currentUser = securityUtil.getCurrentUser();
 //        memberRoomRequestDTO.email() = currentUser.getEmail();
         MemberRoomRequestDTO updatedDTO = new MemberRoomRequestDTO(
-                currentUser.getEmail(),
                 memberRoomRequestDTO.roomId(),
-                memberRoomRequestDTO.roomCode()
+                memberRoomRequestDTO.roomCode(),
+                currentUser.getEmail()
         );
         memberRoomService.create(updatedDTO);
         return ResponseEntity.ok(Map.of("message", "방에 입장했습니다."));
