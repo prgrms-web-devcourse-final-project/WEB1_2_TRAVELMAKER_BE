@@ -1,8 +1,8 @@
 package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.apiPayload.exception.AuthorizationException;
-import edu.example.wayfarer.auth.util.KakaoUtil;
-import edu.example.wayfarer.auth.util.SecurityUtil;
+import edu.example.wayfarer.converter.MemberRoomConverter;
+import edu.example.wayfarer.converter.RoomConverter;
 import edu.example.wayfarer.dto.room.RoomRequestDTO;
 import edu.example.wayfarer.dto.room.RoomResponseDTO;
 import edu.example.wayfarer.dto.room.RoomUpdateDTO;
@@ -11,7 +11,7 @@ import edu.example.wayfarer.entity.MemberRoom;
 import edu.example.wayfarer.entity.Room;
 import edu.example.wayfarer.entity.Schedule;
 import edu.example.wayfarer.entity.enums.Color;
-import edu.example.wayfarer.entity.enums.Days;
+//import edu.example.wayfarer.entity.enums.Days;
 import edu.example.wayfarer.entity.enums.PlanType;
 import edu.example.wayfarer.exception.RoomException;
 import edu.example.wayfarer.repository.*;
@@ -51,16 +51,7 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponseDTO create(RoomRequestDTO roomRequestDTO) {
         // 날짜 유효성 검사
         validateDates(roomRequestDTO);
-
-
-        Room room = Room.builder()
-                .title(roomRequestDTO.title())
-                .country(roomRequestDTO.country())
-                .startDate(roomRequestDTO.startDate())
-                .endDate(roomRequestDTO.endDate())
-                .hostEmail(roomRequestDTO.email())
-                .memberRooms(new ArrayList<>())
-                .build();
+        Room room = RoomConverter.toRoom(roomRequestDTO);
 
         // 랜덤 roomId와 roomCode 생성
         generateRoomIdAndCode(room);
@@ -71,22 +62,17 @@ public class RoomServiceImpl implements RoomService {
         Room savedRoom = roomRepository.save(room);
 
         //memberRoom 저장
-        // currentUser로 지정 나중에
         Member foundMember = memberRepository.findById(room.getHostEmail()).orElseThrow();
         // Color enum을 배열화
         Color[] colors = Color.values();
-        // memberRoom을 build
-        MemberRoom memberRoom = MemberRoom.builder()
-                .member(foundMember)
-                .room(savedRoom)
-                .color(colors[1]).build();
+        MemberRoom memberRoom = MemberRoomConverter.toMemberRoom(savedRoom, foundMember, colors[1]);
         savedRoom.getMemberRooms().add(memberRoom);
         memberRoomRepository.save(memberRoom);
 
         // schedule 저장
         saveSchedules(savedRoom, roomRequestDTO.startDate(), roomRequestDTO.endDate());
 
-        return new RoomResponseDTO(savedRoom);
+        return RoomConverter.toRoomResponseDTO(savedRoom);
     }
 
     @Override
@@ -96,7 +82,7 @@ public class RoomServiceImpl implements RoomService {
 
         List<MemberRoom> members = memberRoomRepository.findAllByRoom_RoomId(roomId);
         room.setMemberRooms(members);
-        return new RoomResponseDTO(room);
+        return RoomConverter.toRoomResponseDTO(room);
     }
 
     /*
@@ -123,7 +109,6 @@ public class RoomServiceImpl implements RoomService {
         long oldSession = ChronoUnit.DAYS.between(room.getStartDate(), room.getEndDate())+1;
         long newSession = ChronoUnit.DAYS.between(roomUpdateDTO.startDate(), roomUpdateDTO.endDate())+1;
 
-        LocalDate oldStartDate = room.getStartDate();   // 이전 여행 시작일
         LocalDate newStartDate = roomUpdateDTO.startDate(); // 새로운 여행 시작일
 
         room.changeStartDate(roomUpdateDTO.startDate());
@@ -139,15 +124,15 @@ public class RoomServiceImpl implements RoomService {
 
         if(newSession > oldSession){
             for(long i = oldSession + 1; i <= newSession; i++){
-                String dayValue = "DAY" + i;
-                Days day = Days.valueOf(dayValue);
+//                String dayValue = "DAY" + i;
+//                Days day = Days.valueOf(dayValue);
 
                 LocalDate actualDate = newStartDate.plusDays(i-1);  // 새로운 시작 날짜 기준으로 actualDate 계산
 
                 for (PlanType planType : PlanType.values()){
                     Schedule newSchedule = Schedule.builder()
                             .room(room)
-                            .date(day)
+//                            .date(day)
                             .actualDate(actualDate)
                             .planType(planType)
                             .build();
@@ -156,14 +141,16 @@ public class RoomServiceImpl implements RoomService {
             }
         }else if(newSession < oldSession){
             for(long i = newSession + 1; i <= oldSession; i++){
-                String dayValue = "DAY" + i;
-                Days day = Days.valueOf(dayValue);
+//                String dayValue = "DAY" + i;
+//                Days day = Days.valueOf(dayValue);
 
-                List<Schedule> schedulesToDelete = scheduleRepository.findByRoomAndDate(room, day);
+                LocalDate actualDate = newStartDate.plusDays(i-1);
+                List<Schedule> schedulesToDelete = scheduleRepository.findByRoomAndActualDate(room, actualDate);
+//                List<Schedule> schedulesToDelete = scheduleRepository.findByRoomAndDate(room, day);
                 scheduleRepository.deleteAll(schedulesToDelete);
             }
         }
-        return new RoomResponseDTO(roomRepository.save(room));
+        return RoomConverter.toRoomResponseDTO(roomRepository.save(room));
     }
 
     @Override
@@ -212,14 +199,14 @@ public class RoomServiceImpl implements RoomService {
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         List<Schedule> schedules = new ArrayList<>();
 
-        Days[] days = Days.values();
+//        Days[] days = Days.values();
         for(int i = 0; i < daysBetween; i++) {
             LocalDate currentDate = startDate.plusDays(i);
             for (PlanType planType : PlanType.values()){
                 schedules.add(Schedule.builder()
                         .room(room)
                         .planType(planType)
-                        .date(days[i])
+//                        .date(days[i])
                         .actualDate(currentDate)
                         .build()
                 );

@@ -10,12 +10,5 @@ public record RoomListDTO(
         LocalDate startDate,
         LocalDate endDate
 ) {
-    public RoomListDTO(Room room) {
-        this(
-                room.getTitle(),
-                room.getCountry(),
-                room.getStartDate(),
-                room.getEndDate()
-        );
-    }
+
 }
