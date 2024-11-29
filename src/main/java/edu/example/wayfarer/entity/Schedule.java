@@ -1,6 +1,6 @@
 package edu.example.wayfarer.entity;
 
-import edu.example.wayfarer.entity.enums.Days;
+//import edu.example.wayfarer.entity.enums.Days;
 import edu.example.wayfarer.entity.enums.PlanType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,8 +29,8 @@ public class Schedule {
     @Enumerated(EnumType.STRING)
     private PlanType planType;
 
-    @Enumerated(EnumType.STRING)
-    private Days date;
+//    @Enumerated(EnumType.STRING)
+//    private Days date;
 
     private LocalDate actualDate;
 
