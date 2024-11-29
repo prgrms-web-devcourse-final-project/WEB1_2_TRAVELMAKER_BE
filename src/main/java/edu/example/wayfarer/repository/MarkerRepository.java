@@ -8,14 +8,14 @@ import java.util.Optional;
 
 public interface MarkerRepository extends JpaRepository<Marker, Long> {
 
-    List<Marker> findBySchedule_ScheduleId(Long scheduleId);
+    List<Marker> findByScheduleScheduleId(Long scheduleId);
 
-    Optional<Marker> findByScheduleItem_ScheduleItemId(Long scheduleItemId);
+    Optional<Marker> findByScheduleItemScheduleItemId(Long scheduleItemId);
 
-    Boolean existsBySchedule_ScheduleId(Long scheduleId);
+    Boolean existsByScheduleScheduleId(Long scheduleId);
 
-    Long countBySchedule_ScheduleId(Long scheduleId);
+    Long countByScheduleScheduleId(Long scheduleId);
 
-    Long countBySchedule_ScheduleIdAndConfirmTrue(Long scheduleId);
+    Long countByScheduleScheduleIdAndConfirmTrue(Long scheduleId);
 
 }

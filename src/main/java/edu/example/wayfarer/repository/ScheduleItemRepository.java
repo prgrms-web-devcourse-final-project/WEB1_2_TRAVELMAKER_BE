@@ -12,15 +12,15 @@ import java.util.Optional;
 
 public interface ScheduleItemRepository extends JpaRepository<ScheduleItem, Long> {
 
-    List<ScheduleItem> findByMarker_Schedule_ScheduleId(Long scheduleId);
+    List<ScheduleItem> findByMarkerScheduleScheduleId(Long scheduleId);
 
-    Page<ScheduleItem> findByMarker_Schedule_ScheduleId(Long scheduleId, Pageable pageable);
+    Page<ScheduleItem> findByMarkerScheduleScheduleId(Long scheduleId, Pageable pageable);
 
-    Optional<ScheduleItem> findByMarker_MarkerId(Long markerId);
+    Optional<ScheduleItem> findByMarkerMarkerId(Long markerId);
 
-    Boolean existsByMarker_MarkerId(Long markerId);
+    Boolean existsByMarkerMarkerId(Long markerId);
 
-    void deleteByMarker_MarkerId(Long markerId);
+    void deleteByMarkerMarkerId(Long markerId);
 
     // 최대 itemOrder 값 조회, null 일 경우 0 반환
     @Query("SELECT COALESCE(MAX(si.itemOrder), 0) " +
@@ -36,7 +36,7 @@ public interface ScheduleItemRepository extends JpaRepository<ScheduleItem, Long
 
     // scheduleId 로 scheduleItem 리스트 조회 및 itemOrder 로 정렬
     // 메서드명 기반 쿼리를 사용하려다보니 엄청 길어졌다 이게맞나?
-    List<ScheduleItem> findByMarker_Schedule_ScheduleIdOrderByItemOrderAsc(Long scheduleId);
+    List<ScheduleItem> findByMarkerScheduleScheduleIdOrderByItemOrderAsc(Long scheduleId);
 
     // 특정 scheduleId를 가지는 scheduleItem 들 중에서
     // index 값을 구하고자하는 scheduleItem 보다 itemOrder 가 작은 데이터의 갯수를 COUNT

@@ -44,7 +44,7 @@ public class MarkerServiceImpl implements MarkerService {
     @Override
     public MarkerResponseDTO create(MarkerRequestDTO markerRequestDTO) {
         // 스케쥴의 마커 갯수가 100개 이상일 경우 예외
-        Long totalMakerCount = markerRepository.countBySchedule_ScheduleId(markerRequestDTO.scheduleId());
+        Long totalMakerCount = markerRepository.countByScheduleScheduleId(markerRequestDTO.scheduleId());
         if (totalMakerCount >= 100) {
             throw MarkerException.MAX_LIMIT_EXCEEDED.get();
         }
@@ -102,7 +102,7 @@ public class MarkerServiceImpl implements MarkerService {
     @Override
     public List<MarkerResponseDTO> getListBySchedule(Long scheduleId) {
         // scheduleId 로 Marker 리스트 조회
-        List<Marker> markers = markerRepository.findBySchedule_ScheduleId(scheduleId);
+        List<Marker> markers = markerRepository.findByScheduleScheduleId(scheduleId);
 
         // 조회된 Marker 리스트를 MakerResponseDTO 리스트로 변환하여 반환
         return markers.stream()
@@ -128,7 +128,7 @@ public class MarkerServiceImpl implements MarkerService {
                 .map(schedule -> {
                     // 2. 각 Schedule 의 scheduleId 로 Marker 리스트 조회
                     List<MarkerResponseDTO> markerResponseDTOS
-                            = markerRepository.findBySchedule_ScheduleId(schedule.getScheduleId()).stream()
+                            = markerRepository.findByScheduleScheduleId(schedule.getScheduleId()).stream()
                             // 3. Marker 를 MarkerResponseDTO 로 변환하고 리스트에 담음
                             .map(MarkerConverter::toMarkerResponseDTO)
                             .toList();
@@ -189,7 +189,7 @@ public class MarkerServiceImpl implements MarkerService {
     // Marker 의 자식 ScheduleItem 생성 메서드
     private void saveScheduleItem(Marker marker) {
         // 스케쥴의 확정 마커 갯수가 50개 이상일 경우 예외
-        Long confirmedCount = markerRepository.countBySchedule_ScheduleIdAndConfirmTrue(marker.getSchedule().getScheduleId());
+        Long confirmedCount = markerRepository.countByScheduleScheduleIdAndConfirmTrue(marker.getSchedule().getScheduleId());
         if (confirmedCount >= 50) {
             throw MarkerException.CONFIRMED_LIMIT_EXCEEDED.get();
         }
