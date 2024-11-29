@@ -14,7 +14,6 @@ import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.ScheduleItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -192,7 +191,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     // 마커 작성자의 color 조회 메서드
     private Color findColor(String email, String roomId) {
         // 특정 방 사용자의 color 값 가져오기
-        return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
+        return memberRoomRepository.findByMemberEmailAndRoomRoomId(email, roomId)
                 .orElseThrow(()-> new RuntimeException("memberRoom not found"))
                 .getColor();
     }
