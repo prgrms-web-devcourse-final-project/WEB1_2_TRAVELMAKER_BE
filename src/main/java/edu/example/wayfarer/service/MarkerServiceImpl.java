@@ -13,7 +13,6 @@ import edu.example.wayfarer.entity.enums.Color;
 import edu.example.wayfarer.exception.MarkerException;
 import edu.example.wayfarer.exception.ScheduleItemException;
 import edu.example.wayfarer.repository.*;
-import edu.example.wayfarer.util.GeocodingUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,7 @@ public class MarkerServiceImpl implements MarkerService {
     private final MemberRoomRepository memberRoomRepository;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleItemRepository scheduleItemRepository;
-    private final GeocodingUtil geocodingUtil;
+    private final GeocodingService geocodingService;
 
     /**
      * 마커 생성 메서드
@@ -199,7 +198,7 @@ public class MarkerServiceImpl implements MarkerService {
             throw MarkerException.CONFIRMED_LIMIT_EXCEEDED.get();
         }
         // Marker 의 위도, 경도 값으로 주소 조회
-        String address = geocodingUtil.reverseGeocoding(marker.getLat(), marker.getLng());
+        String address = geocodingService.reverseGeocoding(marker.getLat(), marker.getLng());
 
         // 최대 ItemOrder 값 조회
         Double maxItemOrder = scheduleItemRepository.findMaxItemOrderByScheduleId(marker.getSchedule().getScheduleId());

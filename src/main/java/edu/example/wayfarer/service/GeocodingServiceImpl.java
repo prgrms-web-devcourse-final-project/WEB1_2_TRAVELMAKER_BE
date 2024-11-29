@@ -1,20 +1,23 @@
-package edu.example.wayfarer.util;
+package edu.example.wayfarer.service;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-@Component
-public class GeocodingUtil {
+@Service
+@RequiredArgsConstructor
+public class GeocodingServiceImpl implements GeocodingService {
 
     // Google API 키를 application.properties 에서 주입받음
     @Value("${google.api.key}")
     private String apiKey;
 
     // RestTemplate 객체를 생성해서 HTTP 요청 수행
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     /**
      * 주소를 받아서 위도,경도로 반환하는 메서드
@@ -22,6 +25,7 @@ public class GeocodingUtil {
      * @param address 변환하려는 주소 문자열
      * @return String 위도 경도를 포함한 문자열, 또는 에러메시지
      */
+    @Override
     public String geocoding(String address) {
         // Google Maps Geocoding API 요청 URL
         String url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + address + "&key=" + apiKey;
@@ -68,6 +72,7 @@ public class GeocodingUtil {
      * @param lng 경도
      * @return String 주소, 또는 에러 메시지
      */
+    @Override
     public String reverseGeocoding(double lat, double lng) {
         // Google Maps Geocoding API 요청 URL
         String url = "https://maps.googleapis.com/maps/api/geocode/json?latlng="

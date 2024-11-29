@@ -1,4 +1,4 @@
-package edu.example.wayfarer.util;
+package edu.example.wayfarer.service;
 
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -9,17 +9,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class GeocodingUtilTest {
+public class GeocodingServiceTests {
 
     @Autowired
-    private GeocodingUtil geocodingUtil;
+    private GeocodingService geocodingService;
 
     @Test
     @Order(1)
     public void testGeocoding() {
         String address = "서울특별시 종로구 세종대로 110)";
 
-        String result = geocodingUtil.geocoding(address);
+        String result = geocodingService.geocoding(address);
 
         System.out.println(result);
     }
@@ -30,7 +30,7 @@ public class GeocodingUtilTest {
         double lat = 37.5665;
         double lon = 126.9780;
 
-        String result = geocodingUtil.reverseGeocoding(lat, lon);
+        String result = geocodingService.reverseGeocoding(lat, lon);
 
         System.out.println(result);
     }
