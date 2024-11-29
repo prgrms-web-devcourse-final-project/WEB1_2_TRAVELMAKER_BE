@@ -1,4 +1,4 @@
-package edu.example.wayfarer.api_controller;
+package edu.example.wayfarer.controller;
 
 import edu.example.wayfarer.dto.marker.MarkerRequestDTO;
 import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
