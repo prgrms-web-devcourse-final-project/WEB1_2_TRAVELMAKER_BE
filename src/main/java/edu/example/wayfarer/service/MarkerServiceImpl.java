@@ -227,7 +227,7 @@ public class MarkerServiceImpl implements MarkerService {
     private Color findColor(String email, String roomId) {
         // 특정 방 사용자의 color 값 가져오기
         return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
-                .orElseThrow(MemberRoomException.NOT_FOUND::get)
+                .orElseThrow(MemberRoomException.ROOM_NOT_FOUND::get)
                 .getColor();
     }
 }
