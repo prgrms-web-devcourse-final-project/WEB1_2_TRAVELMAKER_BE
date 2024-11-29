@@ -27,6 +27,7 @@ public class CorsConfig implements WebMvcConfigurer {
 
         // 응답 허용할 ip
         List<String> allowedOriginPatterns = Arrays.asList(allowedOrigin);//setAllowCredentials(true)와 함께 사용할 경우 특정 Origin을 명시적으로 지정해야 합니다
+
         configuration.setAllowedOriginPatterns(allowedOriginPatterns);
 
         // 응답 허용할 HTTP Method
