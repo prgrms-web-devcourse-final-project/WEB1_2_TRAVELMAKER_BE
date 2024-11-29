@@ -4,7 +4,8 @@ public enum MemberRoomException {
 
     INVALID_ROOMCODE("ROOMCODE가 맞지 않습니다."),
     OVER_CAPACITY("10명 정원을 초과하였습니다."),
-    DUPLICATED_MEMBER("이미 들어와 있는 사용자입니다.");
+    DUPLICATED_MEMBER("이미 들어와 있는 사용자입니다."),
+    NOT_FOUND("해당 MemberRoom을 찾을 수 없습니다.");
 
     private MemberRoomTaskException memberRoomTaskException;
 
