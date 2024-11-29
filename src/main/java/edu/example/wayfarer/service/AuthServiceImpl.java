@@ -92,6 +92,13 @@ public class AuthServiceImpl implements AuthService {
         Member member;
         if (queryUser.isPresent()) {
             member = queryUser.get();
+
+            // 기존에 존재하는 토큰이 있다면 폐기
+            tokenRepository.findByEmail(member.getEmail()).ifPresent(token -> {
+                googleUtil.revokeToken(token.getSocialAccessToken()); // 기존 토큰 폐기
+                tokenRepository.deleteByEmail(member.getEmail()); // Redis에서도 토큰 삭제
+            });
+
         } else {
             String randomPassword = UUID.randomUUID().toString();
             member = AuthConverter.toUser(
@@ -103,35 +110,8 @@ public class AuthServiceImpl implements AuthService {
             memberRepository.save(member);
         }
 
-        // 기존 토큰 삭제
-        tokenRepository.deleteByEmail(member.getEmail());
-
-        // 새로운 Access Token과 Refresh Token 생성
-        String accessToken = jwtUtil.createAccessToken(member.getEmail(), member.getRole());
-        String refreshToken = jwtUtil.createRefreshToken(member.getEmail());
-
-        // Google Access Token 가져오기
-        String googleAccessToken = userInfo.getGoogleAccessToken();
-
-        // 토큰 만료 시간 계산 (초 단위)
-        LocalDateTime accessTokenExpiryDate = LocalDateTime.now().plusSeconds(jwtUtil.getAccessTokenValiditySeconds());
-        LocalDateTime refreshTokenExpiryDate = LocalDateTime.now().plusSeconds(jwtUtil.getRefreshTokenValiditySeconds());
-
-        // 토큰 저장
-        Token token = Token.builder()
-                .email(member.getEmail())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .socialAccessToken(googleAccessToken)
-                .provider("google")
-                .accessTokenExpiryDate(accessTokenExpiryDate)
-                .refreshTokenExpiryDate(refreshTokenExpiryDate)
-                .build();
-        tokenRepository.save(token);
-
-        // JWT Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
-        setCookie(httpServletResponse, "accessToken", accessToken, jwtUtil.getAccessTokenValiditySeconds(), false);
-        setCookie(httpServletResponse, "refreshToken", refreshToken, jwtUtil.getRefreshTokenValiditySeconds(), false);
+        // JWT 토큰 생성 및 Redis 저장 로직을 JwtUtil로 이동
+        jwtUtil.generateAndStoreTokens(member.getEmail(), member.getRole(), userInfo.getGoogleAccessToken(), "google", httpServletResponse);
 
         return member;
     }
@@ -146,6 +126,7 @@ public class AuthServiceImpl implements AuthService {
         response.addCookie(cookie);
     }
 
+    // AuthServiceImpl.java
     @Override
     public String refreshAccessToken(String refreshToken) {
         // Refresh Token 유효성 검증
@@ -163,20 +144,15 @@ public class AuthServiceImpl implements AuthService {
 
         Token token = optionalToken.get();
 
-        // Refresh Token 만료 여부 확인
-        if (token.getRefreshTokenExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new AuthHandler(ErrorStatus._AUTH_EXPIRE_TOKEN);
-        }
-
         // 새로운 Access Token과 Refresh Token 생성
-        String newAccessToken = jwtUtil.createAccessToken(email, token.getEmail());
+        String newAccessToken = jwtUtil.createAccessToken(email, token.getProvider());
         String newRefreshToken = jwtUtil.createRefreshToken(email);
 
         // 토큰 만료 시간 계산
         LocalDateTime newAccessTokenExpiryDate = LocalDateTime.now().plusSeconds(jwtUtil.getAccessTokenValiditySeconds());
         LocalDateTime newRefreshTokenExpiryDate = LocalDateTime.now().plusSeconds(jwtUtil.getRefreshTokenValiditySeconds());
 
-        // 기존 토큰 업데이트 (Social Access Token 및 Provider는 유지)
+        // 기존 토큰 업데이트
         token.updateJwtTokens(newAccessToken, newAccessTokenExpiryDate, newRefreshToken, newRefreshTokenExpiryDate);
         tokenRepository.save(token);
 
@@ -184,14 +160,16 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void revokeAndDeleteToken(String email) throws AuthHandler {
-        // 사용자에게 할당된 토큰 조회
+    public void revokeAndDeleteToken(String email) throws AuthHandler { //소셜서버에 토큰 삭제 알리기 및 우리 토큰 삭제
         Optional<Token> optionalToken = tokenRepository.findByEmail(email);
         if (optionalToken.isEmpty()) {
             throw new AuthHandler(ErrorStatus._TOKEN_NOT_FOUND);
         }
 
         Token token = optionalToken.get();
+
+        // Google Access Token 폐기
+        googleUtil.revokeToken(token.getSocialAccessToken());
 
         // 토큰 삭제
         tokenRepository.delete(token);

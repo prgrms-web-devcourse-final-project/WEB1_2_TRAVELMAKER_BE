@@ -2,36 +2,46 @@ package edu.example.wayfarer.auth.util;
 
 import edu.example.wayfarer.apiPayload.code.status.ErrorStatus;
 import edu.example.wayfarer.apiPayload.exception.handler.AuthHandler;
+import edu.example.wayfarer.entity.Token;
+import edu.example.wayfarer.repository.TokenRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
+import org.springframework.security.core.Authentication;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.Date;
 
 @Component
 @Slf4j
 @Getter
 public class JwtUtil {
-
     private final SecretKey secretKey;
     private final long accessTokenValiditySeconds;
     private final long refreshTokenValiditySeconds;
+    private final TokenRepository tokenRepository;
 
     public JwtUtil(
             @Value("${spring.jwt.secret}") final String secretKey,
             @Value("${spring.jwt.access-token-time}") final long accessTokenValiditySeconds,
-            @Value("${spring.jwt.refresh-token-time}") final long refreshTokenValiditySeconds) {
+            @Value("${spring.jwt.refresh-token-time}") final long refreshTokenValiditySeconds, TokenRepository tokenRepository) {
         this.secretKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         this.accessTokenValiditySeconds = accessTokenValiditySeconds;
         this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
+        this.tokenRepository = tokenRepository;
     }
 
     // HTTP 요청의 'Authorization' 헤더 또는 쿠키에서 JWT 액세스 토큰을 검색
@@ -47,7 +57,7 @@ public class JwtUtil {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("accessToken".equals(cookie.getName())) {
-                    log.info("[*] Token found in cookies: {}", cookie.getValue());
+                    log.info("[*] Access Token found in cookies: {}", cookie.getValue());
                     return cookie.getValue();
                 }
             }
@@ -56,6 +66,57 @@ public class JwtUtil {
         log.warn("[*] No Access Token found in request");
         return null;
     }
+
+    // HTTP 요청의 'Authorization' 헤더 또는 쿠키에서 JWT 리프레시 토큰을 검색
+    public String resolveRefreshToken(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            log.info("[*] Token found in header");
+            return authorization.split(" ")[1];
+        }
+
+        // 헤더에 없으면 쿠키에서 검색
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    log.info("[*] Refresh Token found in cookies: {}", cookie.getValue());
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        log.warn("[*] No Access Token found in request");
+        return null;
+    }
+
+    // JWT 토큰 발급 및 Redis 저장
+    public void generateAndStoreTokens(String email, String role, String socialAccessToken, String provider, HttpServletResponse response) {
+        String accessToken = createAccessToken(email, role);
+        String refreshToken = createRefreshToken(email);
+
+        LocalDateTime accessTokenExpiryDate = LocalDateTime.now().plusSeconds(accessTokenValiditySeconds);
+        LocalDateTime refreshTokenExpiryDate = LocalDateTime.now().plusSeconds(refreshTokenValiditySeconds);
+
+        // 새로운 토큰 객체 생성 및 저장
+        Token token = Token.builder()
+                .email(email)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessTokenExpiryDate(accessTokenExpiryDate)
+                .refreshTokenExpiryDate(refreshTokenExpiryDate)
+                .socialAccessToken(socialAccessToken)
+                .provider(provider)
+                .build();
+
+        // Redis에 토큰 저장
+        tokenRepository.save(token);
+
+        // 쿠키 설정
+        setAccessTokenCookie(response, accessToken);
+        setRefreshTokenCookie(response, refreshToken);
+    }
+
 
     // Access Token 생성
     public String createAccessToken(String email, String role) {
@@ -108,25 +169,37 @@ public class JwtUtil {
         return validateToken(token);
     }
 
-    // 토큰 검증 메서드
+    // 토큰 검증 메서드 -> 기한으로 따지기
     private boolean validateToken(String token) {
         try {
-            Jws<Claims> claims = getClaims(token); //페이로드 부분을 claims로 가져오기
+            Jws<Claims> claims = getClaims(token);
             Date expiredDate = claims.getBody().getExpiration();
             Date now = new Date();
-            return expiredDate.after(now); //만료기간이 현시점보다 뒤인지 확인
-        } catch (ExpiredJwtException e) {
-            log.info("[*] _AUTH_EXPIRE_TOKEN");
-            throw new AuthHandler(ErrorStatus._AUTH_EXPIRE_TOKEN);
-        } catch (SignatureException
-                 | SecurityException
-                 | IllegalArgumentException
-                 | MalformedJwtException
-                 | UnsupportedJwtException e) {
-            log.info("[*] _AUTH_INVALID_TOKEN");
-            throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
+            return expiredDate.after(now);
+        } catch (JwtException e) {
+            log.error("[*] Token validation failed: {}", e.getMessage());
+            return false;
         }
     }
+    // Access Token 쿠키 설정 메서드
+    public void setAccessTokenCookie(HttpServletResponse response, String accessToken) {
+        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setPath("/");
+        accessTokenCookie.setMaxAge((int) accessTokenValiditySeconds);
+        response.addCookie(accessTokenCookie);
+    }
 
+    // Refresh Token 쿠키 설정 메서드도 필요하면 추가
+    public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge((int) refreshTokenValiditySeconds);
+        response.addCookie(refreshTokenCookie);
+    }
 
+    public Authentication createAuthentication(String email) {
+        return new UsernamePasswordAuthenticationToken(email, null, Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")));
+    }
 }
