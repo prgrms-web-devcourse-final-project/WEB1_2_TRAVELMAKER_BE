@@ -14,6 +14,7 @@ import edu.example.wayfarer.exception.RoomException;
 import edu.example.wayfarer.repository.MemberRepository;
 import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.RoomRepository;
+import edu.example.wayfarer.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     private final MemberRoomRepository memberRoomRepository;
     private final RoomRepository roomRepository;
     private final MemberRepository memberRepository;
+    private final ScheduleRepository scheduleRepository;
 
     /*
     create 설명
@@ -44,7 +47,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     @Override
     public MemberRoomResponseDTO create(MemberRoomRequestDTO memberRoomRequestDTO) {
         Room room = roomRepository.findById(memberRoomRequestDTO.roomId())
-                .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
+                .orElseThrow(MemberRoomException.ROOM_NOT_FOUND::get);
 
         // MemberRoomRequestDTO에 있는 roomId와 roomCode가 맞는지 확인
         if(!room.getRoomCode().equals(memberRoomRequestDTO.roomCode())) {
@@ -53,6 +56,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
         Member currentUser = memberRepository.findByEmail(memberRoomRequestDTO.email())
                 .orElseThrow();
+
         boolean memberExistsInRoom = memberRoomRepository.findAllByRoom_RoomId(memberRoomRequestDTO.roomId())
                 .stream()
                 .anyMatch(existingMemberRoom -> existingMemberRoom.getMember().getEmail().equals(currentUser.getEmail()));
@@ -62,20 +66,11 @@ public class MemberRoomServiceImpl implements MemberRoomService {
         }
 
         // Color 순회하여 사용 가능한 Color 찾기
-        Color assignedColor = null;
-        Color[] colors = Color.values();
-        for (int i = 1; i< colors.length; i++) {
-            Color color = colors[i];
-            if(!memberRoomRepository.existsByRoom_RoomIdAndColor(memberRoomRequestDTO.roomId(), color)){
-                assignedColor = color;
-                break;  // 사용 가능한 첫 번째 Color 발견
-            }
-        }
-
-        // 할당할 색이 없을시, 정원 초과로 간주 -> 예외 발생
-        if(assignedColor == null) {
-            throw MemberRoomException.OVER_CAPACITY.get();
-        }
+        Color assignedColor = Stream.of(Color.values())
+                .skip(1)
+                .filter(color -> !memberRoomRepository.existsByRoom_RoomIdAndColor(memberRoomRequestDTO.roomId(), color))
+                .findFirst()
+                .orElseThrow(MemberRoomException.OVER_CAPACITY::get);
 
         MemberRoom memberRoom = MemberRoom.builder()
                 .room(room)
@@ -99,22 +94,8 @@ public class MemberRoomServiceImpl implements MemberRoomService {
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
 
         if(room.getHostEmail().equals(member.getEmail())) {
-            // 현재 방장의 MemberRoom 조회
-            MemberRoom currentHost = memberRoomRepository.findByMember_EmailAndRoom_RoomId(member.getEmail(), roomId)
-                    .orElseThrow(() -> new NoSuchElementException("이미 없는 회원입니다.")); // 여기 사실 방장이 없으면 안되는 건데..
+            hostExit(member, room);
 
-            // 다음 방장 선정: 남은 멤버 중 Color 인덱스가 가장 작은 사람
-            MemberRoom nextHost = memberRoomRepository.findAllByRoom_RoomId(roomId).stream()
-                    .filter(memberRoom -> !memberRoom.getMember().getEmail().equals(room.getHostEmail())) // 방장 제외
-                    .min(Comparator.comparingInt(memberRoom -> memberRoom.getColor().ordinal())) // Color 인덱스 기준 정렬
-                    .orElseThrow(() -> new IllegalStateException("방에 남아 있는 회원이 없어 방을 유지할 수 없습니다."));
-
-            // 새로운 방장 설정
-            room.setHostEmail(nextHost.getMember().getEmail());
-            roomRepository.save(room);
-
-            // 기존 방장의 MemberRoom 삭제
-            memberRoomRepository.delete(currentHost);
         }else {
             MemberRoom memberRoom = memberRoomRepository.findByMember_EmailAndRoom_RoomId(member.getEmail(), roomId)
                     .orElseThrow(()-> new NoSuchElementException("이미 없는 회원입니다."));
@@ -153,6 +134,36 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             throw RoomException.DOESNT_EXIST.get();
         }
 
+    }
+
+    private void hostExit(Member member, Room room){
+        // 현재 방장의 MemberRoom 조회
+        MemberRoom currentHost = memberRoomRepository.findByMember_EmailAndRoom_RoomId(member.getEmail(), room.getRoomId())
+                .orElseThrow(() -> new NoSuchElementException("이미 없는 회원입니다.")); // 여기 사실 방장이 없으면 안되는 건데..
+
+        // 방의 다른 멤버 조회
+        List<MemberRoom> remainingMembers = memberRoomRepository.findAllByRoom_RoomId(room.getRoomId()).stream()
+                .filter(memberRoom -> !memberRoom.getMember().getEmail().equals(room.getHostEmail()))   // 방장 제외
+                .toList();
+
+        if(remainingMembers.isEmpty()) {
+            memberRoomRepository.delete(currentHost);
+            scheduleRepository.deleteByRoomId(room.getRoomId());
+            roomRepository.delete(room);
+        }else {
+            // 다음 방장 선정: 남은 멤버 중 Color 인덱스가 가장 작은 사람
+            MemberRoom nextHost = memberRoomRepository.findAllByRoom_RoomId(room.getRoomId()).stream()
+                    .filter(memberRoom -> !memberRoom.getMember().getEmail().equals(room.getHostEmail())) // 방장 제외
+                    .min(Comparator.comparingInt(memberRoom -> memberRoom.getColor().ordinal())) // Color 인덱스 기준 정렬
+                    .orElseThrow(() -> new IllegalStateException("방에 남아 있는 회원이 없어 방을 유지할 수 없습니다."));
+
+            // 새로운 방장 설정
+            room.setHostEmail(nextHost.getMember().getEmail());
+            roomRepository.save(room);
+
+            // 기존 방장의 MemberRoom 삭제
+            memberRoomRepository.delete(currentHost);
+        }
     }
 
 
