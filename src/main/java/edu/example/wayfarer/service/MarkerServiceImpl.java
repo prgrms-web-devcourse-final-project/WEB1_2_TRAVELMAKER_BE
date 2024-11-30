@@ -195,6 +195,11 @@ public class MarkerServiceImpl implements MarkerService {
     @Transactional
     protected void saveScheduleItem(Marker marker) {
 
+        Boolean result = scheduleItemRepository.existsByMarkerScheduleScheduleId(marker.getSchedule().getScheduleId());
+        if (result) {
+            throw ScheduleItemException.ITEM_DUPLICATE.get();
+        }
+
         Long scheduleId = marker.getSchedule().getScheduleId();
 
         // 스케쥴의 확정 마커 갯수가 50개 이상일 경우 예외
