@@ -12,6 +12,7 @@ import edu.example.wayfarer.exception.ScheduleItemException;
 import edu.example.wayfarer.repository.MarkerRepository;
 import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.ScheduleItemRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     private final ScheduleItemRepository scheduleItemRepository;
     private final MarkerRepository markerRepository;
     private final MemberRoomRepository memberRoomRepository;
+    private final EntityManager entityManager;
 
     /**
      * 스케쥴 아이템 조회 메서드
@@ -177,10 +179,12 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         ScheduleItem savedScheduleItem = scheduleItemRepository.save(scheduleItem);
 
         // ScheduleItem 의 index 를 구하는 메서드 호출
-        int itemOrderIndex = getIndex(
-                savedScheduleItem.getScheduleItemId(),
-                savedScheduleItem.getMarker().getSchedule().getScheduleId()
-        );
+//        entityManager.flush();
+//        int itemOrderIndex = getIndex(
+//                savedScheduleItem.getScheduleItemId(),
+//                savedScheduleItem.getMarker().getSchedule().getScheduleId()
+//        );
+        int itemOrderIndex = 0;
 
         // 수정된 ScheduleItem 과 index 를 ScheduleItemResponseDTO 로 변환하여 반환
         return ScheduleItemConverter.toScheduleItemResponseDTO(savedScheduleItem, itemOrderIndex);
@@ -260,7 +264,6 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     // LinkedList 구조 재설정 메서드
     @Transactional
     protected void updateIndex(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
-
         if (previousItemId != null && nextItemId != null) {  // 두개의 일정 사이로 이동할 경우
             // 1. 앞에 위치할 ScheduleItem 조회
             ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
@@ -276,10 +279,10 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
 
             // 4. LinkedList  구조 재설정
             previousItem.changeNextItem(scheduleItem);
-            scheduleItemRepository.save(previousItem);
+//            ScheduleItem savedPreviousItem = scheduleItemRepository.save(previousItem);
 
             nextItem.changePreviousItem(scheduleItem);
-            scheduleItemRepository.save(nextItem);
+//            ScheduleItem savedNextItem = scheduleItemRepository.save(nextItem);
 
             scheduleItem.changePreviousItem(previousItem);
             scheduleItem.changeNextItem(nextItem);
@@ -324,6 +327,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     }
 
     // scheduleItem 의 index 를 구하는 메서드
+//    @Transactional(readOnly = true)
     public int getIndex(Long scheduleItemId, Long scheduleId) {
         // scheduleId 를 가지는 첫번째 scheduleItem 조회
         ScheduleItem startItem
