@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +29,6 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     private final ScheduleItemRepository scheduleItemRepository;
     private final MarkerRepository markerRepository;
     private final MemberRoomRepository memberRoomRepository;
-    private final EntityManager entityManager;
 
     /**
      * 스케쥴 아이템 조회 메서드
@@ -180,11 +178,11 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
 
         // ScheduleItem 의 index 를 구하는 메서드 호출
 //        entityManager.flush();
-//        int itemOrderIndex = getIndex(
-//                savedScheduleItem.getScheduleItemId(),
-//                savedScheduleItem.getMarker().getSchedule().getScheduleId()
-//        );
-        int itemOrderIndex = 0;
+        int itemOrderIndex = getIndex(
+                savedScheduleItem.getScheduleItemId(),
+                savedScheduleItem.getMarker().getSchedule().getScheduleId()
+        );
+//        int itemOrderIndex = 0;
 
         // 수정된 ScheduleItem 과 index 를 ScheduleItemResponseDTO 로 변환하여 반환
         return ScheduleItemConverter.toScheduleItemResponseDTO(savedScheduleItem, itemOrderIndex);
@@ -213,14 +211,12 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         //    삭제할 scheduleItem 의 nextItem 으로 변경
         if (previousItem != null) {
             previousItem.changeNextItem(nextItem);
-            scheduleItemRepository.save(previousItem);
         }
 
         //  - 뒤 scheduleItem 의 previousItem 을
         //    삭제할 scheduleItem 의 previousItem 으로 변경
         if (nextItem != null) {
             nextItem.changePreviousItem(previousItem);
-            scheduleItemRepository.save(nextItem);
         }
 
         // 4. 삭제할 ScheduleItem 의 부모 Marker 조회
@@ -240,8 +236,6 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
                         foundMarker.getSchedule().getRoom().getRoomId()
                 )
         );
-        // 변경사항 저장
-        markerRepository.save(foundMarker);
     }
 
     // 마커 작성자의 color 조회 메서드
@@ -278,11 +272,17 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
             }
 
             // 4. LinkedList  구조 재설정
+            if (previousItem.getPreviousItem().getScheduleItemId().equals(scheduleItem.getScheduleItemId())) {
+                previousItem.changePreviousItem(scheduleItem.getPreviousItem());
+            }
             previousItem.changeNextItem(scheduleItem);
-//            ScheduleItem savedPreviousItem = scheduleItemRepository.save(previousItem);
+//          ScheduleItem savedPreviousItem = scheduleItemRepository.save(previousItem);
 
             nextItem.changePreviousItem(scheduleItem);
-//            ScheduleItem savedNextItem = scheduleItemRepository.save(nextItem);
+            if (nextItem.getNextItem().getScheduleItemId().equals(scheduleItem.getScheduleItemId())) {
+                nextItem.changeNextItem(scheduleItem.getNextItem());
+            }
+//          ScheduleItem savedNextItem = scheduleItemRepository.save(nextItem);
 
             scheduleItem.changePreviousItem(previousItem);
             scheduleItem.changeNextItem(nextItem);
@@ -298,8 +298,14 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
             }
 
             // 3. LinkedList 구조 재설정
+            if (scheduleItem.getPreviousItem() != null) {
+                scheduleItem.getPreviousItem().changeNextItem(scheduleItem.getNextItem());
+            }
+            if (scheduleItem.getNextItem() != null) {
+                scheduleItem.getNextItem().changePreviousItem(scheduleItem.getPreviousItem());
+            }
             previousItem.changeNextItem(scheduleItem);
-            scheduleItemRepository.save(previousItem);
+//            scheduleItemRepository.save(previousItem);
 
             scheduleItem.changePreviousItem(previousItem);
             scheduleItem.changeNextItem(null);
@@ -315,6 +321,12 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
             }
 
             // 3. LinkedList 구조 재설정
+            if (scheduleItem.getPreviousItem() != null) {
+                scheduleItem.getPreviousItem().changeNextItem(scheduleItem.getNextItem());
+            }
+            if (scheduleItem.getNextItem() != null) {
+                scheduleItem.getNextItem().changePreviousItem(scheduleItem.getPreviousItem());
+            }
             nextItem.changePreviousItem(scheduleItem);
             scheduleItemRepository.save(nextItem);
 
@@ -335,7 +347,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
                 .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
         // 시작 index 값
-        int index = 1;
+        int index = 0;
 
         // LinkedList 를 순회하며 목표 scheduleItem 찾기
         ScheduleItem currentItem = startItem;
