@@ -33,7 +33,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         Room room = roomRepository.findById(chatMessageRequestDTO.roomId())
                 .orElseThrow(RoomException.NOT_FOUND::get);
         Member member = memberRepository.findByEmail(chatMessageRequestDTO.email())
-                .orElseThrow(MemberException.MEMBER_NOT_FOUND::get);
+                .orElseThrow(MemberException.NOT_FOUND::get);
 
         // 해당 사용자가 방의 참여자인지 확인
         verifyMemberInRoom(chatMessageRequestDTO.email(), chatMessageRequestDTO.roomId());
@@ -69,8 +69,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     }
 
     private void verifyMemberInRoom(String email, String roomId){
-        memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
-                .orElseThrow(MemberException.MEMBER_NOT_FOUND::get);
+        memberRoomRepository.findByMemberEmailAndRoomRoomId(email, roomId)
+                .orElseThrow(MemberException.NOT_FOUND::get);
     }
 
     private void verifyWriter(ChatMessage chatMessage, String email){
