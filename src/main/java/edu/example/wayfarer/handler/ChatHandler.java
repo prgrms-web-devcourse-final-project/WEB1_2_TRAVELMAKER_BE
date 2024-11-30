@@ -1,7 +1,9 @@
 package edu.example.wayfarer.handler;
 
+import edu.example.wayfarer.dto.chatMessage.ChatMessageRequestDTO;
 import edu.example.wayfarer.exception.WebSocketException;
 import edu.example.wayfarer.exception.WebSocketTaskException;
+import edu.example.wayfarer.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -16,7 +18,7 @@ import java.util.Map;
 @Log4j2
 public class ChatHandler {
     private final SimpMessagingTemplate template;
-//    private final ChatMessageService chatMessageService;
+    private final ChatMessageService chatMessageService;
 
     public void handleChat(String roomId, String email, Map<String, Object> messagePayload) {
         //클라이언트가 보낸 Payload를 action과 data로 분리
@@ -61,8 +63,8 @@ public class ChatHandler {
         );
 
         //chatMessage DB에 저장
-//        ChatMessageRequestDTO chatMessageRequestDTO = new ChatMessageRequestDTO (email, message);
-//        chatMesageService.create(chatMessageRequestDTO);
+        ChatMessageRequestDTO chatMessageRequestDTO = new ChatMessageRequestDTO (roomId, email, message);
+        chatMessageService.createChatMessage(chatMessageRequestDTO);
 
         log.debug("BROADCAST_MESSAGE: " + broadcastMessage);
 
