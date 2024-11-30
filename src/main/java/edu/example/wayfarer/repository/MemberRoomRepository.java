@@ -15,9 +15,6 @@ import java.util.Optional;
 public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
     Optional<MemberRoom> findByMemberEmailAndRoomRoomId(String email, String roomId);
 
-    @Query("select mb from MemberRoom mb where mb.room.roomId = :roomId")
-    MemberRoom findByRoomId(@Param("roomId") String roomId);
-
     @Modifying
     @Transactional
     @Query("DELETE FROM MemberRoom mr WHERE mr.room.roomId = :roomId")
@@ -25,7 +22,6 @@ public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
 
     // 특정 Room에 해당 Color가 이미 사용중인지 확인
     boolean existsByRoomRoomIdAndColor(String roomId, Color color);
-
 
     /* Room에 속한 모든 MemberRoom 조회 */
     List<MemberRoom> findAllByRoomRoomId(String roomId);

@@ -32,11 +32,11 @@ public class RoomServiceTest {
     @Commit
     public void testCreateRoom() {
         RoomRequestDTO roomRequestDTO = new RoomRequestDTO(
-                "jj@jj.com", // 임시 이메일
-                "고향",
-                "캐나다",
-                LocalDate.of(2024, 11, 29),
-                LocalDate.of(2024, 11, 30)
+                "테스트 그만 want 해요",
+                "testingC",
+                LocalDate.of(2024, 12, 30),
+                LocalDate.of(2025, 1, 02),
+                "aa@aa.com"
 
         );
         RoomResponseDTO result = roomService.create(roomRequestDTO);
