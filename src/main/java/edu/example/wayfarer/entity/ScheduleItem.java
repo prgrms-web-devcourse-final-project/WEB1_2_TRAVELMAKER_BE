@@ -30,11 +30,11 @@ public class ScheduleItem {
     private String address;
     private String content;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "previous_item_id")
     private ScheduleItem previousItem;  // 이전 항목
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "next_item_id")
     private ScheduleItem nextItem;  // 다음 항목
 
