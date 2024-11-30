@@ -80,7 +80,7 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
 
-        List<MemberRoom> members = memberRoomRepository.findAllByRoom_RoomId(roomId);
+        List<MemberRoom> members = memberRoomRepository.findAllByRoomRoomId(roomId);
         room.setMemberRooms(members);
         return RoomConverter.toRoomResponseDTO(room);
     }

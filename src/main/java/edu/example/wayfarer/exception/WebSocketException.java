@@ -4,8 +4,6 @@ public enum WebSocketException {
 
     INVALID_TOKEN("Invalid token", 401),
     INVALID_MESSAGE_FORMAT("Invalid message format", 1002), // 1002: Protocol Error
-    UNAUTHORIZED("Unauthorized access", 1001), // 1001: Going Away (or use another appropriate code)
-    SERVER_ERROR("Server encountered an unexpected error", 1006), // 1006: Abnormal Closure
     INVALID_ACTION("Invalid action", 1003),
     INVALID_EMAIL("Invalid email", 1003);
 
