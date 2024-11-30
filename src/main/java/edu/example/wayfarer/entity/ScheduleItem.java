@@ -30,8 +30,6 @@ public class ScheduleItem {
     private String address;
     private String content;
 
-    private Integer orderIndex;  // ScheduleItem 의 순서
-
     @OneToOne
     @JoinColumn(name = "previous_item_id")
     private ScheduleItem previousItem;  // 이전 항목
@@ -54,8 +52,11 @@ public class ScheduleItem {
         this.content = content;
     }
 
-    public void changeOrderIndex(Integer orderIndex) {
-        this.orderIndex = orderIndex;
+    public void changePreviousItem(ScheduleItem previousItem) {
+        this.previousItem = previousItem;
     }
 
+    public void changeNextItem(ScheduleItem nextItem) {
+        this.nextItem = nextItem;
+    }
 }
