@@ -12,7 +12,6 @@ import edu.example.wayfarer.exception.ScheduleItemException;
 import edu.example.wayfarer.repository.MarkerRepository;
 import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.ScheduleItemRepository;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -177,12 +176,10 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         ScheduleItem savedScheduleItem = scheduleItemRepository.save(scheduleItem);
 
         // ScheduleItem 의 index 를 구하는 메서드 호출
-//        entityManager.flush();
         int itemOrderIndex = getIndex(
                 savedScheduleItem.getScheduleItemId(),
                 savedScheduleItem.getMarker().getSchedule().getScheduleId()
         );
-//        int itemOrderIndex = 0;
 
         // 수정된 ScheduleItem 과 index 를 ScheduleItemResponseDTO 로 변환하여 반환
         return ScheduleItemConverter.toScheduleItemResponseDTO(savedScheduleItem, itemOrderIndex);
@@ -276,13 +273,11 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
                 previousItem.changePreviousItem(scheduleItem.getPreviousItem());
             }
             previousItem.changeNextItem(scheduleItem);
-//          ScheduleItem savedPreviousItem = scheduleItemRepository.save(previousItem);
 
             nextItem.changePreviousItem(scheduleItem);
             if (nextItem.getNextItem().getScheduleItemId().equals(scheduleItem.getScheduleItemId())) {
                 nextItem.changeNextItem(scheduleItem.getNextItem());
             }
-//          ScheduleItem savedNextItem = scheduleItemRepository.save(nextItem);
 
             scheduleItem.changePreviousItem(previousItem);
             scheduleItem.changeNextItem(nextItem);
@@ -305,7 +300,6 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
                 scheduleItem.getNextItem().changePreviousItem(scheduleItem.getPreviousItem());
             }
             previousItem.changeNextItem(scheduleItem);
-//            scheduleItemRepository.save(previousItem);
 
             scheduleItem.changePreviousItem(previousItem);
             scheduleItem.changeNextItem(null);
@@ -328,7 +322,6 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
                 scheduleItem.getNextItem().changePreviousItem(scheduleItem.getPreviousItem());
             }
             nextItem.changePreviousItem(scheduleItem);
-            scheduleItemRepository.save(nextItem);
 
             scheduleItem.changePreviousItem(null);
             scheduleItem.changeNextItem(nextItem);
@@ -363,6 +356,4 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         // 예외 처리
         throw ScheduleItemException.NOT_FOUND.get();
     }
-
-
 }

@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
-//@TestPropertySource(locations = "classpath:application-test.properties")
+@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MarkerServiceTests {
     @Autowired
