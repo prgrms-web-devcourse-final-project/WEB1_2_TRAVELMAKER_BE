@@ -10,8 +10,8 @@ public enum ScheduleItemException {
 
     private final ScheduleItemTaskException scheduleItemTaskException;
 
-    ScheduleItemException(String message, HttpStatus httpStatus) {
-        scheduleItemTaskException = new ScheduleItemTaskException(message, httpStatus);
+    ScheduleItemException(String message, HttpStatus status) {
+        scheduleItemTaskException = new ScheduleItemTaskException(message, status);
     }
 
     public ScheduleItemTaskException get() {

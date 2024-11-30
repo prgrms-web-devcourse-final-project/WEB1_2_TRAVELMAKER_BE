@@ -11,8 +11,8 @@ public enum MarkerException {
 
     private final MarkerTaskException markerTaskException;
 
-    MarkerException(String message, HttpStatus httpStatus) {
-        markerTaskException = new MarkerTaskException(message, httpStatus);
+    MarkerException(String message, HttpStatus status) {
+        markerTaskException = new MarkerTaskException(message, status);
     }
 
     public MarkerTaskException get() {

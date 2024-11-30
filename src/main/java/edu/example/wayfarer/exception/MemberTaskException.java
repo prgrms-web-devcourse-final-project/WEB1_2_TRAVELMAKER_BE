@@ -8,6 +8,10 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public class MemberTaskException extends RuntimeException {
 
-    private String message;
-    private HttpStatus httpStatus;
+    private HttpStatus status;
+
+    public MemberTaskException(String message, HttpStatus status) {
+        super(message);
+        this.status = status;
+    }
 }
