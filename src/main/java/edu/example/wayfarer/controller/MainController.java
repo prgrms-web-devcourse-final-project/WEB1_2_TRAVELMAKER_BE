@@ -31,11 +31,11 @@ public class MainController {
     public RoomResponseDTO createRoom(@RequestBody RoomRequestDTO roomRequestDTO) {
         Member currentUser = securityUtil.getCurrentUser();
         RoomRequestDTO updatedDTO = new RoomRequestDTO(
-                currentUser.getEmail(),
                 roomRequestDTO.title(),
                 roomRequestDTO.country(),
                 roomRequestDTO.startDate(),
-                roomRequestDTO.endDate()
+                roomRequestDTO.endDate(),
+                currentUser.getEmail()
         );
         return roomService.create(updatedDTO);
     }

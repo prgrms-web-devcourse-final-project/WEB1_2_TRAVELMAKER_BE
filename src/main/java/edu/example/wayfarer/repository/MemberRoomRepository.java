@@ -17,17 +17,13 @@ import java.util.Optional;
 public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
     Optional<MemberRoom> findByMember_EmailAndRoom_RoomId(String email, String roomId);
 
-    @Query("select mb from MemberRoom mb where mb.room.roomId = :roomId")
-    MemberRoom findByRoomId(@Param("roomId") String roomId);
-
     @Modifying
     @Transactional
     @Query("DELETE FROM MemberRoom mr WHERE mr.room.roomId = :roomId")
     void deleteByRoomId(@Param("roomId") String roomId);
 
-    // 특정 Room에 해당 Color가 이미 사용중인지 확인
+    /* 특정 Room에 해당 Color가 이미 사용중인지 확인 */
     boolean existsByRoom_RoomIdAndColor(String roomId, Color color);
-
 
     /* Room에 속한 모든 MemberRoom 조회 */
     List<MemberRoom> findAllByRoom_RoomId(String roomId);
