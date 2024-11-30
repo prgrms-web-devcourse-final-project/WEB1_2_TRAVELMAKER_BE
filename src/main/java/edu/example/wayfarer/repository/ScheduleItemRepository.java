@@ -18,7 +18,7 @@ public interface ScheduleItemRepository extends JpaRepository<ScheduleItem, Long
 
     Optional<ScheduleItem> findByMarkerMarkerId(Long markerId);
 
-    Boolean existsByMarkerScheduleScheduleId(Long scheduleId);
+    Boolean existsByMarkerMarkerId(Long markerId);
 
     // scheduleId를 기준 시작 아이템을 조회
     Optional<ScheduleItem> findFirstByMarkerScheduleScheduleIdAndPreviousItemIsNull(Long scheduleId);

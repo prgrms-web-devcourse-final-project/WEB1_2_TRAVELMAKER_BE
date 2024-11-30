@@ -195,7 +195,7 @@ public class MarkerServiceImpl implements MarkerService {
     @Transactional
     protected void saveScheduleItem(Marker marker) {
 
-        Boolean result = scheduleItemRepository.existsByMarkerScheduleScheduleId(marker.getSchedule().getScheduleId());
+        Boolean result = scheduleItemRepository.existsByMarkerMarkerId(marker.getMarkerId());
         if (result) {
             throw ScheduleItemException.ITEM_DUPLICATE.get();
         }
