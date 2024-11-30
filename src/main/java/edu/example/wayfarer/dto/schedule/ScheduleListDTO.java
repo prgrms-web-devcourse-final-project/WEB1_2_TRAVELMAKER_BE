@@ -8,12 +8,14 @@ import java.time.LocalDate;
 
 public record ScheduleListDTO(
 //        Days date,
+        Long scheduleId,
         PlanType planType,
         LocalDate actualDate
 ) {
     public ScheduleListDTO(Schedule schedule) {
         this(
 //                schedule.getDate(),
+                schedule.getScheduleId(),
                 schedule.getPlanType(),
                 schedule.getActualDate()
         );
