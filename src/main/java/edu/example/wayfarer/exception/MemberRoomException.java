@@ -9,6 +9,7 @@ public enum MemberRoomException {
     DUPLICATED_MEMBER("이미 들어와 있는 사용자입니다.", HttpStatus.CONFLICT),
     ROOM_NOT_FOUND("방을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),;
 
+
     private final MemberRoomTaskException memberRoomTaskException;
 
     MemberRoomException(String message, HttpStatus status){

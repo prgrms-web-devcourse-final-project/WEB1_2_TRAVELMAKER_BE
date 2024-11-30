@@ -10,10 +10,8 @@ import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Schedule;
 import edu.example.wayfarer.entity.ScheduleItem;
 import edu.example.wayfarer.entity.enums.Color;
-import edu.example.wayfarer.exception.MarkerException;
-import edu.example.wayfarer.exception.ScheduleItemException;
+import edu.example.wayfarer.exception.*;
 import edu.example.wayfarer.repository.*;
-import edu.example.wayfarer.util.GeocodingUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -23,7 +21,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MarkerServiceImpl implements MarkerService {
 
     private final MarkerRepository markerRepository;
@@ -31,7 +28,7 @@ public class MarkerServiceImpl implements MarkerService {
     private final MemberRoomRepository memberRoomRepository;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleItemRepository scheduleItemRepository;
-    private final GeocodingUtil geocodingUtil;
+    private final GeocodingService geocodingService;
 
     /**
      * 마커 생성 메서드
@@ -42,9 +39,10 @@ public class MarkerServiceImpl implements MarkerService {
      * @return MarkerResponseDTO 생성된 Marker 응답 데이터
      */
     @Override
+    @Transactional
     public MarkerResponseDTO create(MarkerRequestDTO markerRequestDTO) {
         // 스케쥴의 마커 갯수가 100개 이상일 경우 예외
-        Long totalMakerCount = markerRepository.countBySchedule_ScheduleId(markerRequestDTO.scheduleId());
+        Long totalMakerCount = markerRepository.countByScheduleScheduleId(markerRequestDTO.scheduleId());
         if (totalMakerCount >= 100) {
             throw MarkerException.MAX_LIMIT_EXCEEDED.get();
         }
@@ -52,11 +50,11 @@ public class MarkerServiceImpl implements MarkerService {
         // 마커 생성을 위한 Member 조회
         // 로그인 구현 이후 수정 예정
         Member member = memberRepository.findById(markerRequestDTO.email())
-                .orElseThrow(() -> new RuntimeException("Member not found"));
+                .orElseThrow(MemberException.NOT_FOUND::get);
 
         // 마커 생성을 위한 Schedule 정보 조회
         Schedule schedule = scheduleRepository.findById(markerRequestDTO.scheduleId())
-                .orElseThrow(() -> new RuntimeException("Schedule not found"));
+                .orElseThrow(ScheduleException.NOT_FOUND::get);
 
         // 해당 멤버의 memberRoom.color 조회
         Color color = findColor(member.getEmail(), schedule.getRoom().getRoomId());
@@ -100,9 +98,10 @@ public class MarkerServiceImpl implements MarkerService {
      * @return List<MarkerResponseDTO> 조회된 Marker 들의 응답데이터 리스트
      */
     @Override
+//    @Transactional(readOnly = true)
     public List<MarkerResponseDTO> getListBySchedule(Long scheduleId) {
         // scheduleId 로 Marker 리스트 조회
-        List<Marker> markers = markerRepository.findBySchedule_ScheduleId(scheduleId);
+        List<Marker> markers = markerRepository.findByScheduleScheduleId(scheduleId);
 
         // 조회된 Marker 리스트를 MakerResponseDTO 리스트로 변환하여 반환
         return markers.stream()
@@ -122,13 +121,14 @@ public class MarkerServiceImpl implements MarkerService {
      * @return List<MarkerListDTO> 해당하는 Room 의 모든 Marker 들의 응답데이터 리스트
      */
     @Override
+//    @Transactional(readOnly = true)
     public List<MarkerListDTO> getListByRoom(String roomId) {
         // 1. roomId 에 해당하는 모든 Schedule 조회
         return scheduleRepository.findByRoom_RoomId(roomId).stream()
                 .map(schedule -> {
                     // 2. 각 Schedule 의 scheduleId 로 Marker 리스트 조회
                     List<MarkerResponseDTO> markerResponseDTOS
-                            = markerRepository.findBySchedule_ScheduleId(schedule.getScheduleId()).stream()
+                            = markerRepository.findByScheduleScheduleId(schedule.getScheduleId()).stream()
                             // 3. Marker 를 MarkerResponseDTO 로 변환하고 리스트에 담음
                             .map(MarkerConverter::toMarkerResponseDTO)
                             .toList();
@@ -148,6 +148,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @return MarkerResponseDTO 수정된 Marker 응답 데이터
      */
     @Override
+    @Transactional
     public MarkerResponseDTO update(MarkerUpdateDTO markerUpdateDTO) {
         // 수정할 Marker 조회
         Marker foundMarker = markerRepository.findById(markerUpdateDTO.markerId())
@@ -172,6 +173,7 @@ public class MarkerServiceImpl implements MarkerService {
      * @param markerId 삭제할 Marker 의 PK
      */
     @Override
+    @Transactional
     public void delete(Long markerId) {
         // 삭제할 Marker 조회
         Marker foundMarker = markerRepository.findById(markerId)
@@ -187,14 +189,15 @@ public class MarkerServiceImpl implements MarkerService {
     }
 
     // Marker 의 자식 ScheduleItem 생성 메서드
-    private void saveScheduleItem(Marker marker) {
+    @Transactional
+    protected void saveScheduleItem(Marker marker) {
         // 스케쥴의 확정 마커 갯수가 50개 이상일 경우 예외
-        Long confirmedCount = markerRepository.countBySchedule_ScheduleIdAndConfirmTrue(marker.getSchedule().getScheduleId());
+        Long confirmedCount = markerRepository.countByScheduleScheduleIdAndConfirmTrue(marker.getSchedule().getScheduleId());
         if (confirmedCount >= 50) {
             throw MarkerException.CONFIRMED_LIMIT_EXCEEDED.get();
         }
         // Marker 의 위도, 경도 값으로 주소 조회
-        String address = geocodingUtil.reverseGeocoding(marker.getLat(), marker.getLng());
+        String address = geocodingService.reverseGeocoding(marker.getLat(), marker.getLng());
 
         // 최대 ItemOrder 값 조회
         Double maxItemOrder = scheduleItemRepository.findMaxItemOrderByScheduleId(marker.getSchedule().getScheduleId());
@@ -224,7 +227,7 @@ public class MarkerServiceImpl implements MarkerService {
     private Color findColor(String email, String roomId) {
         // 특정 방 사용자의 color 값 가져오기
         return memberRoomRepository.findByMember_EmailAndRoom_RoomId(email, roomId)
-                .orElseThrow(()-> new RuntimeException("memberRoom not found"))
+                .orElseThrow(MemberRoomException.ROOM_NOT_FOUND::get)
                 .getColor();
     }
 }

@@ -3,15 +3,15 @@ package edu.example.wayfarer.exception;
 import org.springframework.http.HttpStatus;
 
 public enum MemberException {
-    MEMBER_NOT_FOUND("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+    NOT_FOUND("존재하지 않는 맴버입니다.", HttpStatus.NOT_FOUND),;
 
     private final MemberTaskException memberTaskException;
 
-    MemberException(String message, HttpStatus status) {
-        memberTaskException = new MemberTaskException(message, status);
+    MemberException(String message, HttpStatus httpStatus) {
+        memberTaskException = new MemberTaskException(message, httpStatus);
     }
 
-    public MemberTaskException get(){
+    public MemberTaskException get() {
         return memberTaskException;
     }
 }
