@@ -30,9 +30,9 @@ public class MemberRoomServiceTests {
     @Commit
     public void testCreateMemberRoom() {
         MemberRoomRequestDTO memberRoomRequestDTO = new MemberRoomRequestDTO(
-                "SMAZCett",
-                "nyNqsifP",
-                ""
+                "728t5EIw",
+                "PBBMbFpC",
+                "bb@bb.com"
         );
         memberRoomService.create(memberRoomRequestDTO);
     }
