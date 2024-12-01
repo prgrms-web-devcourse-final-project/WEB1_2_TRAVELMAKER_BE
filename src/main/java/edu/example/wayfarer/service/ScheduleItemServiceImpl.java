@@ -255,7 +255,16 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     // LinkedList 구조 재설정 메서드
     @Transactional
     protected void updateIndex(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
-        if (previousItemId != null && nextItemId != null) {  // 두개의 일정 사이로 이동할 경우
+        // 기존 연결 끊기
+        if (scheduleItem.getPreviousItem() != null) {
+            scheduleItem.getPreviousItem().changeNextItem(scheduleItem.getNextItem());
+        }
+        if (scheduleItem.getNextItem() != null) {
+            scheduleItem.getNextItem().changePreviousItem(scheduleItem.getPreviousItem());
+        }
+
+        if (previousItemId != null && nextItemId != null) {
+            // CASE1: 두개의 일정 사이로 이동할 경우
             // 1. 앞에 위치할 ScheduleItem 조회
             ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
@@ -269,20 +278,14 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
             }
 
             // 4. LinkedList  구조 재설정
-            if (previousItem.getPreviousItem().getScheduleItemId().equals(scheduleItem.getScheduleItemId())) {
-                previousItem.changePreviousItem(scheduleItem.getPreviousItem());
-            }
             previousItem.changeNextItem(scheduleItem);
-
-            nextItem.changePreviousItem(scheduleItem);
-            if (nextItem.getNextItem().getScheduleItemId().equals(scheduleItem.getScheduleItemId())) {
-                nextItem.changeNextItem(scheduleItem.getNextItem());
-            }
-
             scheduleItem.changePreviousItem(previousItem);
             scheduleItem.changeNextItem(nextItem);
+            nextItem.changePreviousItem(scheduleItem);
 
-        } else if (previousItemId != null) {  // 제일 뒤로 이동할 경우
+
+        } else if (previousItemId != null) {
+            // CASE2: 제일 뒤로 이동할 경우
             // 1. 앞에 위치할 ScheduleItem 조회
             ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
@@ -293,18 +296,12 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
             }
 
             // 3. LinkedList 구조 재설정
-            if (scheduleItem.getPreviousItem() != null) {
-                scheduleItem.getPreviousItem().changeNextItem(scheduleItem.getNextItem());
-            }
-            if (scheduleItem.getNextItem() != null) {
-                scheduleItem.getNextItem().changePreviousItem(scheduleItem.getPreviousItem());
-            }
             previousItem.changeNextItem(scheduleItem);
-
             scheduleItem.changePreviousItem(previousItem);
             scheduleItem.changeNextItem(null);
 
-        } else if (nextItemId != null) {  // 제일 앞으로 이동할 경우
+        } else if (nextItemId != null) {
+            // CASE3: 제일 앞으로 이동할 경우
             // 1. 뒤에 위치할 ScheduleItem 조회
             ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
@@ -315,14 +312,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
             }
 
             // 3. LinkedList 구조 재설정
-            if (scheduleItem.getPreviousItem() != null) {
-                scheduleItem.getPreviousItem().changeNextItem(scheduleItem.getNextItem());
-            }
-            if (scheduleItem.getNextItem() != null) {
-                scheduleItem.getNextItem().changePreviousItem(scheduleItem.getPreviousItem());
-            }
             nextItem.changePreviousItem(scheduleItem);
-
             scheduleItem.changePreviousItem(null);
             scheduleItem.changeNextItem(nextItem);
 
