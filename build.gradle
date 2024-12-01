@@ -53,6 +53,11 @@ dependencies {
 
     // Swagger Setting
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+
+    //redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    //implementation 'io.lettuce.core:lettuce-core'
+    implementation 'org.springframework.session:spring-session-data-redis'
 }
 
 tasks.named('test') {
