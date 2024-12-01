@@ -37,10 +37,9 @@ public class RoomController {
                 roomUpdateDTO.title(),
                 roomUpdateDTO.country(),
                 roomUpdateDTO.startDate(),
-                roomUpdateDTO.endDate(),
-                currentUser.getEmail()
+                roomUpdateDTO.endDate()
         );
-        return ResponseEntity.ok(roomService.update(updatedDTO));
+        return ResponseEntity.ok(roomService.update(updatedDTO, currentUser.getEmail()));
     }
 
     @Operation(summary = "방 삭제 (방장만 가능)")

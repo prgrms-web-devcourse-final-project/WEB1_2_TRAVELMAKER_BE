@@ -35,10 +35,9 @@ public class MainController {
                 roomRequestDTO.title(),
                 roomRequestDTO.country(),
                 roomRequestDTO.startDate(),
-                roomRequestDTO.endDate(),
-                currentUser.getEmail()
+                roomRequestDTO.endDate()
         );
-        return roomService.create(updatedDTO);
+        return roomService.create(updatedDTO, currentUser.getEmail());
     }
 
     @Operation(summary = "방 리스트 조회")
@@ -56,10 +55,9 @@ public class MainController {
 //        memberRoomRequestDTO.email() = currentUser.getEmail();
         MemberRoomRequestDTO updatedDTO = new MemberRoomRequestDTO(
                 memberRoomRequestDTO.roomId(),
-                memberRoomRequestDTO.roomCode(),
-                currentUser.getEmail()
+                memberRoomRequestDTO.roomCode()
         );
-        memberRoomService.create(updatedDTO);
+        memberRoomService.create(updatedDTO, currentUser.getEmail());
         return ResponseEntity.ok(Map.of("message", "방에 입장했습니다."));
     }
 
