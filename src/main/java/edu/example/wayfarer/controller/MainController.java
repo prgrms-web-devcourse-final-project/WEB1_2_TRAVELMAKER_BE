@@ -8,6 +8,7 @@ import edu.example.wayfarer.dto.room.RoomResponseDTO;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.service.MemberRoomService;
 import edu.example.wayfarer.service.RoomService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class MainController {
     private final MemberRoomService memberRoomService;
     private final SecurityUtil securityUtil;
 
-    // 방 생성
+    @Operation(summary = "방 생성")
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public RoomResponseDTO createRoom(@RequestBody RoomRequestDTO roomRequestDTO) {
@@ -40,7 +41,7 @@ public class MainController {
         return roomService.create(updatedDTO);
     }
 
-    // 방리스트 조회
+    @Operation(summary = "방 리스트 조회")
     @GetMapping("/list")
     public ResponseEntity<List<RoomListDTO>> getListByEmail() {
         Member currentUser = securityUtil.getCurrentUser();
@@ -48,7 +49,7 @@ public class MainController {
         return ResponseEntity.ok(rooms);
     }
 
-    // 방 입장
+    @Operation(summary = "방 입장")
     @PostMapping("/join")
     public ResponseEntity<Map<String,String>> createMemberRoom(@RequestBody MemberRoomRequestDTO memberRoomRequestDTO) {
         Member currentUser = securityUtil.getCurrentUser();
