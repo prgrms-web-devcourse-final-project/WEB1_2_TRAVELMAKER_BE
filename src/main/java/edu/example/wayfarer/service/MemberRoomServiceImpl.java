@@ -57,7 +57,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
         Member currentUser = memberRepository.findByEmail(memberRoomRequestDTO.email())
                 .orElseThrow();
 
-        boolean memberExistsInRoom = memberRoomRepository.findAllByRoom_RoomId(memberRoomRequestDTO.roomId())
+        boolean memberExistsInRoom = memberRoomRepository.findAllByRoomRoomId(memberRoomRequestDTO.roomId())
                 .stream()
                 .anyMatch(existingMemberRoom -> existingMemberRoom.getMember().getEmail().equals(currentUser.getEmail()));
 
@@ -68,7 +68,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
         // Color 순회하여 사용 가능한 Color 찾기
         Color assignedColor = Stream.of(Color.values())
                 .skip(1)
-                .filter(color -> !memberRoomRepository.existsByRoom_RoomIdAndColor(memberRoomRequestDTO.roomId(), color))
+                .filter(color -> !memberRoomRepository.existsByRoomRoomIdAndColor(memberRoomRequestDTO.roomId(), color))
                 .findFirst()
                 .orElseThrow(MemberRoomException.OVER_CAPACITY::get);
 
@@ -97,7 +97,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             hostExit(member, room);
 
         }else {
-            MemberRoom memberRoom = memberRoomRepository.findByMember_EmailAndRoom_RoomId(member.getEmail(), roomId)
+            MemberRoom memberRoom = memberRoomRepository.findByMemberEmailAndRoomRoomId(member.getEmail(), roomId)
                     .orElseThrow(()-> new NoSuchElementException("이미 없는 회원입니다."));
             memberRoomRepository.delete(memberRoom);
         }
@@ -108,7 +108,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     @Override
     public List<MemberRoomResponseDTO> listByRoomId(String roomId) {
         // 1. 방에 속한 모든 MemberRoom 조회
-        List<MemberRoom> memberRooms = memberRoomRepository.findAllByRoom_RoomId(roomId);
+        List<MemberRoom> memberRooms = memberRoomRepository.findAllByRoomRoomId(roomId);
 
         // 2. MemberRoom 엔티티를 MemberRoomResponseDTO로 변환
         return memberRooms.stream()
@@ -119,7 +119,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     @Override
     public List<RoomListDTO> listByEmail(Member member) {
         try {
-            List<MemberRoom> memberRooms = memberRoomRepository.findAllByMember_Email(member.getEmail());
+            List<MemberRoom> memberRooms = memberRoomRepository.findAllByMemberEmail(member.getEmail());
 
             List<RoomListDTO> roomListDTOS = memberRooms.stream()
                     .map(memberRoom -> {
@@ -138,11 +138,11 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
     private void hostExit(Member member, Room room){
         // 현재 방장의 MemberRoom 조회
-        MemberRoom currentHost = memberRoomRepository.findByMember_EmailAndRoom_RoomId(member.getEmail(), room.getRoomId())
+        MemberRoom currentHost = memberRoomRepository.findByMemberEmailAndRoomRoomId(member.getEmail(), room.getRoomId())
                 .orElseThrow(() -> new NoSuchElementException("이미 없는 회원입니다.")); // 여기 사실 방장이 없으면 안되는 건데..
 
         // 방의 다른 멤버 조회
-        List<MemberRoom> remainingMembers = memberRoomRepository.findAllByRoom_RoomId(room.getRoomId()).stream()
+        List<MemberRoom> remainingMembers = memberRoomRepository.findAllByRoomRoomId(room.getRoomId()).stream()
                 .filter(memberRoom -> !memberRoom.getMember().getEmail().equals(room.getHostEmail()))   // 방장 제외
                 .toList();
 
@@ -152,7 +152,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             roomRepository.delete(room);
         }else {
             // 다음 방장 선정: 남은 멤버 중 Color 인덱스가 가장 작은 사람
-            MemberRoom nextHost = memberRoomRepository.findAllByRoom_RoomId(room.getRoomId()).stream()
+            MemberRoom nextHost = memberRoomRepository.findAllByRoomRoomId(room.getRoomId()).stream()
                     .filter(memberRoom -> !memberRoom.getMember().getEmail().equals(room.getHostEmail())) // 방장 제외
                     .min(Comparator.comparingInt(memberRoom -> memberRoom.getColor().ordinal())) // Color 인덱스 기준 정렬
                     .orElseThrow(() -> new IllegalStateException("방에 남아 있는 회원이 없어 방을 유지할 수 없습니다."));

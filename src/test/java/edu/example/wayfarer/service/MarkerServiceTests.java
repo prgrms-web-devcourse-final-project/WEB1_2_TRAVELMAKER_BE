@@ -6,6 +6,7 @@ import edu.example.wayfarer.dto.marker.MarkerResponseDTO;
 import edu.example.wayfarer.dto.marker.MarkerUpdateDTO;
 import edu.example.wayfarer.entity.*;
 import edu.example.wayfarer.entity.enums.Color;
+//import edu.example.wayfarer.entity.enums.Days;
 import edu.example.wayfarer.entity.enums.PlanType;
 import edu.example.wayfarer.repository.*;
 import org.junit.jupiter.api.*;
@@ -78,15 +79,19 @@ public class MarkerServiceTests {
             // 임의의 스케쥴 생성
             List<Schedule> schedules = new ArrayList<>();
 
+            long daysBetween = ChronoUnit.DAYS.between(start, end)+1;
+//            Days[] days = Days.values();
+            for (int i = 0; i < daysBetween; i++) {
                 for (int j = 0; j<2; j++) {
                     Schedule schedule = Schedule.builder()
                             .room(savedRoom)
+//                            .date(days[i])
                             .planType(PlanType.values()[j])
                             .build();
 
                     schedules.add(schedule);
                 }
-
+            }
             scheduleRepository.saveAll(schedules);
             Member foundMember = memberRepository.findById("member1@abc.com")
                     .orElseThrow(() -> new RuntimeException("Member not found"));
