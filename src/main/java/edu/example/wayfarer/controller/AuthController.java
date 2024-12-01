@@ -10,6 +10,7 @@ import edu.example.wayfarer.dto.member.MemberResponseDTO;
 import edu.example.wayfarer.service.AuthService;
 import edu.example.wayfarer.auth.util.GoogleUtil;
 import edu.example.wayfarer.auth.util.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -88,45 +90,45 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = getRefreshTokenFromCookies(request);
-        if (refreshToken == null || refreshToken.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Refresh Token not found"));
-        }
+//    @PostMapping("/refresh")
+//    public ResponseEntity<?> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
+//        String refreshToken = getRefreshTokenFromCookies(request);
+//        if (refreshToken == null || refreshToken.isEmpty()) {
+//            log.error("Refresh Token not found in request");
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Refresh Token not found"));
+//        }
+//
+//        try {
+//            String newAccessToken = authService.refreshAccessToken(refreshToken);
+//            String email = jwtUtil.getEmail(refreshToken);
+//            String newRefreshToken = jwtUtil.createRefreshToken(email);
+//
+//            // 새로운 Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
+//            setCookie(response, "accessToken", newAccessToken, jwtUtil.getAccessTokenValiditySeconds());
+//            setCookie(response, "refreshToken", newRefreshToken, jwtUtil.getRefreshTokenValiditySeconds());
+//
+//            return ResponseEntity.ok(Map.of(
+//                    "accessToken", newAccessToken // Refresh Token은 쿠키에 저장되므로 응답 본문에 포함하지 않음
+//            ));
+//        } catch (AuthHandler e) {
+//            log.error("Refresh Token Error: {}", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+//                    "message", e.getMessage()
+//            ));
+//        }
+//    }
+//
+//    // 쿠키에서 Refresh Token 추출 메서드 추가
+//    private String getRefreshTokenFromCookies(HttpServletRequest request) {
+//        if (request.getCookies() == null) return null;
+//        for (Cookie cookie : request.getCookies()) {
+//            if ("refreshToken".equals(cookie.getName())) {
+//                return cookie.getValue();
+//            }
+//        }
+//        return null;
+//    }
 
-        try {
-            String newAccessToken = authService.refreshAccessToken(refreshToken);
-            String email = jwtUtil.getEmailFromRefreshToken(refreshToken);
-            String newRefreshToken = jwtUtil.createRefreshToken(email);
-
-            // 새로운 Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
-            setCookie(response, "accessToken", newAccessToken, jwtUtil.getAccessTokenValiditySeconds());
-            setCookie(response, "refreshToken", newRefreshToken, jwtUtil.getRefreshTokenValiditySeconds());
-
-            return ResponseEntity.ok(Map.of(
-                    "accessToken", newAccessToken // Refresh Token은 쿠키에 저장되므로 응답 본문에 포함하지 않음
-            ));
-        } catch (AuthHandler e) {
-            log.error("Refresh Token Error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "message", e.getMessage()
-            ));
-        }
-    }
-
-    // 쿠키에서 Refresh Token 추출 메서드 추가
-    private String getRefreshTokenFromCookies(HttpServletRequest request) {
-        if (request.getCookies() == null) return null;
-        for (Cookie cookie : request.getCookies()) {
-            if ("refreshToken".equals(cookie.getName())) {
-                return cookie.getValue();
-            }
-        }
-        return null;
-    }
-
-    // 단일 통합 로그아웃 엔드포인트
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String authorization, HttpServletResponse response) {
         try {
@@ -135,6 +137,17 @@ public class AuthController {
                 throw new AuthHandler(ErrorStatus._TOKEN_NOT_FOUND);
             }
             String accessToken = authorization.split(" ")[1];
+
+            // Access Token 유효성 검증
+            try {
+                if (!jwtUtil.isAccessTokenValid(accessToken)) {
+                    throw new AuthHandler(ErrorStatus._AUTH_EXPIRE_TOKEN);
+                }
+            } catch (ExpiredJwtException e) {
+                // 만료된 Access Token에 대한 별도의 처리
+                log.error("Access Token has expired: {}", e.getMessage());
+                throw new AuthHandler(ErrorStatus._AUTH_EXPIRE_TOKEN);
+            }
 
             // Access Token에서 이메일 추출
             String email = jwtUtil.getEmail(accessToken);
@@ -146,6 +159,9 @@ public class AuthController {
             deleteCookie(response, "accessToken");
             deleteCookie(response, "refreshToken");
 
+            // SecurityContextHolder에서 인증 정보 제거
+            SecurityContextHolder.clearContext();
+
             return ResponseEntity.ok(Map.of(
                     "message", "Successfully logged out"
             ));
@@ -156,6 +172,7 @@ public class AuthController {
             ));
         }
     }
+
 
     // 쿠키 설정 메서드
     private void setCookie(HttpServletResponse response, String name, String value, long maxAge) {
