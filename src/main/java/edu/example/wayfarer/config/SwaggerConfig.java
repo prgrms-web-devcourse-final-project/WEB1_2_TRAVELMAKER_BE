@@ -28,7 +28,6 @@ public class SwaggerConfig {
     private Info apiInfo(){
         return new Info()
                 .title("API Test")
-                .description("requestBody에 쓰여 있는 email은 아예 빼고 실행시켜주시면 토큰으로 알아서 들어갑니다.")
                 .version("1.0.0");
     }
 }
