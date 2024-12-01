@@ -140,13 +140,13 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         return new PageImpl<>(orderedList, pageable, totalItems);
     }
 
-        /**
-         * ScheduleItem 수정 메서드
-         * UpdateDTO 의 null 이 아닌 값만 엔티티에 반영
-         *
-         * @param scheduleItemUpdateDTO 수정할 데이터가 담긴 DTO
-         * @return ScheduleItemResponseDTO 수정된 ScheduleItem 의 응답 데이터
-         */
+    /**
+     *  ScheduleItem 수정 메서드
+     * UpdateDTO 의 null 이 아닌 값만 엔티티에 반영
+     *
+     * @param scheduleItemUpdateDTO 수정할 데이터가 담긴 DTO
+     * @return ScheduleItemResponseDTO 수정된 ScheduleItem 의 응답 데이터
+     */
     @Override
     @Transactional
     public ScheduleItemResponseDTO update(ScheduleItemUpdateDTO scheduleItemUpdateDTO) {
