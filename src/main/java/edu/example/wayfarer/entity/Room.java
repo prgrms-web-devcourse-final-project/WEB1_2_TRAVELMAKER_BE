@@ -32,7 +32,7 @@ public class Room {
     private LocalDate endDate;
     private String roomCode;
     private String hostEmail;
-    private String url;
+//    private String url;
 
     @CreatedDate
     private LocalDateTime createdAt;
