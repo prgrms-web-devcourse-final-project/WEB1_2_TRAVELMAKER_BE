@@ -9,6 +9,7 @@ import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.MemberRoom;
 import edu.example.wayfarer.entity.Room;
 import edu.example.wayfarer.entity.enums.Color;
+import edu.example.wayfarer.exception.MemberException;
 import edu.example.wayfarer.exception.MemberRoomException;
 import edu.example.wayfarer.exception.RoomException;
 import edu.example.wayfarer.repository.MemberRepository;
@@ -45,7 +46,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
         (사용 가능한 색상이 없을 경우 정원 초과로 간주, OVER_CAPACITY 예외)
      */
     @Override
-    public MemberRoomResponseDTO create(MemberRoomRequestDTO memberRoomRequestDTO) {
+    public MemberRoomResponseDTO create(MemberRoomRequestDTO memberRoomRequestDTO, String email) {
         Room room = roomRepository.findById(memberRoomRequestDTO.roomId())
                 .orElseThrow(MemberRoomException.ROOM_NOT_FOUND::get);
 
@@ -54,8 +55,8 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             throw MemberRoomException.INVALID_ROOMCODE.get();
         }
 
-        Member currentUser = memberRepository.findByEmail(memberRoomRequestDTO.email())
-                .orElseThrow();
+        Member currentUser = memberRepository.findByEmail(email)
+                .orElseThrow(MemberException.NOT_FOUND::get);
 
         boolean memberExistsInRoom = memberRoomRepository.findAllByRoomRoomId(memberRoomRequestDTO.roomId())
                 .stream()

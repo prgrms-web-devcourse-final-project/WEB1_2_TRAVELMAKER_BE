@@ -6,8 +6,7 @@ public record RoomRequestDTO (
         String title,
         String country,
         LocalDate startDate,
-        LocalDate endDate,
-        String email
+        LocalDate endDate
 ){}
 
 
