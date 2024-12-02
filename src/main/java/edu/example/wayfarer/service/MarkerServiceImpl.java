@@ -154,6 +154,9 @@ public class MarkerServiceImpl implements MarkerService {
         Marker foundMarker = markerRepository.findById(markerUpdateDTO.markerId())
                 .orElseThrow(MarkerException.NOT_FOUND::get);
 
+        // ADD : 이미 확정 상태일 경우 예외 처리
+
+
         if (markerUpdateDTO.confirm()) {
             // true 로 변경 요청시 자식 scheduleItem 생성
             saveScheduleItem(foundMarker);
@@ -191,36 +194,45 @@ public class MarkerServiceImpl implements MarkerService {
     // Marker 의 자식 ScheduleItem 생성 메서드
     @Transactional
     protected void saveScheduleItem(Marker marker) {
+
+        Boolean result = scheduleItemRepository.existsByMarkerMarkerId(marker.getMarkerId());
+        if (result) {
+            throw ScheduleItemException.ITEM_DUPLICATE.get();
+        }
+
+        Long scheduleId = marker.getSchedule().getScheduleId();
+
         // 스케쥴의 확정 마커 갯수가 50개 이상일 경우 예외
-        Long confirmedCount = markerRepository.countByScheduleScheduleIdAndConfirmTrue(marker.getSchedule().getScheduleId());
+        Long confirmedCount
+                = markerRepository.countByScheduleScheduleIdAndConfirmTrue(scheduleId);
         if (confirmedCount >= 50) {
             throw MarkerException.CONFIRMED_LIMIT_EXCEEDED.get();
         }
         // Marker 의 위도, 경도 값으로 주소 조회
         String address = geocodingService.reverseGeocoding(marker.getLat(), marker.getLng());
 
-        // 최대 ItemOrder 값 조회
-        Double maxItemOrder = scheduleItemRepository.findMaxItemOrderByScheduleId(marker.getSchedule().getScheduleId());
+        // 마지막 ScheduleItem 조회
+        ScheduleItem lastItem
+                = scheduleItemRepository.findLastByMarkerScheduleScheduleIdAndNextItemIsNull(scheduleId)
+                .orElse(null);
 
-        // 새로운 ItemOrder 값 생성(maxItemOrder 의 정수 부분 + 1.0)
-        Double newItemOrder = Math.floor(maxItemOrder) + 1.0;
-
-        // scheduleItem 생성
-        ScheduleItem scheduleItem = ScheduleItem.builder()
+        // 새 scheduleItem 생성
+        ScheduleItem newItem = ScheduleItem.builder()
                 .marker(marker)
                 .name(address) // 최초 생성시 주소로 제목 생성
                 .content("내용")
                 .address(address)
-                .itemOrder(newItemOrder)
+                .previousItem(lastItem)
                 .build();
 
-        try {
-            // scheduleItem 저장
-            scheduleItemRepository.save(scheduleItem);
-        } catch (DataIntegrityViolationException e) {
-            // 해당 마커에 이미 ScheduleItem 이 존재할 경우 예외처리
-            throw ScheduleItemException.ITEM_DUPLICATE.get();
+        // linkedList 연결
+        if (lastItem != null) {
+            lastItem.changeNextItem(newItem);
+            scheduleItemRepository.save(lastItem);
         }
+
+        // 새 scheduleItem 저장
+        scheduleItemRepository.save(newItem);
     }
 
     // 마커 작성자의 color 조회 메서드

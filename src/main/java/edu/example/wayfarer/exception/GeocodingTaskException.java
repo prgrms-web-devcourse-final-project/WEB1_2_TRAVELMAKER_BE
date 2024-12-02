@@ -8,6 +8,10 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public class GeocodingTaskException extends RuntimeException {
 
-    private String message;
-    private HttpStatus httpStatus;
+    private HttpStatus status;
+
+    public GeocodingTaskException(String message, HttpStatus status) {
+        super(message);
+        this.status = status;
+    }
 }

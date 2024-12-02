@@ -79,6 +79,7 @@ public class MarkerServiceTests {
             // 임의의 스케쥴 생성
             List<Schedule> schedules = new ArrayList<>();
 
+
             long daysBetween = ChronoUnit.DAYS.between(start, end)+1;
 //            Days[] days = Days.values();
             for (int i = 0; i < daysBetween; i++) {
@@ -92,6 +93,7 @@ public class MarkerServiceTests {
                     schedules.add(schedule);
                 }
             }
+
             scheduleRepository.saveAll(schedules);
             Member foundMember = memberRepository.findById("member1@abc.com")
                     .orElseThrow(() -> new RuntimeException("Member not found"));

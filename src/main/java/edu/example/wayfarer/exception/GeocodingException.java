@@ -13,8 +13,8 @@ public enum GeocodingException {
 
     private final GeocodingTaskException geocodingTaskException;
 
-    GeocodingException(String message, HttpStatus httpStatus) {
-        geocodingTaskException = new GeocodingTaskException(message, httpStatus);
+    GeocodingException(String message, HttpStatus status) {
+        geocodingTaskException = new GeocodingTaskException(message, status);
     }
 
     public GeocodingTaskException get() {
