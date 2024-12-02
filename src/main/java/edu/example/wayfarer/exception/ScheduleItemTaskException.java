@@ -8,6 +8,10 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public class ScheduleItemTaskException extends RuntimeException {
 
-    private String message;
-    private HttpStatus httpStatus;
+    private HttpStatus status;
+
+    public ScheduleItemTaskException(String message, HttpStatus status) {
+        super(message);
+        this.status = status;
+    }
 }
