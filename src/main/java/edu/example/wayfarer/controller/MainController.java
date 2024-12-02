@@ -1,5 +1,6 @@
 package edu.example.wayfarer.controller;
 
+import edu.example.wayfarer.annotation.JoinOperation;
 import edu.example.wayfarer.auth.util.SecurityUtil;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
 import edu.example.wayfarer.dto.room.RoomListDTO;
@@ -48,11 +49,10 @@ public class MainController {
         return ResponseEntity.ok(rooms);
     }
 
-    @Operation(summary = "방 입장")
+    @JoinOperation
     @PostMapping("/join")
     public ResponseEntity<Map<String,String>> createMemberRoom(@RequestBody MemberRoomRequestDTO memberRoomRequestDTO) {
         Member currentUser = securityUtil.getCurrentUser();
-//        memberRoomRequestDTO.email() = currentUser.getEmail();
         MemberRoomRequestDTO updatedDTO = new MemberRoomRequestDTO(
                 memberRoomRequestDTO.roomId(),
                 memberRoomRequestDTO.roomCode()
