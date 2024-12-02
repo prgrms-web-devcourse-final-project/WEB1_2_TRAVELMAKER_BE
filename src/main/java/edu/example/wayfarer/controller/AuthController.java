@@ -55,9 +55,12 @@ public class AuthController {
 
     // Google 및 Kakao 콜백 엔드포인트 통합
     @GetMapping("/{provider}/callback")
-    public void socialCallback(@PathVariable("provider") String provider,
-                                                                        @RequestParam("code") String accessCode,
-                                                                        HttpServletResponse httpServletResponse) {
+    public void socialCallback(
+            @PathVariable("provider") String provider,
+            @RequestParam("code") String accessCode,
+            HttpServletResponse httpServletResponse,
+            @Value("${app.redirect.login.success.url}") String url
+    ) {
         Member member;
         if ("google".equalsIgnoreCase(provider)) {
             // 구글 로그인 처리
@@ -83,7 +86,7 @@ public class AuthController {
         //return BaseResponse.onSuccess(MemberConverter.toJoinResultDTO(member));
         try {
             // 로그인 성공 후 메인 페이지로 리다이렉트
-            httpServletResponse.sendRedirect("http://localhost:8080/");
+            httpServletResponse.sendRedirect(url);
         } catch (IOException e) {
             log.error("Redirect Error: {}", e.getMessage());
             throw new AuthHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
