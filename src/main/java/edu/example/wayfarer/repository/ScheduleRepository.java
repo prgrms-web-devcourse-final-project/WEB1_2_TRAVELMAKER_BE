@@ -23,4 +23,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
 //    List<Schedule> findByRoomAndDate(Room room, Days day);
     List<Schedule> findByRoomAndActualDate(Room room, LocalDate actualDate);
+
 }
