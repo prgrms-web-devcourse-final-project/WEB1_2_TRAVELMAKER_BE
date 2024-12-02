@@ -1,6 +1,10 @@
 package edu.example.wayfarer.controller;
 
+import edu.example.wayfarer.annotation.DeleteOperation;
+import edu.example.wayfarer.annotation.LeaveOperation;
 import edu.example.wayfarer.auth.util.SecurityUtil;
+import edu.example.wayfarer.dto.responses.DeleteResponse;
+import edu.example.wayfarer.dto.responses.LeaveResponse;
 import edu.example.wayfarer.dto.room.RoomResponseDTO;
 import edu.example.wayfarer.dto.room.RoomUpdateDTO;
 import edu.example.wayfarer.entity.Member;
@@ -10,8 +14,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -42,20 +44,24 @@ public class RoomController {
         return ResponseEntity.ok(roomService.update(updatedDTO, currentUser.getEmail()));
     }
 
-    @Operation(summary = "방 삭제 (방장만 가능)")
+    @DeleteOperation
     @DeleteMapping("/{roomId}")
-    public ResponseEntity<Map<String, String>> deleteRoom(@PathVariable String roomId) {
+    public ResponseEntity<DeleteResponse> deleteRoom(@PathVariable String roomId) {
         Member currentUser = securityUtil.getCurrentUser();
         roomService.delete(currentUser, roomId);
-        return ResponseEntity.ok(Map.of("message", "삭제되었습니다."));
+
+        DeleteResponse response = new DeleteResponse("삭제되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "방 퇴장")
+    @LeaveOperation
     @DeleteMapping("/leave/{roomId}")
-    public ResponseEntity<Map<String, String>> leaveRoom(@PathVariable String roomId) {
+    public ResponseEntity<LeaveResponse> leaveRoom(@PathVariable String roomId) {
         Member currentUser = securityUtil.getCurrentUser();
         memberRoomService.delete(currentUser, roomId);
-        return ResponseEntity.ok(Map.of("message", "퇴장하였습니다."));
+
+        LeaveResponse response = new LeaveResponse("퇴장하였습니다.");
+        return ResponseEntity.ok(response);
     }
 
 }
