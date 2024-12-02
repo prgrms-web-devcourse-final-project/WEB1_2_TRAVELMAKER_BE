@@ -15,7 +15,7 @@ public record RoomResponseDTO(
         LocalDate endDate,
         String roomCode,
         String hostEmail,
-        List<String> members,
-        String url
+        List<String> members
+//        String url
 ) {
 }
