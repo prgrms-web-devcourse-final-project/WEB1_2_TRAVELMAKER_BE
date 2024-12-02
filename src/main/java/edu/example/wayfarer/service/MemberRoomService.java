@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface MemberRoomService {
 
-    public MemberRoomResponseDTO create(MemberRoomRequestDTO memberRoomRequestDTO);
+    public MemberRoomResponseDTO create(MemberRoomRequestDTO memberRoomRequestDTO, String email);
 
     public void delete(Member member, String roomId);
 

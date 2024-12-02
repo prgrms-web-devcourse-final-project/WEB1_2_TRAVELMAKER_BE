@@ -8,6 +8,10 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public class MarkerTaskException extends RuntimeException {
 
-    private String message;
     private HttpStatus status;
+
+    public MarkerTaskException(String message, HttpStatus status) {
+        super(message);
+        this.status = status;
+    }
 }

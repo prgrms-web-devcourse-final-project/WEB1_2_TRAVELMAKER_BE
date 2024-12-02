@@ -16,7 +16,6 @@ public class RoomConverter {
                 .country(roomRequestDTO.country())
                 .startDate(roomRequestDTO.startDate())
                 .endDate(roomRequestDTO.endDate())
-                .hostEmail(roomRequestDTO.email())
                 .memberRooms(new ArrayList<>())
                 .build();
     }

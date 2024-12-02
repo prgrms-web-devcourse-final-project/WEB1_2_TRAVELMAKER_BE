@@ -13,16 +13,13 @@ import edu.example.wayfarer.repository.MarkerRepository;
 import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.ScheduleItemRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -62,21 +59,35 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     @Override
 //    @Transactional(readOnly = true)
     public List<ScheduleItemResponseDTO> getListBySchedule(Long scheduleId) {
-        // scheduleId 를 기준으로 scheduleItem 리스트 조회
-        List<ScheduleItem> scheduleItems =
-                scheduleItemRepository.findByMarkerScheduleScheduleIdOrderByItemOrderAsc(scheduleId);
+        // 1. scheduleId 를 기준으로 scheduleItem 리스트 조회
+        List<ScheduleItem> scheduleItems
+                = scheduleItemRepository.findByMarkerScheduleScheduleId(scheduleId);
 
-        // 순차적인 정수 index 부여
-        AtomicInteger index = new AtomicInteger(0);
+        // 2. LinkedList 를 구성하기 위해 시작 아이템 찾기
+        ScheduleItem startItem = scheduleItems.stream()
+                .filter(item -> item.getPreviousItem() == null)
+                .findFirst()
+                .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
-        // 조회된 ScheduleItem 리스트를 ScheduleItemResponseDTO 리스트로 변환하여 반환
-        return scheduleItems.stream()
-                .map(scheduleItem ->
-                        ScheduleItemConverter.toScheduleItemResponseDTO(
-                                scheduleItem, index.getAndIncrement()
-                        )
-                )
-                .collect(Collectors.toList());
+        // 3. LinkedList 형태로 순회하며 순차적인 index 부여
+        int index = 0;
+
+        List<ScheduleItemResponseDTO> orderedList = new ArrayList<>();
+
+        // 순회 시작 아이템
+        ScheduleItem currentItem = startItem;
+
+        while (currentItem != null) { // 리스트 순회
+            orderedList.add(
+                    ScheduleItemConverter.toScheduleItemResponseDTO(
+                            currentItem, index++
+                    )
+            );
+            // 다음 아이템이로 이동
+            currentItem = currentItem.getNextItem();
+        }
+
+        return orderedList;
     }
 
     /**
@@ -90,29 +101,47 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     @Override
 //    @Transactional(readOnly = true)
     public Page<ScheduleItemResponseDTO> getPageBySchedule(Long scheduleId, PageRequestDTO pageRequestDTO) {
-        // Pageable 생성
-        Pageable pageable = pageRequestDTO.getPageable(Sort.by("itemOrder").ascending());
+        // 1. 시작 아이템 조회
+        ScheduleItem startItem
+                = scheduleItemRepository.findFirstByMarkerScheduleScheduleIdAndPreviousItemIsNull(scheduleId)
+                .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
-        // ScheduleItem 조회
-        Page<ScheduleItem> scheduleItems
-                = scheduleItemRepository.findByMarkerScheduleScheduleId(scheduleId, pageable);
+        // 2. LinkedList 형태로 순회하며 필요한 데이터 가져오기
+        List<ScheduleItemResponseDTO> orderedList = new ArrayList<>();
 
-        // 페이지의 시작 인덱스
-        // 예)page=1,size=5 일 경우 (0*5) 0부터 시작
-        // 예)page=2,size=5 일 경우 (1*5) 5부터 시작
-        int startIndex = pageable.getPageNumber() * pageable.getPageSize();
+        ScheduleItem currentItem = startItem;
 
-        AtomicInteger index = new AtomicInteger(startIndex);
+        // 인덱스 초기값
+        int index = 0;
+        // 페이징 시작점
+        int skipCount = (pageRequestDTO.page() - 1) * pageRequestDTO.size();
 
-        return scheduleItems.map(scheduleItem ->
-            ScheduleItemConverter.toScheduleItemResponseDTO(
-                    scheduleItem, index.getAndIncrement()
-            )
-        );
+        while (currentItem != null) {
+            if (index >= skipCount && orderedList.size() < pageRequestDTO.size()) {
+                orderedList.add(
+                        ScheduleItemConverter.toScheduleItemResponseDTO(
+                               currentItem, index
+                        )
+                );
+            }
+            if (orderedList.size() >= pageRequestDTO.size()) {
+                break;
+            }
+            currentItem = currentItem.getNextItem();
+            index++;
+        }
+
+        // 3. 전체 데이터 크기 조회
+        long totalItems = scheduleItemRepository.countByScheduleId(scheduleId);
+
+        // 4. Page 객체 반환
+        Pageable pageable = pageRequestDTO.getPageable(Sort.unsorted());
+
+        return new PageImpl<>(orderedList, pageable, totalItems);
     }
 
     /**
-     * ScheduleItem 수정 메서드
+     *  ScheduleItem 수정 메서드
      * UpdateDTO 의 null 이 아닌 값만 엔티티에 반영
      *
      * @param scheduleItemUpdateDTO 수정할 데이터가 담긴 DTO
@@ -133,10 +162,10 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         if (scheduleItemUpdateDTO.content() != null) {
             scheduleItem.changeContent(scheduleItemUpdateDTO.content());
         }
-        // itemOrder(순서) 수정
+        // 순서 수정
         if (scheduleItemUpdateDTO.previousItemId() != null || scheduleItemUpdateDTO.nextItemId() != null) {
-            // itemOrder 수정 메서드 호출
-            updateItemOrder(
+            // LinkedList 재설정 메서드 호출
+            updateIndex(
                     scheduleItem,
                     scheduleItemUpdateDTO.previousItemId(),
                     scheduleItemUpdateDTO.nextItemId()
@@ -166,26 +195,44 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     @Override
     @Transactional
     public void delete(Long scheduleItemId) {
-        // 삭제할 ScheduleItem 의 부모 Marker 조회
+        // 1. 삭제할 scheduleItem 조회
+        ScheduleItem scheduleItem = scheduleItemRepository.findById(scheduleItemId)
+                .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+        // 2. 삭제할 scheduleItem 의 앞과 뒤 scheduleItem
+        ScheduleItem previousItem = scheduleItem.getPreviousItem();
+        ScheduleItem nextItem = scheduleItem.getNextItem();
+
+        // 3. LinkedList 연결 재설정
+        //  - 앞 scheduleItem 의 nextItem 을
+        //    삭제할 scheduleItem 의 nextItem 으로 변경
+        if (previousItem != null) {
+            previousItem.changeNextItem(nextItem);
+        }
+
+        //  - 뒤 scheduleItem 의 previousItem 을
+        //    삭제할 scheduleItem 의 previousItem 으로 변경
+        if (nextItem != null) {
+            nextItem.changePreviousItem(previousItem);
+        }
+
+        // 4. 삭제할 ScheduleItem 의 부모 Marker 조회
         Marker foundMarker = markerRepository.findByScheduleItemScheduleItemId(scheduleItemId)
                 .orElseThrow(MarkerException.NOT_FOUND::get);
 
-        // Marker 자식 관계 끊고 orphanRemoval = true 를 이용해 자동 삭제
+        // 5. 스케쥴아이템 삭제
         foundMarker.changeScheduleItem(null);
 
-        // Marker 의 confirm 을 false 로 변경
+        // 6. Marker 의 confirm 을 false 로 변경
         foundMarker.changeConfirm(false);
 
-        // Marker 의 color 를 작성자의 색상으로 변경
+        // 7. Marker 의 color 를 작성자의 색상으로 변경
         foundMarker.changeColor(
                 findColor(
                         foundMarker.getMember().getEmail(),
                         foundMarker.getSchedule().getRoom().getRoomId()
                 )
         );
-
-        // 변경사항 저장
-        markerRepository.save(foundMarker);
     }
 
     // 마커 작성자의 color 조회 메서드
@@ -205,72 +252,98 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         return ScheduleItemConverter.toScheduleItemResponseDTO(item, itemIndex);
     }
 
-    // itemOrder 수정 메서드
+    // LinkedList 구조 재설정 메서드
     @Transactional
-    protected void updateItemOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
+    protected void updateIndex(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
+        // 기존 연결 끊기
+        if (scheduleItem.getPreviousItem() != null) {
+            scheduleItem.getPreviousItem().changeNextItem(scheduleItem.getNextItem());
+        }
+        if (scheduleItem.getNextItem() != null) {
+            scheduleItem.getNextItem().changePreviousItem(scheduleItem.getPreviousItem());
+        }
 
-        Long scheduleId = scheduleItem.getMarker().getSchedule().getScheduleId();
-        Double newItemOrder = 0.0;
-
-        if (previousItemId != null && nextItemId != null) {  // 두개의 일정 사이로 이동할 경우
-            // 앞에 위치할 ScheduleItem 조회
+        if (previousItemId != null && nextItemId != null) {
+            // CASE1: 두개의 일정 사이로 이동할 경우
+            // 1. 앞에 위치할 ScheduleItem 조회
             ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
-            // 뒤에 이치할 ScheduleItem 조회
+            // 2. 뒤에 이치할 ScheduleItem 조회
             ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
-            // 두개의 아이템 사이에 다른 아이템이 없는지 체크
-            Boolean exists = scheduleItemRepository.existsBetweenItemOrders(
-                    scheduleId,
-                    previousItem.getItemOrder(),
-                    nextItem.getItemOrder()
-            );
-            if (exists) {
+            // 3. 두개의 아이템 사이에 다른 아이템이 없는지 체크
+            if (!previousItem.getNextItem().getScheduleItemId().equals(nextItem.getScheduleItemId())) {
                 throw ScheduleItemException.IDS_INVALID.get();
             }
 
-            // 앞과 뒤의 itemOrder 를 더한 값의 중간 값으로 새로운 itemOrder 생성
-            newItemOrder = (previousItem.getItemOrder() + nextItem.getItemOrder()) / 2.0;
+            // 4. LinkedList  구조 재설정
+            previousItem.changeNextItem(scheduleItem);
+            scheduleItem.changePreviousItem(previousItem);
+            scheduleItem.changeNextItem(nextItem);
+            nextItem.changePreviousItem(scheduleItem);
 
-        } else if (previousItemId != null) {  // 제일 뒤로 이동할 경우
-            // 앞에 위치할 ScheduleItem 조회
+
+        } else if (previousItemId != null) {
+            // CASE2: 제일 뒤로 이동할 경우
+            // 1. 앞에 위치할 ScheduleItem 조회
             ScheduleItem previousItem = scheduleItemRepository.findById(previousItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
-            // 조회한 객체가 제일 마지막 순서 인지 체크
-            Double maxItemOrder = scheduleItemRepository.findMaxItemOrderByScheduleId(scheduleId);
-            if (previousItem.getItemOrder() < maxItemOrder) {
+            // 2. 조회한 객체가 제일 마지막 순서 인지 체크
+            if (previousItem.getNextItem() != null) {
                 throw ScheduleItemException.IDS_INVALID.get();
             }
 
-            // 앞의 itemOrder 의 정수 부분에 1.0 을 더한 값으로 새로운 itemOrder 생성
-            newItemOrder = Math.floor(previousItem.getItemOrder()) + 1.0;
-        } else if (nextItemId != null) {  // 제일 앞으로 이동할 경우
-            // 뒤에 위치할 ScheduleItem 조회
+            // 3. LinkedList 구조 재설정
+            previousItem.changeNextItem(scheduleItem);
+            scheduleItem.changePreviousItem(previousItem);
+            scheduleItem.changeNextItem(null);
+
+        } else if (nextItemId != null) {
+            // CASE3: 제일 앞으로 이동할 경우
+            // 1. 뒤에 위치할 ScheduleItem 조회
             ScheduleItem nextItem = scheduleItemRepository.findById(nextItemId)
                     .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
-            // 조회한 객체가 제일 첫번째 순서 인지 체크
-            Double minItemOrder = scheduleItemRepository.findMinItemOrderByScheduleId(scheduleId);
-            if (nextItem.getItemOrder() > minItemOrder) {
+            // 2. 조회한 객체가 제일 첫번째 순서 인지 체크
+            if (nextItem.getPreviousItem() != null) {
                 throw ScheduleItemException.IDS_INVALID.get();
             }
 
-            // 0 과 nextItem.itemOrder 의 중간 값으로 새로운 itemOrder 생성
-            newItemOrder = (0.0 + nextItem.getItemOrder()) / 2.0;
+            // 3. LinkedList 구조 재설정
+            nextItem.changePreviousItem(scheduleItem);
+            scheduleItem.changePreviousItem(null);
+            scheduleItem.changeNextItem(nextItem);
+
         } else {
             throw ScheduleItemException.INVALID_REQUEST.get();
         }
-
-        // scheduleItem 객체의 itemOrder 변경
-        scheduleItem.changeItemOrder(newItemOrder);
     }
 
     // scheduleItem 의 index 를 구하는 메서드
+//    @Transactional(readOnly = true)
     public int getIndex(Long scheduleItemId, Long scheduleId) {
-        return scheduleItemRepository.findIndexByScheduleItemId(scheduleItemId, scheduleId);
+        // scheduleId 를 가지는 첫번째 scheduleItem 조회
+        ScheduleItem startItem
+                = scheduleItemRepository.findFirstByMarkerScheduleScheduleIdAndPreviousItemIsNull(scheduleId)
+                .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+
+        // 시작 index 값
+        int index = 0;
+
+        // LinkedList 를 순회하며 목표 scheduleItem 찾기
+        ScheduleItem currentItem = startItem;
+
+        while (currentItem != null) {
+            if (currentItem.getScheduleItemId().equals(scheduleItemId)) {
+                return index;
+            }
+            currentItem = currentItem.getNextItem();
+            index++;
+        }
+
+        // 예외 처리
+        throw ScheduleItemException.NOT_FOUND.get();
     }
-
-
 }
