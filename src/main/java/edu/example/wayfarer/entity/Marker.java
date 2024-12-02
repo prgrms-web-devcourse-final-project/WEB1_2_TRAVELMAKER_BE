@@ -31,7 +31,7 @@ public class Marker {
     @JoinColumn(name = "schedule_id")
     private Schedule schedule;
 
-    @OneToOne(mappedBy = "marker", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne(mappedBy = "marker", cascade = CascadeType.ALL, orphanRemoval = true)
     private ScheduleItem scheduleItem;
 
     private Double lat;
