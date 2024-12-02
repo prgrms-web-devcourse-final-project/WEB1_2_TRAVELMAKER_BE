@@ -57,8 +57,8 @@ public class RoomServiceImpl implements RoomService {
         // 랜덤 roomId와 roomCode 생성
         generateRoomIdAndCode(room);
         // url 생성
-        String url = generateRoomUrl(room.getRoomId());
-        room.setUrl(url);
+//        String url = generateRoomUrl(room.getRoomId());
+//        room.setUrl(url);
         // 방 저장
         Room savedRoom = roomRepository.save(room);
 
@@ -192,9 +192,9 @@ public class RoomServiceImpl implements RoomService {
         room.setRoomCode(roomCode);
     }
 
-    private String generateRoomUrl(String roomId){
-        return "https://wayfarer.com/rooms/" + roomId;
-    }
+//    private String generateRoomUrl(String roomId){
+//        return "https://wayfarer.com/rooms/" + roomId;
+//    }
 
     private void saveSchedules(Room room, LocalDate startDate, LocalDate endDate) {
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate) + 1;
