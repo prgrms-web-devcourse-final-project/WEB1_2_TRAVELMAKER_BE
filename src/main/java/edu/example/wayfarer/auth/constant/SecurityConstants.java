@@ -13,6 +13,7 @@ public class SecurityConstants {
             "/auth/kakao/callback/**",
             "/auth/google/callback/**",
             "/auth/login/google", // 구글 경로 추가
+            "/auth/login/kakao",
             //"/login/oauth2/code/google", // OAuth 리다이렉트 경로 추가
             "/logout",
             "/refresh",

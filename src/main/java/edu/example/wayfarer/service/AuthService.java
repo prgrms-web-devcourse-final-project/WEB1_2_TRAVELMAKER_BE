@@ -2,6 +2,7 @@ package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.apiPayload.exception.handler.AuthHandler;
 import edu.example.wayfarer.dto.GoogleUserInfo;
+import edu.example.wayfarer.dto.KakaoDTO;
 import edu.example.wayfarer.entity.Member;
 import jakarta.servlet.http.HttpServletResponse;
 
