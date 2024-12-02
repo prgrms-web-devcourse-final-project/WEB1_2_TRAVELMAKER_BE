@@ -36,14 +36,21 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Member kakaoLogin(String accessCode, HttpServletResponse httpServletResponse) {
-        KakaoDTO.OAuthToken oAuthToken = kakaoUtil.requestToken(accessCode);
-        KakaoDTO.KakaoProfile kakaoProfile = kakaoUtil.requestProfile(oAuthToken);
+        KakaoDTO.OAuthToken oAuthToken = kakaoUtil.getAccessToken(accessCode);
+        KakaoDTO.KakaoProfile kakaoProfile = kakaoUtil.getUserInfo(oAuthToken);
 
         Optional<Member> queryUser = memberRepository.findByEmail(kakaoProfile.getKakao_account().getEmail());
 
         Member member;
         if (queryUser.isPresent()) {
             member = queryUser.get();
+
+            // 기존에 존재하는 토큰이 있다면 폐기
+            tokenRepository.findByEmail(member.getEmail()).ifPresent(token -> {
+                kakaoUtil.revokeToken(token.getSocialAccessToken()); // 기존 토큰 폐기
+                tokenRepository.deleteByEmail(member.getEmail()); // Redis에서도 토큰 삭제
+            });
+
         } else {
             String randomPassword = UUID.randomUUID().toString();
             member = AuthConverter.toUser(
@@ -55,32 +62,8 @@ public class AuthServiceImpl implements AuthService {
             memberRepository.save(member);
         }
 
-        // 기존 토큰 삭제
-        tokenRepository.deleteByEmail(member.getEmail());
-
-        // 새로운 Access Token과 Refresh Token 생성
-        String accessToken = jwtUtil.createAccessToken(member.getEmail(), member.getRole());
-        String refreshToken = jwtUtil.createRefreshToken(member.getEmail());
-
-        // 토큰 만료 시간 계산
-        LocalDateTime accessTokenExpiryDate = LocalDateTime.now().plusSeconds(jwtUtil.getAccessTokenValiditySeconds());
-        LocalDateTime refreshTokenExpiryDate = LocalDateTime.now().plusSeconds(jwtUtil.getRefreshTokenValiditySeconds());
-
-        // 토큰 저장
-        Token token = Token.builder()
-                .email(member.getEmail())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .socialAccessToken(oAuthToken.getAccess_token())
-                .provider("kakao")
-                .accessTokenExpiryDate(accessTokenExpiryDate)
-                .refreshTokenExpiryDate(refreshTokenExpiryDate)
-                .build();
-        tokenRepository.save(token);
-
-        // JWT Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
-        setCookie(httpServletResponse, "accessToken", accessToken, jwtUtil.getAccessTokenValiditySeconds(), false);
-        setCookie(httpServletResponse, "refreshToken", refreshToken, jwtUtil.getRefreshTokenValiditySeconds(), false);
+        // JWT 토큰 생성 및 Redis 저장 로직을 JwtUtil로 이동
+        jwtUtil.generateAndStoreTokens(member.getEmail(), member.getRole(), oAuthToken.getAccess_token(), "kakao", httpServletResponse);
 
         return member;
     }
@@ -168,8 +151,12 @@ public class AuthServiceImpl implements AuthService {
 
         Token token = optionalToken.get();
 
-        // Google Access Token 폐기
-        googleUtil.revokeToken(token.getSocialAccessToken());
+        if(token.getProvider().equals("google")) {
+            // Google Access Token 폐기
+            googleUtil.revokeToken(token.getSocialAccessToken());
+        }else{
+            kakaoUtil.revokeToken(token.getSocialAccessToken());
+        }
 
         // 토큰 삭제
         tokenRepository.delete(token);
