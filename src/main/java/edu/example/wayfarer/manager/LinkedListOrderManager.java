@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 // LinkedList 기반 순서 관리 구현체
 @Component
@@ -60,7 +59,7 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
      * @return 정렬된 ScheduleItemResponseDTO 리스트
      */
     @Override
-    public List<ScheduleItemResponseDTO> orderByLinkedList(Long scheduleId) {
+    public List<ScheduleItemResponseDTO> getOrderedItems(Long scheduleId) {
         // 1. scheduleId 를 가지는 첫번째 scheduleItem 조회
         ScheduleItem startItem = findStartItem(scheduleId);
 
@@ -74,7 +73,7 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
                 }
         );
 
-        // 6. 결과 반환
+        // 4. 결과 반환
         return orderedList;
     }
 
@@ -88,7 +87,7 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
      * @return 페이지 생성시 필요한 item 리스트
      */
     @Override
-    public List<ScheduleItemResponseDTO> paginate(Long scheduleId, PageRequestDTO pageRequestDTO) {
+    public List<ScheduleItemResponseDTO> getPaginatedItems(Long scheduleId, PageRequestDTO pageRequestDTO) {
         // 1. LinkedList 시작아이템 조회
         ScheduleItem startItem = findStartItem(scheduleId);
 
@@ -120,7 +119,7 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
      * @param nextItemId 다음 아이템의 ID (null 가능)
      */
     @Override
-    public void updateLinks(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
+    public void updateOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId) {
         // 1. 기존 연결 제거 메서드 호출
         removeCurrentLinks(scheduleItem);
 
@@ -146,7 +145,7 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
      * @param scheduleItem 제거할 ScheduleItem
      */
     @Override
-    public void removeLinkedList(ScheduleItem scheduleItem) {
+    public void detachItem(ScheduleItem scheduleItem) {
         // 1. 기존 연결 제거 메서드 호출
         removeCurrentLinks(scheduleItem);
 
