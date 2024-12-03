@@ -52,7 +52,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
         // MemberRoomRequestDTO에 있는 roomId와 roomCode가 맞는지 확인
         if(!room.getRoomCode().equals(memberRoomRequestDTO.roomCode())) {
-            throw MemberRoomException.INVALID_ROOMCODE.get();
+            MemberRoomException.INVALID_ROOMCODE.throwException();
         }
 
         Member currentUser = memberRepository.findByEmail(email)

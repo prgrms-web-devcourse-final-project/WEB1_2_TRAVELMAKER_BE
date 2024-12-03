@@ -13,9 +13,9 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@Operation(summary = "방 삭제 (방장만 가능)", responses = {
+@Operation(summary = "회원 탈퇴", responses = {
         @ApiResponse(responseCode = "200", description = "삭제되었습니다.",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeleteResponse.class))),
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeleteResponse.class))),
 })
-public @interface DeleteOperation {
+public @interface DeleteMemberOperation {
 }
