@@ -3,7 +3,6 @@ package edu.example.wayfarer.service;
 import edu.example.wayfarer.converter.MemberConverter;
 import edu.example.wayfarer.dto.member.MemberImgUpdateDTO;
 import edu.example.wayfarer.dto.member.MemberResponseDTO;
-import edu.example.wayfarer.dto.member.MemberNicknameUpdateDTO;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Room;
 import edu.example.wayfarer.exception.MemberException;
@@ -29,10 +28,11 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public MemberResponseDTO updateNickname(MemberNicknameUpdateDTO memberUpdateDTO) {
-        Member member = memberRepository.findByEmail(memberUpdateDTO.email())
+    public MemberResponseDTO updateNickname(String newNickname, String email) {
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberException.NOT_FOUND::get);
-        member.changeNickname(memberUpdateDTO.nickname());
+        member.changeNickname(newNickname);
+        memberRepository.save(member);
         return MemberConverter.toMemberResponseDTO(member);
     }
 

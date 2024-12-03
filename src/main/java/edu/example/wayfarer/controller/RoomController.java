@@ -1,6 +1,6 @@
 package edu.example.wayfarer.controller;
 
-import edu.example.wayfarer.annotation.DeleteOperation;
+import edu.example.wayfarer.annotation.DeleteRoomOperation;
 import edu.example.wayfarer.annotation.LeaveOperation;
 import edu.example.wayfarer.auth.util.SecurityUtil;
 import edu.example.wayfarer.dto.responses.DeleteResponse;
@@ -44,7 +44,7 @@ public class RoomController {
         return ResponseEntity.ok(roomService.update(updatedDTO, currentUser.getEmail()));
     }
 
-    @DeleteOperation
+    @DeleteRoomOperation
     @DeleteMapping("/{roomId}")
     public ResponseEntity<DeleteResponse> deleteRoom(@PathVariable String roomId) {
         Member currentUser = securityUtil.getCurrentUser();
