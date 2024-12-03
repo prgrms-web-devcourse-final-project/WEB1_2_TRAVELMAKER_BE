@@ -6,11 +6,13 @@ import edu.example.wayfarer.dto.scheduleItem.ScheduleItemResponseDTO;
 import edu.example.wayfarer.entity.ScheduleItem;
 import edu.example.wayfarer.exception.ScheduleItemException;
 import edu.example.wayfarer.repository.ScheduleItemRepository;
+import edu.example.wayfarer.util.BreakableBiConsumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 // LinkedList 기반 순서 관리 구현체
 @Component
@@ -29,11 +31,7 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
     @Override
     public int getIndex(ScheduleItem scheduleItem) {
         // 1. scheduleId 를 가지는 첫번째 scheduleItem 조회
-        ScheduleItem startItem
-                // 가독성을 위해 해당 조회 jpa 조회 메서드명 수정예정
-                = scheduleItemRepository.findFirstByMarkerScheduleScheduleIdAndPreviousItemIsNull(
-                        scheduleItem.getMarker().getSchedule().getScheduleId()
-                ).orElseThrow(ScheduleItemException.NOT_FOUND::get);
+        ScheduleItem startItem = findStartItem(scheduleItem.getMarker().getSchedule().getScheduleId());
 
         // 2. 시작 index 값
         int index = 0;
@@ -63,29 +61,18 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
      */
     @Override
     public List<ScheduleItemResponseDTO> orderByLinkedList(Long scheduleId) {
-        // ScheduleItem 리스트 조회
-        List<ScheduleItem> items = scheduleItemRepository.findByMarkerScheduleScheduleId(scheduleId);
-
-        // 1. LinkedList 순서 정렬을 위한 시작아이템 조회
-        ScheduleItem startItem = items.stream()
-                .filter(item -> item.getPreviousItem() == null)
-                .findFirst()
-                .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+        // 1. scheduleId 를 가지는 첫번째 scheduleItem 조회
+        ScheduleItem startItem = findStartItem(scheduleId);
 
         // 2. 정렬된 객체를 담을 List 초기화
         List<ScheduleItemResponseDTO> orderedList = new ArrayList<>();
-        // 3. 조회한 scheduleItem 을 LinkedList 를 순회할 첫 아이템으로 지정
-        ScheduleItem currentItem = startItem;
-        // 4. 시작 index 값
-        int index = 0;
 
-        // 5. LinkedList 구조 순회
-        while (currentItem != null) {
-            // 아이템의 nextItem 값으로 다음 아이템을 조회하면서
-            // 하나씩 리스트에 추가
-            orderedList.add(ScheduleItemConverter.toScheduleItemResponseDTO(currentItem, index++));
-            currentItem = currentItem.getNextItem();
-        }
+        // 3. LinkedList 를 순회하며 하나씩 리스트에 추가
+        traverseLinkedList(startItem, (item, index) -> {
+                    orderedList.add(ScheduleItemConverter.toScheduleItemResponseDTO(item, index));
+                    return true;
+                }
+        );
 
         // 6. 결과 반환
         return orderedList;
@@ -103,32 +90,25 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
     @Override
     public List<ScheduleItemResponseDTO> paginate(Long scheduleId, PageRequestDTO pageRequestDTO) {
         // 1. LinkedList 시작아이템 조회
-        ScheduleItem startItem = scheduleItemRepository.findFirstByMarkerScheduleScheduleIdAndPreviousItemIsNull(scheduleId)
-                .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+        ScheduleItem startItem = findStartItem(scheduleId);
 
         // 2. 정렬된 객체를 담을 List 초기화
-        List<ScheduleItemResponseDTO> pageItems = new ArrayList<>();
-        // 3. 조회한 scheduleItem 을 LinkedList 를 순회할 첫 아이템으로 지정
-        ScheduleItem currentItem = startItem;
-        // 4. 시작 index 값
-        int index = 0;
-        // 5. 스킵할 갯수
+        List<ScheduleItemResponseDTO> paginatedList = new ArrayList<>();
+
+        // 3. 스킵할 갯수
         int skip = (pageRequestDTO.page()-1) * pageRequestDTO.size();
 
-        // 6. LinkedList 구조 순회
-        while (currentItem != null) {
-            if (index >= skip && pageItems.size() < pageRequestDTO.size()) {
-                pageItems.add(ScheduleItemConverter.toScheduleItemResponseDTO(currentItem, index));
+        // 4. LinkedList 를 순회하며 하나씩 리스트에 추가
+        traverseLinkedList(startItem, (item, index) -> {
+            if (index >= skip && paginatedList.size() < pageRequestDTO.size()) {
+                paginatedList.add(ScheduleItemConverter.toScheduleItemResponseDTO(item, index));
             }
-            if (pageItems.size() >= pageRequestDTO.size()) {
-                break;
-            }
-            currentItem =currentItem.getNextItem();
-            index++;
-        }
+            // 한 페이지 들어갈 갯수에 도달하면 반복 중단
+            return paginatedList.size() < pageRequestDTO.size();
+        });
 
-        // 7. 결과 반환
-        return pageItems;
+        // 5. 결과 반환
+        return paginatedList;
     }
 
     /**
@@ -173,6 +153,29 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
         // 2. 현재 노드의 연결 초기화 (안전하게 처리)
         scheduleItem.changePreviousItem(null);
         scheduleItem.changeNextItem(null);
+    }
+
+    // 시작아이템 조회
+    private ScheduleItem findStartItem(Long scheduleId) {
+        return scheduleItemRepository.findFirstByMarkerScheduleScheduleIdAndPreviousItemIsNull(scheduleId)
+                .orElseThrow(ScheduleItemException.NOT_FOUND::get);
+    }
+
+    // LinkedList 순회
+    private void traverseLinkedList(
+            ScheduleItem startItem,
+            BreakableBiConsumer<ScheduleItem, Integer> action
+    ) {
+        ScheduleItem currentItem = startItem;
+        int index = 0;
+
+        while (currentItem != null) {
+            if (!action.accept(currentItem, index)) {  // false 면 반복 종료
+                break;
+            }
+            currentItem = currentItem.getNextItem();
+            index++;
+        }
     }
 
     // scheduleItem 의 기존 연결 제거
