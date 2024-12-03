@@ -137,7 +137,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
     }
 
-    private void hostExit(Member member, Room room){
+    protected void hostExit(Member member, Room room){
         // 현재 방장의 MemberRoom 조회
         MemberRoom currentHost = memberRoomRepository.findByMemberEmailAndRoomRoomId(member.getEmail(), room.getRoomId())
                 .orElseThrow(() -> new NoSuchElementException("이미 없는 회원입니다.")); // 여기 사실 방장이 없으면 안되는 건데..

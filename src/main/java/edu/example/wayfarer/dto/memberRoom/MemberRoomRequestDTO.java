@@ -1,7 +1,9 @@
 package edu.example.wayfarer.dto.memberRoom;
 
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public record MemberRoomRequestDTO (
-        String roomId,
-        String roomCode
+        @Schema(description = "방ID", defaultValue = "728t5EIw") String roomId,
+        @Schema(description = "방CODE", defaultValue = "PBBMbFpC") String roomCode
 ) {}

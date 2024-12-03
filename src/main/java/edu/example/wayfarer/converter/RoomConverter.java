@@ -40,8 +40,8 @@ public class RoomConverter {
                 room.getHostEmail(),
                 room.getMemberRooms().stream().map(
                         memberRoom -> memberRoom.getMember().getEmail()
-                ).toList(),
-                room.getUrl()
+                ).toList()
+//                room.getUrl()
         );
     }
 

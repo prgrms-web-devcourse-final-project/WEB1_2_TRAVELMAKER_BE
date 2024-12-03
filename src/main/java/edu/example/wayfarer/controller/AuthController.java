@@ -1,18 +1,16 @@
 package edu.example.wayfarer.controller;
 
-import edu.example.wayfarer.apiPayload.BaseResponse;
 import edu.example.wayfarer.apiPayload.code.status.ErrorStatus;
 import edu.example.wayfarer.apiPayload.exception.handler.AuthHandler;
-import edu.example.wayfarer.converter.MemberConverter;
+import edu.example.wayfarer.auth.util.KakaoUtil;
+import edu.example.wayfarer.dto.KakaoDTO;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.dto.GoogleUserInfo;
-import edu.example.wayfarer.dto.member.MemberResponseDTO;
 import edu.example.wayfarer.service.AuthService;
 import edu.example.wayfarer.auth.util.GoogleUtil;
 import edu.example.wayfarer.auth.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +34,7 @@ public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
     private final GoogleUtil googleUtil;
+    private final KakaoUtil kakaoUtil;
 
     // Google 로그인 리다이렉트 엔드포인트
     @GetMapping("/login/google")
@@ -51,6 +50,19 @@ public class AuthController {
 
         log.debug("Redirecting to: " + googleLoginUrl);
         response.sendRedirect(googleLoginUrl);
+    }
+
+    @GetMapping("/login/kakao")
+    public void redirectToKakao(HttpServletResponse response,
+                                 @Value("${KAKAO_CLIENT_ID}") String clientId,
+                                 @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}") String redirectUri) throws IOException {
+        String kakaoLoginUrl = "https://kauth.kakao.com/oauth/authorize?"
+                + "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
+                + "&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
+                + "&response_type=code";
+
+        log.debug("Redirecting to: " + kakaoLoginUrl);
+        response.sendRedirect(kakaoLoginUrl);
     }
 
     // Google 및 Kakao 콜백 엔드포인트 통합
@@ -79,58 +91,25 @@ public class AuthController {
             }
         } else if ("kakao".equalsIgnoreCase(provider)) {
             // 카카오 로그인 처리
-            member = authService.kakaoLogin(accessCode, httpServletResponse);
+            try {
+                // AuthService로 회원 처리 (쿠키 설정 포함)
+                member = authService.kakaoLogin(accessCode, httpServletResponse);
+            } catch (Exception e) {
+                log.error("Kakao Callback Error: {}", e.getMessage());
+                throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
+            }
         } else {
             throw new AuthHandler(ErrorStatus._INVALID_PROVIDER);
         }
-        //return BaseResponse.onSuccess(MemberConverter.toJoinResultDTO(member));
         try {
             // 로그인 성공 후 메인 페이지로 리다이렉트
             httpServletResponse.sendRedirect(url);
+
         } catch (IOException e) {
             log.error("Redirect Error: {}", e.getMessage());
             throw new AuthHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
     }
-
-//    @PostMapping("/refresh")
-//    public ResponseEntity<?> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
-//        String refreshToken = getRefreshTokenFromCookies(request);
-//        if (refreshToken == null || refreshToken.isEmpty()) {
-//            log.error("Refresh Token not found in request");
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Refresh Token not found"));
-//        }
-//
-//        try {
-//            String newAccessToken = authService.refreshAccessToken(refreshToken);
-//            String email = jwtUtil.getEmail(refreshToken);
-//            String newRefreshToken = jwtUtil.createRefreshToken(email);
-//
-//            // 새로운 Access Token과 Refresh Token을 HttpOnly 쿠키에 설정
-//            setCookie(response, "accessToken", newAccessToken, jwtUtil.getAccessTokenValiditySeconds());
-//            setCookie(response, "refreshToken", newRefreshToken, jwtUtil.getRefreshTokenValiditySeconds());
-//
-//            return ResponseEntity.ok(Map.of(
-//                    "accessToken", newAccessToken // Refresh Token은 쿠키에 저장되므로 응답 본문에 포함하지 않음
-//            ));
-//        } catch (AuthHandler e) {
-//            log.error("Refresh Token Error: {}", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-//                    "message", e.getMessage()
-//            ));
-//        }
-//    }
-//
-//    // 쿠키에서 Refresh Token 추출 메서드 추가
-//    private String getRefreshTokenFromCookies(HttpServletRequest request) {
-//        if (request.getCookies() == null) return null;
-//        for (Cookie cookie : request.getCookies()) {
-//            if ("refreshToken".equals(cookie.getName())) {
-//                return cookie.getValue();
-//            }
-//        }
-//        return null;
-//    }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String authorization, HttpServletResponse response) {
@@ -158,7 +137,7 @@ public class AuthController {
             // 사용자 토큰 삭제 및 로그아웃 처리 (서비스 레이어에서 처리)
             authService.revokeAndDeleteToken(email);
 
-            // HttpOnly 쿠키 삭제
+            // HttpOnly 쿠키 삭제 -> 시크릿창은 이 코드 무시해버림
             deleteCookie(response, "accessToken");
             deleteCookie(response, "refreshToken");
 
