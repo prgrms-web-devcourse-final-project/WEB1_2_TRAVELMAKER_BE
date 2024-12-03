@@ -77,7 +77,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
     @Override
 //    @Transactional(readOnly = true)
     public List<ScheduleItemResponseDTO> getListBySchedule(Long scheduleId) {
-        return scheduleItemOrderManager.orderByLinkedList(scheduleId);
+        return scheduleItemOrderManager.getOrderedItems(scheduleId);
     }
 
     /**
@@ -92,7 +92,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
 //    @Transactional(readOnly = true)
     public Page<ScheduleItemResponseDTO> getPageBySchedule(Long scheduleId, PageRequestDTO pageRequestDTO) {
         // 페이지에 들어갈 아이템의 목록
-        List<ScheduleItemResponseDTO> pageItems = scheduleItemOrderManager.paginate(scheduleId, pageRequestDTO);
+        List<ScheduleItemResponseDTO> pageItems = scheduleItemOrderManager.getPaginatedItems(scheduleId, pageRequestDTO);
 
         // 전체 데이터 크기 조회
         long totalItems = scheduleItemRepository.countByScheduleId(scheduleId);
@@ -128,7 +128,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
         // 순서 수정
         if (scheduleItemUpdateDTO.previousItemId() != null || scheduleItemUpdateDTO.nextItemId() != null) {
             // LinkedList 재설정 메서드 호출
-            scheduleItemOrderManager.updateLinks(
+            scheduleItemOrderManager.updateOrder(
                     scheduleItem,
                     scheduleItemUpdateDTO.previousItemId(),
                     scheduleItemUpdateDTO.nextItemId()
@@ -160,7 +160,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
                 .orElseThrow(ScheduleItemException.NOT_FOUND::get);
 
         // LinkedList 연결 제거 메서드 호출
-        scheduleItemOrderManager.removeLinkedList(scheduleItem);
+        scheduleItemOrderManager.detachItem(scheduleItem);
 
         // 삭제할 ScheduleItem 의 부모 Marker 조회
         Marker foundMarker = markerRepository.findByScheduleItemScheduleItemId(scheduleItemId)

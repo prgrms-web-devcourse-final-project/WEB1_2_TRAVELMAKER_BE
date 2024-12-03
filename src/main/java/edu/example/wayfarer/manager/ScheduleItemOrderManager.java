@@ -9,8 +9,8 @@ import java.util.List;
 public interface ScheduleItemOrderManager {
 
     int getIndex(ScheduleItem scheduleItem);
-    List<ScheduleItemResponseDTO> orderByLinkedList(Long scheduleId);
-    List<ScheduleItemResponseDTO> paginate(Long scheduleId, PageRequestDTO pageRequestDTO);
-    void updateLinks(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId);
-    void removeLinkedList(ScheduleItem scheduleItem);
+    List<ScheduleItemResponseDTO> getOrderedItems(Long scheduleId);
+    List<ScheduleItemResponseDTO> getPaginatedItems(Long scheduleId, PageRequestDTO pageRequestDTO);
+    void updateOrder(ScheduleItem scheduleItem, Long previousItemId, Long nextItemId);
+    void detachItem(ScheduleItem scheduleItem);
 }
