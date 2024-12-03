@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 // LinkedList 기반 순서 관리 구현체
 @Component
@@ -63,18 +65,12 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
         // 1. scheduleId 를 가지는 첫번째 scheduleItem 조회
         ScheduleItem startItem = findStartItem(scheduleId);
 
-        // 2. 정렬된 객체를 담을 List 초기화
-        List<ScheduleItemResponseDTO> orderedList = new ArrayList<>();
-
-        // 3. LinkedList 를 순회하며 하나씩 리스트에 추가
-        traverseLinkedList(startItem, (item, index) -> {
-                    orderedList.add(ScheduleItemConverter.toScheduleItemResponseDTO(item, index));
-                    return true;
-                }
+        // 2. LinkedList 를 순회하며 모든 항목을 순서대로 매핑하여 리스트로 반환
+        return traverseLinkedList(
+                startItem,  // 순회를 시작할 첫번째 ScheduleItem
+                ScheduleItemConverter::toScheduleItemResponseDTO,  // 현재 노드를 DTO 로 매핑
+                resultList -> false  // 중단 조건 없음
         );
-
-        // 4. 결과 반환
-        return orderedList;
     }
 
     /**
@@ -88,27 +84,22 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
      */
     @Override
     public List<ScheduleItemResponseDTO> getPaginatedItems(Long scheduleId, PageRequestDTO pageRequestDTO) {
-        // 1. LinkedList 시작아이템 조회
+        // 1. scheduleId 를 가지는 첫번째 scheduleItem 조회
         ScheduleItem startItem = findStartItem(scheduleId);
 
-        // 2. 정렬된 객체를 담을 List 초기화
-        List<ScheduleItemResponseDTO> paginatedList = new ArrayList<>();
-
-        // 3. 스킵할 갯수
+        // 2. 스킵할 항목 수 계산 (페이지 번호와 페이지 크기 기반)
         int skip = (pageRequestDTO.page()-1) * pageRequestDTO.size();
 
-        // 4. LinkedList 를 순회하며 하나씩 리스트에 추가
-        traverseLinkedList(startItem, (item, index) -> {
-            if (index >= skip && paginatedList.size() < pageRequestDTO.size()) {
-                paginatedList.add(ScheduleItemConverter.toScheduleItemResponseDTO(item, index));
-            }
-            // 한 페이지 들어갈 갯수에 도달하면 반복 중단
-            return paginatedList.size() < pageRequestDTO.size();
-        });
-
-        // 5. 결과 반환
-        return paginatedList;
+        // 3. linkedList 를 순회하며 페이지에 해당하는 항목만 매핑하여 리스트로 반환
+        return traverseLinkedList(
+                startItem,
+                // 현재 인덱스가 skip 이후 부터 매핑
+                (item, index) -> index >= skip ? ScheduleItemConverter.toScheduleItemResponseDTO(item, index) : null,
+                // 결과 리스트 크기가 페이지 크기와 같아지면 순회 중단
+                resultList -> resultList.size() >= pageRequestDTO.size()
+        );
     }
+
 
     /**
      * LinkedList 구조에서 특정 ScheduleItem 의 연결 관계를 업데이트
@@ -160,22 +151,37 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
                 .orElseThrow(ScheduleItemException.NOT_FOUND::get);
     }
 
-    // LinkedList 순회
-    private void traverseLinkedList(
-            ScheduleItem startItem,
-            BreakableBiConsumer<ScheduleItem, Integer> action
+    // LinkedList 순회 메서드
+    private <T> List<T> traverseLinkedList(
+            ScheduleItem startItem,  // 순회를 시작할 아이템
+            BiFunction<ScheduleItem, Integer, T> mapper,  // 현재 노드와 인덱스를 매핑하여 결과를 생성하는 함수
+            Predicate<List<T>> breakCondition  // 결과 리스트를 기반으로 순회를 중단하는 조건
     ) {
+        // 결과 리스트 초기화
+        List<T> resultList = new ArrayList<>();
+        // 순회를 시작할 현재 노드
         ScheduleItem currentItem = startItem;
+        // 현재 노드의 인덱스
         int index = 0;
 
+        // LinkedList 순회
         while (currentItem != null) {
-            if (!action.accept(currentItem, index)) {  // false 면 반복 종료
+            // 중단 조건이 충족되면 순회 종료
+            if (breakCondition.test(resultList)) {
                 break;
             }
-            currentItem = currentItem.getNextItem();
-            index++;
+            // 현재 노드를 매핑하여 결과 생성
+            T mappedValue = mapper.apply(currentItem, index);
+            // 매핑결과가 null 이 아니면 결과 리스트에 추가
+            if (mappedValue != null) {
+                resultList.add(mappedValue);
+            }
+            currentItem = currentItem.getNextItem(); // 다음 노드로 이동
+            index++; // 인덱스 증가
         }
+        return resultList; // 결과 리스트 반환
     }
+
 
     // scheduleItem 의 기존 연결 제거
     private void removeCurrentLinks(ScheduleItem scheduleItem) {
