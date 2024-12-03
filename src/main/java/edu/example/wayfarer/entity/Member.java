@@ -52,4 +52,12 @@ public class Member {
                 ", updatedAt=" + updatedAt +
                 '}';
     }
+
+    public void changeNickname(String newNickname) {
+        this.nickname = newNickname;
+    }
+
+    public void changeImage(String newProfileImage) {
+        this.profileImage = newProfileImage;
+    }
 }
