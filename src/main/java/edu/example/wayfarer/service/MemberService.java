@@ -11,4 +11,6 @@ public interface MemberService {
     MemberResponseDTO updateNickname(MemberNicknameUpdateDTO memberUpdateDTO);
 
     MemberResponseDTO updateImg(MemberImgUpdateDTO memberPicUpdateDTO);
+
+    void delete(String email);
 }

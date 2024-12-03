@@ -39,5 +39,10 @@ public class MemberServiceImpl implements MemberService {
         return MemberConverter.toMemberResponseDTO(member);
     }
 
+    @Override
+    public void delete(String email) {
+        memberRepository.deleteById(email);
+    }
+
 
 }
