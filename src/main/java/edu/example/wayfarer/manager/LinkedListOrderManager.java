@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+// LinkedList 기반 순서 관리 구현체
 @Component
 @RequiredArgsConstructor
 public class LinkedListOrderManager implements ScheduleItemOrderManager {
