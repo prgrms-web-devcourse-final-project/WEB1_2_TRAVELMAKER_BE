@@ -34,7 +34,7 @@ public class Member {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "member")
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberRoom> memberRooms;
 
     public void update(String nickname) {
