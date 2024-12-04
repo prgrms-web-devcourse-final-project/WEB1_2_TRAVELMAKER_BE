@@ -20,4 +20,9 @@ public enum MemberRoomException {
         return memberRoomTaskException;
     }
 
+    // 예외 던지기
+    public void throwException() {
+        throw new MemberRoomTaskException(memberRoomTaskException.getMessage(), memberRoomTaskException.getStatus());
+    }
+
 }
