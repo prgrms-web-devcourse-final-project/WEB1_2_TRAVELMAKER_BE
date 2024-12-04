@@ -9,6 +9,7 @@ import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.MemberRoom;
 import edu.example.wayfarer.entity.Room;
 import edu.example.wayfarer.entity.enums.Color;
+import edu.example.wayfarer.exception.MemberException;
 import edu.example.wayfarer.exception.MemberRoomException;
 import edu.example.wayfarer.exception.RoomException;
 import edu.example.wayfarer.repository.MemberRepository;
@@ -45,17 +46,17 @@ public class MemberRoomServiceImpl implements MemberRoomService {
         (사용 가능한 색상이 없을 경우 정원 초과로 간주, OVER_CAPACITY 예외)
      */
     @Override
-    public MemberRoomResponseDTO create(MemberRoomRequestDTO memberRoomRequestDTO) {
+    public MemberRoomResponseDTO create(MemberRoomRequestDTO memberRoomRequestDTO, String email) {
         Room room = roomRepository.findById(memberRoomRequestDTO.roomId())
                 .orElseThrow(MemberRoomException.ROOM_NOT_FOUND::get);
 
         // MemberRoomRequestDTO에 있는 roomId와 roomCode가 맞는지 확인
         if(!room.getRoomCode().equals(memberRoomRequestDTO.roomCode())) {
-            throw MemberRoomException.INVALID_ROOMCODE.get();
+            MemberRoomException.INVALID_ROOMCODE.throwException();
         }
 
-        Member currentUser = memberRepository.findByEmail(memberRoomRequestDTO.email())
-                .orElseThrow();
+        Member currentUser = memberRepository.findByEmail(email)
+                .orElseThrow(MemberException.NOT_FOUND::get);
 
         boolean memberExistsInRoom = memberRoomRepository.findAllByRoomRoomId(memberRoomRequestDTO.roomId())
                 .stream()
@@ -136,7 +137,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
     }
 
-    private void hostExit(Member member, Room room){
+    protected void hostExit(Member member, Room room){
         // 현재 방장의 MemberRoom 조회
         MemberRoom currentHost = memberRoomRepository.findByMemberEmailAndRoomRoomId(member.getEmail(), room.getRoomId())
                 .orElseThrow(() -> new NoSuchElementException("이미 없는 회원입니다.")); // 여기 사실 방장이 없으면 안되는 건데..

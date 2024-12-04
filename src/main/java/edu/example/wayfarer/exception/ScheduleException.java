@@ -7,8 +7,8 @@ public enum ScheduleException {
 
     private final ScheduleTaskException scheduleTaskException;
 
-    ScheduleException(String message, HttpStatus httpStatus) {
-        scheduleTaskException = new ScheduleTaskException(message, httpStatus);
+    ScheduleException(String message, HttpStatus status) {
+        scheduleTaskException = new ScheduleTaskException(message, status);
     }
 
     public ScheduleTaskException get() {

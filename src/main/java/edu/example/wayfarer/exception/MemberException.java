@@ -7,8 +7,8 @@ public enum MemberException {
 
     private final MemberTaskException memberTaskException;
 
-    MemberException(String message, HttpStatus httpStatus) {
-        memberTaskException = new MemberTaskException(message, httpStatus);
+    MemberException(String message, HttpStatus status) {
+        memberTaskException = new MemberTaskException(message, status);
     }
 
     public MemberTaskException get() {

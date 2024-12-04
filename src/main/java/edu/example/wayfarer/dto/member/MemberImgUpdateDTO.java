@@ -5,3 +5,4 @@ public record MemberImgUpdateDTO(
         String profileImage
 ) {
 }
+

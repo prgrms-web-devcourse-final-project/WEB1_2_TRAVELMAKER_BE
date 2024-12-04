@@ -32,7 +32,7 @@ public class Room {
     private LocalDate endDate;
     private String roomCode;
     private String hostEmail;
-    private String url;
+//    private String url;
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -40,7 +40,7 @@ public class Room {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "room")
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberRoom> memberRooms;
 
     // Room 생성시 랜덤 roomId 할당
