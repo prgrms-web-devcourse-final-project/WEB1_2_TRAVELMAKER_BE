@@ -2,6 +2,7 @@ package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.dto.member.MemberImgUpdateDTO;
 import edu.example.wayfarer.dto.member.MemberResponseDTO;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface MemberService {
 
@@ -9,7 +10,7 @@ public interface MemberService {
 
     MemberResponseDTO updateNickname(String newNickname, String email);
 
-    MemberResponseDTO updateImg(MemberImgUpdateDTO memberPicUpdateDTO);
+    MemberResponseDTO updateImg(String email, MultipartFile newImage);
 
     void delete(String email);
 }

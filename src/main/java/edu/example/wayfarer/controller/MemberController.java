@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,7 +33,13 @@ public class MemberController {
         return ResponseEntity.ok(memberService.updateNickname(newNickname, currentUser.getEmail()));
     }
 
-    // updateMemberImg
+    @Operation(summary = "프로필 사진 수정")
+    @PutMapping("/profileImg")
+    public ResponseEntity<MemberResponseDTO> updateProfileImg(@RequestParam("image") MultipartFile image ){
+        Member currentUser = securityUtil.getCurrentUser();
+        MemberResponseDTO updatedMember = memberService.updateImg(currentUser.getEmail(), image);
+        return ResponseEntity.ok(updatedMember);
+    }
 
     @DeleteMemberOperation
     @DeleteMapping

@@ -1,7 +1,6 @@
 package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.converter.MemberConverter;
-import edu.example.wayfarer.dto.member.MemberImgUpdateDTO;
 import edu.example.wayfarer.dto.member.MemberResponseDTO;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.Room;
@@ -10,6 +9,7 @@ import edu.example.wayfarer.repository.MemberRepository;
 import edu.example.wayfarer.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -19,6 +19,7 @@ public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
     private final RoomRepository roomRepository;
     private final MemberRoomServiceImpl memberRoomServiceImpl;
+    private final S3Service s3Service;
 
     @Override
     public MemberResponseDTO read(String email) {
@@ -37,10 +38,19 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public MemberResponseDTO updateImg(MemberImgUpdateDTO memberPicUpdateDTO) {
-        Member member = memberRepository.findByEmail(memberPicUpdateDTO.email())
+    public MemberResponseDTO updateImg(String email, MultipartFile newImage) {
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberException.NOT_FOUND::get);
-        member.changeImage(memberPicUpdateDTO.filename());
+
+        // 존재하는 기존이미지가 S3에 있다면 삭제
+        String oldImageUrl = member.getProfileImage();
+        if(oldImageUrl != null) {
+            s3Service.deleteFileFromS3(oldImageUrl);
+        }
+
+        String newImageUrl = s3Service.upload(email + "/profile", newImage);
+        member.changeImage(newImageUrl);
+        memberRepository.save(member);
 
         return MemberConverter.toMemberResponseDTO(member);
     }
