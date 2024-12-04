@@ -11,9 +11,9 @@ import edu.example.wayfarer.entity.Schedule;
 import edu.example.wayfarer.entity.ScheduleItem;
 import edu.example.wayfarer.entity.enums.Color;
 import edu.example.wayfarer.exception.*;
+import edu.example.wayfarer.manager.ScheduleItemOrderManager;
 import edu.example.wayfarer.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -28,6 +28,7 @@ public class MarkerServiceImpl implements MarkerService {
     private final MemberRoomRepository memberRoomRepository;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleItemRepository scheduleItemRepository;
+    private final ScheduleItemOrderManager scheduleItemOrderManager;
     private final GeocodingService geocodingService;
 
     /**
@@ -70,7 +71,7 @@ public class MarkerServiceImpl implements MarkerService {
         );
 
         // Marker 를 MarkerResponseDTO 로 변환 후 반환
-        return MarkerConverter.toMarkerResponseDTO(savedMarker);
+        return MarkerConverter.toMarkerResponseDTO(savedMarker, null);
     }
 
     /**
@@ -86,8 +87,13 @@ public class MarkerServiceImpl implements MarkerService {
         Marker foundMarker = markerRepository.findById(markerId)
                 .orElseThrow(MarkerException.NOT_FOUND::get);
 
+        // itemOrder 값 설정
+        Integer itemOrder = Boolean.TRUE.equals(foundMarker.getConfirm())
+                ? scheduleItemOrderManager.getIndex(foundMarker.getScheduleItem())
+                : null;
+
         // 조회된 Marker 를 MarkerResponseDTO 로 변환하여 반환
-        return MarkerConverter.toMarkerResponseDTO(foundMarker);
+        return MarkerConverter.toMarkerResponseDTO(foundMarker, itemOrder);
     }
 
     /**
@@ -105,7 +111,14 @@ public class MarkerServiceImpl implements MarkerService {
 
         // 조회된 Marker 리스트를 MakerResponseDTO 리스트로 변환하여 반환
         return markers.stream()
-                .map(MarkerConverter::toMarkerResponseDTO)
+                .map(marker -> {
+                    // itemOrder 값 설정
+                    Integer itemOrder = Boolean.TRUE.equals(marker.getConfirm())
+                            ? scheduleItemOrderManager.getIndex(marker.getScheduleItem())
+                            : null;
+                    // MarkerResponseDTO 생성
+                    return MarkerConverter.toMarkerResponseDTO(marker, itemOrder);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -130,7 +143,14 @@ public class MarkerServiceImpl implements MarkerService {
                     List<MarkerResponseDTO> markerResponseDTOS
                             = markerRepository.findByScheduleScheduleId(schedule.getScheduleId()).stream()
                             // 3. Marker 를 MarkerResponseDTO 로 변환하고 리스트에 담음
-                            .map(MarkerConverter::toMarkerResponseDTO)
+                            .map(marker -> {
+                                // itemOrder 값 설정
+                                Integer itemOrder = Boolean.TRUE.equals(marker.getConfirm())
+                                        ? scheduleItemOrderManager.getIndex(marker.getScheduleItem())
+                                        : null;
+                                // MarkerResponseDTO 생성
+                                return MarkerConverter.toMarkerResponseDTO(marker, itemOrder);
+                            })
                             .toList();
 
                     // 4. scheduleId 와 MarkerResponseDTO 리스트로 MarkerListDTO 생성
@@ -154,8 +174,10 @@ public class MarkerServiceImpl implements MarkerService {
         Marker foundMarker = markerRepository.findById(markerUpdateDTO.markerId())
                 .orElseThrow(MarkerException.NOT_FOUND::get);
 
-        // ADD : 이미 확정 상태일 경우 예외 처리
-
+        // 이미 확정 상태일 경우 예외 처리
+        if (foundMarker.getConfirm()) {
+            throw MarkerException.ALREADY_CONFIRMED.get();
+        }
 
         if (markerUpdateDTO.confirm()) {
             // true 로 변경 요청시 자식 scheduleItem 생성
@@ -165,9 +187,15 @@ public class MarkerServiceImpl implements MarkerService {
             // Marker 의 color 를 확정 컬러로 변경
             foundMarker.changeColor(Color.RED);
         }
+
+        Marker savedMarker = markerRepository.save(foundMarker);
+
+        Integer itemOrder = Boolean.TRUE.equals(savedMarker.getConfirm())
+                ? scheduleItemOrderManager.getIndex(savedMarker.getScheduleItem())
+                : null;
         
         // 수정한 Marker 를 저장 후 MarkerResponseDTO 로 변환하여 반환
-        return MarkerConverter.toMarkerResponseDTO(markerRepository.save(foundMarker));
+        return MarkerConverter.toMarkerResponseDTO(savedMarker, itemOrder);
     }
 
     /**

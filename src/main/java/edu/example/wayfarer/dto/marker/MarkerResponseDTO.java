@@ -10,6 +10,7 @@ public record MarkerResponseDTO(
         double lng,
         String color,
         Boolean confirm,
+        Integer itemOrder,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {}

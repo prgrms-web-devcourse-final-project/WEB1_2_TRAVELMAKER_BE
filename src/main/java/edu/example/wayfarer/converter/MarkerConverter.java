@@ -28,7 +28,10 @@ public class MarkerConverter {
                 .build();
     }
 
-    public static MarkerResponseDTO toMarkerResponseDTO(Marker marker) {
+    public static MarkerResponseDTO toMarkerResponseDTO(
+            Marker marker,
+            Integer itemOrder
+    ) {
         return new MarkerResponseDTO(
                 marker.getMarkerId(),
                 marker.getMember().getEmail(),
@@ -37,6 +40,7 @@ public class MarkerConverter {
                 marker.getLng(),
                 marker.getColor().getHexCode(),
                 marker.getConfirm(),
+                itemOrder,
                 marker.getCreatedAt(),
                 marker.getUpdatedAt()
         );
