@@ -184,7 +184,7 @@ public class JwtUtil {
     // Access Token 쿠키 설정 메서드
     public void setAccessTokenCookie(HttpServletResponse response, String accessToken) {
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
-        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setHttpOnly(false);
         accessTokenCookie.setPath("/");
         accessTokenCookie.setMaxAge((int) accessTokenValiditySeconds);
         response.addCookie(accessTokenCookie);
@@ -193,7 +193,7 @@ public class JwtUtil {
     // Refresh Token 쿠키 설정 메서드도 필요하면 추가
     public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
-        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setHttpOnly(false);
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge((int) refreshTokenValiditySeconds);
         response.addCookie(refreshTokenCookie);
