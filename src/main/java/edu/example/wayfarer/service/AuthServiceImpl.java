@@ -102,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
     // 공통 쿠키 설정 메서드
     private void setCookie(HttpServletResponse response, String name, String value, long maxAge, boolean isSecure) {
         Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(false);
         cookie.setSecure(isSecure); // 프로덕션 환경에서는 true로 설정
         cookie.setPath("/");
         cookie.setMaxAge((int) maxAge);

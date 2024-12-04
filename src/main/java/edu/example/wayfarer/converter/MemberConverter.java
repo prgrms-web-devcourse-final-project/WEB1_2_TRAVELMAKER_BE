@@ -16,5 +16,5 @@ public class MemberConverter {
                 member.getProfileImage()
         );
     }
-
 }
+
