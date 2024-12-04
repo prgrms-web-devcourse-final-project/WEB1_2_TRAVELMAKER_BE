@@ -35,11 +35,10 @@ public class RoomServiceTest {
                 "테스트 그만 want 해요",
                 "testingC",
                 LocalDate.of(2024, 12, 30),
-                LocalDate.of(2025, 1, 02),
-                "aa@aa.com"
+                LocalDate.of(2025, 1, 02)
 
         );
-        RoomResponseDTO result = roomService.create(roomRequestDTO);
+        RoomResponseDTO result = roomService.create(roomRequestDTO, "aa@aa.com");
         assertNotNull(result);
     }
 
@@ -57,16 +56,14 @@ public class RoomServiceTest {
     @Commit
     public void testUpdateRoom() {
         String email = "aa@aa.com";
-        Member member = memberRepository.findByEmail(email).get();
         RoomUpdateDTO roomUpdateDTO = new RoomUpdateDTO(
                 "TSNAnwj4", // roomId
-                member,
                 "후후탕후루를먹자", // title
                 "중국", // country
                 LocalDate.of(2025, 1, 1), // startDate
                 LocalDate.of(2025, 1, 3)  // endDate
         );
-        RoomResponseDTO result = roomService.update(roomUpdateDTO);
+        RoomResponseDTO result = roomService.update(roomUpdateDTO, email);
         assertNotNull(result);
         assertEquals("중국", result.country());
         assertEquals("후후탕후루를먹자", result.title());

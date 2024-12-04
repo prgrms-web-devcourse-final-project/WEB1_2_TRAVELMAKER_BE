@@ -31,6 +31,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.modelmapper:modelmapper:3.1.1'
+//    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.779'
+    implementation 'software.amazon.awssdk:s3:2.20.38' // AWS SDK 2.x
+
 
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -58,6 +61,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     //implementation 'io.lettuce.core:lettuce-core'
     implementation 'org.springframework.session:spring-session-data-redis'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 }
 
 tasks.named('test') {

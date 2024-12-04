@@ -112,9 +112,9 @@ public class MarkerServiceTests {
     @Test
     @Order(2)
     public void testCreateMarker() {
-        for (int i=0; i<3; i++) {
+//        for (int i=0; i<3; i++) {
             MarkerRequestDTO markerRequestDTO = new MarkerRequestDTO(
-                    "member1@abc.com",
+                    "aa@aa.com",
                     1L,
                     37.552,
                     126.988
@@ -122,9 +122,9 @@ public class MarkerServiceTests {
 
             MarkerResponseDTO markerResponseDTO = markerService.create(markerRequestDTO);
 
-            System.out.println("2. 마커 생성 테스트" + i);
+//            System.out.println("2. 마커 생성 테스트" + i);
             System.out.println(markerResponseDTO);
-        }
+//        }
     }
 
     @Test

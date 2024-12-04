@@ -29,12 +29,12 @@ public class MemberRoomServiceTests {
     @Transactional
     @Commit
     public void testCreateMemberRoom() {
+        String email = "aa@aa.com";
         MemberRoomRequestDTO memberRoomRequestDTO = new MemberRoomRequestDTO(
                 "728t5EIw",
-                "PBBMbFpC",
-                "bb@bb.com"
+                "PBBMbFpC"
         );
-        memberRoomService.create(memberRoomRequestDTO);
+        memberRoomService.create(memberRoomRequestDTO, email);
     }
 
     @Test

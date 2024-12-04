@@ -1,9 +1,7 @@
 package edu.example.wayfarer.dto.member;
 
-
-public record MemberResponseDTO(
+public record MemberImgUpdateDTO(
         String email,
-        String nickname,
         String profileImage
 ) {
 }
