@@ -91,7 +91,7 @@ public class JwtUtil {
     }
 
     // JWT 토큰 발급 및 Redis 저장
-    public void generateAndStoreTokens(String email, String role, String socialAccessToken, String provider, HttpServletResponse response) {
+    public void generateAndStoreTokens(String email, String role, String socialAccessToken, String provider) {
         String accessToken = createAccessToken(email, role);
         String refreshToken = createRefreshToken(email);
 
@@ -111,12 +111,11 @@ public class JwtUtil {
 
         // Redis에 토큰 저장
         tokenRepository.save(token);
-
-        // 쿠키 설정
-        setAccessTokenCookie(response, accessToken);
-        setRefreshTokenCookie(response, refreshToken);
+//
+//        // 쿠키 설정
+//        setAccessTokenCookie(response, accessToken); //수정필요
+//        setRefreshTokenCookie(response, refreshToken);
     }
-
 
     // Access Token 생성
     public String createAccessToken(String email, String role) {
@@ -181,25 +180,9 @@ public class JwtUtil {
             return false;
         }
     }
-    // Access Token 쿠키 설정 메서드
-    public void setAccessTokenCookie(HttpServletResponse response, String accessToken) {
-        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
-        accessTokenCookie.setHttpOnly(false);
-        accessTokenCookie.setPath("/");
-        accessTokenCookie.setMaxAge((int) accessTokenValiditySeconds);
-        response.addCookie(accessTokenCookie);
-    }
-
-    // Refresh Token 쿠키 설정 메서드도 필요하면 추가
-    public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
-        refreshTokenCookie.setHttpOnly(false);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge((int) refreshTokenValiditySeconds);
-        response.addCookie(refreshTokenCookie);
-    }
 
     public Authentication createAuthentication(String email) {
         return new UsernamePasswordAuthenticationToken(email, null, Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")));
     }
+
 }

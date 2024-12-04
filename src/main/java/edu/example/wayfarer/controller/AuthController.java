@@ -6,6 +6,8 @@ import edu.example.wayfarer.auth.util.KakaoUtil;
 import edu.example.wayfarer.dto.KakaoDTO;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.dto.GoogleUserInfo;
+import edu.example.wayfarer.entity.Token;
+import edu.example.wayfarer.repository.TokenRepository;
 import edu.example.wayfarer.service.AuthService;
 import edu.example.wayfarer.auth.util.GoogleUtil;
 import edu.example.wayfarer.auth.util.JwtUtil;
@@ -24,6 +26,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -35,6 +38,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final GoogleUtil googleUtil;
     private final KakaoUtil kakaoUtil;
+    private final TokenRepository tokenRepository;
 
     // Google 로그인 리다이렉트 엔드포인트
     @GetMapping("/login/google")
@@ -59,7 +63,7 @@ public class AuthController {
         String kakaoLoginUrl = "https://kauth.kakao.com/oauth/authorize?"
                 + "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
                 + "&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
-                + "&response_type=code";
+                + "&response_type=code";//code 값으로 accessCode 반환
 
         log.debug("Redirecting to: " + kakaoLoginUrl);
         response.sendRedirect(kakaoLoginUrl);
@@ -67,24 +71,34 @@ public class AuthController {
 
     // Google 및 Kakao 콜백 엔드포인트 통합
     @GetMapping("/{provider}/callback")
-    public void socialCallback(
+    public ResponseEntity<?> socialCallback(
             @PathVariable("provider") String provider,
-            @RequestParam("code") String accessCode,
+            @RequestParam("code") String accessCode, //반환된 accessCode 로 각 소셜서버에서 정보가져오기 시작
             HttpServletResponse httpServletResponse,
             @Value("${app.redirect.login.success.url}") String url
     ) {
+
         Member member;
         if ("google".equalsIgnoreCase(provider)) {
             // 구글 로그인 처리
             try {
-                // Authorization Code로 Access Token 가져오기
-                String googleAccessToken = googleUtil.getAccessToken(accessCode);
+                // Authorization Code로 OAUTH Token 가져오기
+                String googleAccessToken = googleUtil.getOAuthToken(accessCode);//구글로그인 해서 구글OAUTH 토큰 갖고오기
 
                 // Access Token으로 사용자 정보 가져오기
                 GoogleUserInfo userInfo = googleUtil.getUserInfo(googleAccessToken);
 
                 // AuthService로 회원 처리 (쿠키 설정 포함)
-                member = authService.googleLogin(userInfo, httpServletResponse);
+                member = authService.googleLogin(userInfo);
+                Optional<Token> token = tokenRepository.findByEmail(member.getEmail());
+                if (token.isPresent()) {
+                    return ResponseEntity.ok(Map.of(
+                            "accessToken", token.get().getAccessToken(),
+                            "refreshToken", token.get().getRefreshToken()
+                    ));
+                } else {
+                    throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
+                }
             } catch (Exception e) {
                 log.error("Google Callback Error: {}", e.getMessage());
                 throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
@@ -93,21 +107,22 @@ public class AuthController {
             // 카카오 로그인 처리
             try {
                 // AuthService로 회원 처리 (쿠키 설정 포함)
-                member = authService.kakaoLogin(accessCode, httpServletResponse);
+                member = authService.kakaoLogin(accessCode);
+                Optional<Token> token = tokenRepository.findByEmail(member.getEmail());
+                if (token.isPresent()) {
+                    return ResponseEntity.ok(Map.of(
+                            "accessToken", token.get().getAccessToken(),
+                            "refreshToken", token.get().getRefreshToken()
+                    ));
+                } else {
+                    throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
+                }
             } catch (Exception e) {
                 log.error("Kakao Callback Error: {}", e.getMessage());
                 throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
             }
         } else {
             throw new AuthHandler(ErrorStatus._INVALID_PROVIDER);
-        }
-        try {
-            // 로그인 성공 후 메인 페이지로 리다이렉트
-            httpServletResponse.sendRedirect(url);
-
-        } catch (IOException e) {
-            log.error("Redirect Error: {}", e.getMessage());
-            throw new AuthHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -137,10 +152,6 @@ public class AuthController {
             // 사용자 토큰 삭제 및 로그아웃 처리 (서비스 레이어에서 처리)
             authService.revokeAndDeleteToken(email);
 
-            // HttpOnly 쿠키 삭제 -> 시크릿창은 이 코드 무시해버림
-            deleteCookie(response, "accessToken");
-            deleteCookie(response, "refreshToken");
-
             // SecurityContextHolder에서 인증 정보 제거
             SecurityContextHolder.clearContext();
 
@@ -153,24 +164,5 @@ public class AuthController {
                     "message", e.getMessage()
             ));
         }
-    }
-
-
-    // 쿠키 설정 메서드
-    private void setCookie(HttpServletResponse response, String name, String value, long maxAge) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setSecure(false); // 프로덕션에서는 true로 설정
-        cookie.setPath("/");
-        cookie.setMaxAge((int) maxAge);
-        response.addCookie(cookie);
-    }
-
-    // 쿠키 삭제 메서드
-    private void deleteCookie(HttpServletResponse response, String name) {
-        Cookie cookie = new Cookie(name, null);
-        cookie.setSecure(false); // 프로덕션에서는 true로 설정
-        cookie.setPath("/");
-        cookie.setMaxAge(0); // 삭제
-        response.addCookie(cookie);
     }
 }

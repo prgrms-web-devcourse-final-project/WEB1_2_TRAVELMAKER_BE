@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public Member kakaoLogin(String accessCode, HttpServletResponse httpServletResponse) {
+    public Member kakaoLogin(String accessCode) {
         KakaoDTO.OAuthToken oAuthToken = kakaoUtil.getAccessToken(accessCode);
         KakaoDTO.KakaoProfile kakaoProfile = kakaoUtil.getUserInfo(oAuthToken);
 
@@ -63,14 +63,14 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // JWT 토큰 생성 및 Redis 저장 로직을 JwtUtil로 이동
-        jwtUtil.generateAndStoreTokens(member.getEmail(), member.getRole(), oAuthToken.getAccess_token(), "kakao", httpServletResponse);
+        jwtUtil.generateAndStoreTokens(member.getEmail(), member.getRole(), oAuthToken.getAccess_token(), "kakao");
 
         return member;
     }
 
     @Override
-    public Member googleLogin(GoogleUserInfo userInfo, HttpServletResponse httpServletResponse) {
-        Optional<Member> queryUser = memberRepository.findByEmail(userInfo.getEmail());
+    public Member googleLogin(GoogleUserInfo userInfo) {
+        Optional<Member> queryUser = memberRepository.findByEmail(userInfo.getEmail());//email로 기존에 존재하던 사람인지 옵셔널
 
         Member member;
         if (queryUser.isPresent()) {
@@ -78,11 +78,11 @@ public class AuthServiceImpl implements AuthService {
 
             // 기존에 존재하는 토큰이 있다면 폐기
             tokenRepository.findByEmail(member.getEmail()).ifPresent(token -> {
-                googleUtil.revokeToken(token.getSocialAccessToken()); // 기존 토큰 폐기
+                googleUtil.revokeToken(token.getSocialAccessToken()); // 기존 토큰 폐기 ->로그인에서 다시 로그인한 것
                 tokenRepository.deleteByEmail(member.getEmail()); // Redis에서도 토큰 삭제
             });
 
-        } else {
+        } else {//회원가입
             String randomPassword = UUID.randomUUID().toString();
             member = AuthConverter.toUser(
                     userInfo.getEmail(),
@@ -94,19 +94,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // JWT 토큰 생성 및 Redis 저장 로직을 JwtUtil로 이동
-        jwtUtil.generateAndStoreTokens(member.getEmail(), member.getRole(), userInfo.getGoogleAccessToken(), "google", httpServletResponse);
+        jwtUtil.generateAndStoreTokens(member.getEmail(), member.getRole(), userInfo.getGoogleAccessToken(), "google");
 
         return member;
-    }
-
-    // 공통 쿠키 설정 메서드
-    private void setCookie(HttpServletResponse response, String name, String value, long maxAge, boolean isSecure) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(false);
-        cookie.setSecure(isSecure); // 프로덕션 환경에서는 true로 설정
-        cookie.setPath("/");
-        cookie.setMaxAge((int) maxAge);
-        response.addCookie(cookie);
     }
 
     // AuthServiceImpl.java

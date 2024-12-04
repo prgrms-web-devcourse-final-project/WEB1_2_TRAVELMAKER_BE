@@ -22,7 +22,7 @@ public class GoogleUtil {
     private String redirect_uri;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public String getAccessToken(String authorizationCode) {
+    public String getOAuthToken(String authorizationCode) {
         log.info("Authorization Code: {}", authorizationCode); // Authorization Code 로깅
 
         HttpHeaders headers = new HttpHeaders();
@@ -46,6 +46,7 @@ public class GoogleUtil {
 
         return response.getBody().get("access_token").toString();
     }
+
 
     public GoogleUserInfo getUserInfo(String accessToken) {
         // Access Token으로 사용자 정보 요청

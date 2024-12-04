@@ -70,7 +70,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     Token existingToken = tokenOptional.get();
 
                     // generateAndStoreTokens를 이용해 Access Token과 Refresh Token을 재발급하고 저장
-                    jwtUtil.generateAndStoreTokens(email,"ROLE_USER", existingToken.getSocialAccessToken(),existingToken.getProvider(), response);
+                    jwtUtil.generateAndStoreTokens(email,"ROLE_USER", existingToken.getSocialAccessToken(),existingToken.getProvider());
 
                     // SecurityContext에 새로운 인증 정보 설정
                     SecurityContextHolder.getContext().setAuthentication(jwtUtil.createAuthentication(email));
@@ -84,17 +84,5 @@ public class JwtFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
-//    private void handleAuthError(AuthHandler e, HttpServletResponse response) throws IOException {
-//        if (ErrorStatus._AUTH_EXPIRE_TOKEN.equals(e.getErrorReasonHttpStatus().getCode())) {
-//            log.error("Access Token expired: {}", e.getMessage());
-//            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-//            response.getWriter().write("Unauthorized - Access Token expired");
-//        } else {
-//            log.error("Authentication Error: {}", e.getMessage());
-//            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-//            response.getWriter().write("Unauthorized");
-//        }
-//    }
 
 }
