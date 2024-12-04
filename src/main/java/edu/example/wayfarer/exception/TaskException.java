@@ -4,13 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-@Getter
 @AllArgsConstructor
-public class GeocodingTaskException extends RuntimeException {
+@Getter
+public class TaskException extends RuntimeException {
 
     private HttpStatus status;
 
-    public GeocodingTaskException(String message, HttpStatus status) {
+    public TaskException(String message, HttpStatus status) {
         super(message);
         this.status = status;
     }

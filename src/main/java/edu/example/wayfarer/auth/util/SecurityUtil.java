@@ -1,6 +1,6 @@
 package edu.example.wayfarer.auth.util;
 
-import edu.example.wayfarer.apiPayload.exception.AuthorizationException;
+import edu.example.wayfarer.exception.AuthorizationException;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public class SecurityUtil {
     private Authentication getAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication(); //사용자의 인증 정보를 담는다 (스레드)
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AuthorizationException("인증 정보가 없습니다.");
+            throw AuthorizationException.NOT_FOUND.get();
         }
         return authentication;
     }
@@ -29,6 +29,6 @@ public class SecurityUtil {
 
         // MemberRepository를 이용해 현재 인증된 사용자의 이메일로 Member 객체를 찾습니다.
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthorizationException("인증된 사용자 정보를 확인할 수 없습니다."));
+                .orElseThrow(AuthorizationException.NOT_FOUND::get);
     }
 }

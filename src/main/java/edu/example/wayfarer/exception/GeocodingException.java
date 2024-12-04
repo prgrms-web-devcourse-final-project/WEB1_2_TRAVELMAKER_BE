@@ -11,13 +11,13 @@ public enum GeocodingException {
     UNKNOWN_ERROR("알 수 없는 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR)
     ;
 
-    private final GeocodingTaskException geocodingTaskException;
+    private final TaskException geocodingTaskException;
 
     GeocodingException(String message, HttpStatus status) {
-        geocodingTaskException = new GeocodingTaskException(message, status);
+        geocodingTaskException = new TaskException(message, status);
     }
 
-    public GeocodingTaskException get() {
+    public TaskException get() {
         return geocodingTaskException;
     }
 }

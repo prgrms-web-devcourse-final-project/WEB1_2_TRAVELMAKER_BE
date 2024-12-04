@@ -5,13 +5,13 @@ import org.springframework.http.HttpStatus;
 public enum ScheduleException {
     NOT_FOUND("존재하지 않는 스케쥴입니다.", HttpStatus.NOT_FOUND);
 
-    private final ScheduleTaskException scheduleTaskException;
+    private final TaskException scheduleTaskException;
 
     ScheduleException(String message, HttpStatus status) {
-        scheduleTaskException = new ScheduleTaskException(message, status);
+        scheduleTaskException = new TaskException(message, status);
     }
 
-    public ScheduleTaskException get() {
+    public TaskException get() {
         return scheduleTaskException;
     }
 }

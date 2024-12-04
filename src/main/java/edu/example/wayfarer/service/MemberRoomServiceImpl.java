@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,7 +38,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     private final ScheduleRepository scheduleRepository;
 
     /*
-    create 설명
+    create 설명 (방 입장)
     1. 제일 먼저 해당 방을 찾습니다. (찾을 수 없을 시 존재 X 예외)
     2. RoomId와 RoomCode가 일치하는지 검증합니다. (다를 시 INVALID_ROOMCODE 예외)
     3. (로그인한 상태니 당연히 currentUser로 받을 수 있어야 하지만 아직은 로그인 기능이 없으니 member를 찾는 걸로 임시대체)
@@ -92,14 +93,14 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     @Override
     public void delete(Member member, String roomId) {
         Room room = roomRepository.findById(roomId)
-                .orElseThrow(()-> new NoSuchElementException("해당 방이 존재하지 않습니다."));
+                .orElseThrow(MemberRoomException.ROOM_NOT_FOUND::get);
 
         if(room.getHostEmail().equals(member.getEmail())) {
             hostExit(member, room);
 
         }else {
             MemberRoom memberRoom = memberRoomRepository.findByMemberEmailAndRoomRoomId(member.getEmail(), roomId)
-                    .orElseThrow(()-> new NoSuchElementException("이미 없는 회원입니다."));
+                    .orElseThrow(MemberRoomException.LEFT_MEMBER::get);
             memberRoomRepository.delete(memberRoom);
         }
 
@@ -119,28 +120,23 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
     @Override
     public List<RoomListDTO> listByEmail(Member member) {
-        try {
             List<MemberRoom> memberRooms = memberRoomRepository.findAllByMemberEmail(member.getEmail());
 
             List<RoomListDTO> roomListDTOS = memberRooms.stream()
                     .map(memberRoom -> {
                         Room room = roomRepository.findById(memberRoom.getRoom().getRoomId())
-                                .orElseThrow(RoomException.DOESNT_EXIST::get);
+                                .orElseThrow(RoomException.NOT_FOUND::get);
                         return RoomConverter.toRoomListDTO(room);
                     })
                     .collect(Collectors.toList());
 
             return roomListDTOS;
-        }catch (Exception e) {
-            throw RoomException.DOESNT_EXIST.get();
-        }
-
     }
 
     protected void hostExit(Member member, Room room){
         // 현재 방장의 MemberRoom 조회
         MemberRoom currentHost = memberRoomRepository.findByMemberEmailAndRoomRoomId(member.getEmail(), room.getRoomId())
-                .orElseThrow(() -> new NoSuchElementException("이미 없는 회원입니다.")); // 여기 사실 방장이 없으면 안되는 건데..
+                .orElseThrow(MemberRoomException.LEFT_MEMBER::get); // 여기 사실 방장이 없으면 안되는 건데..
 
         // 방의 다른 멤버 조회
         List<MemberRoom> remainingMembers = memberRoomRepository.findAllByRoomRoomId(room.getRoomId()).stream()
@@ -148,15 +144,13 @@ public class MemberRoomServiceImpl implements MemberRoomService {
                 .toList();
 
         if(remainingMembers.isEmpty()) {
-            memberRoomRepository.delete(currentHost);
-            scheduleRepository.deleteByRoomId(room.getRoomId());
+            // 남은 멤버가 없는 경우, 방 삭제
             roomRepository.delete(room);
         }else {
             // 다음 방장 선정: 남은 멤버 중 Color 인덱스가 가장 작은 사람
-            MemberRoom nextHost = memberRoomRepository.findAllByRoomRoomId(room.getRoomId()).stream()
-                    .filter(memberRoom -> !memberRoom.getMember().getEmail().equals(room.getHostEmail())) // 방장 제외
-                    .min(Comparator.comparingInt(memberRoom -> memberRoom.getColor().ordinal())) // Color 인덱스 기준 정렬
-                    .orElseThrow(() -> new IllegalStateException("방에 남아 있는 회원이 없어 방을 유지할 수 없습니다."));
+            MemberRoom nextHost = remainingMembers.stream()
+                    .min(Comparator.comparingInt(memberRoom -> memberRoom.getColor().ordinal())) // Color 기준으로 정렬
+                    .orElseThrow(MemberRoomException.HOST_NOT_FOUND::get); // 이 상황은 발생하지 않음
 
             // 새로운 방장 설정
             room.setHostEmail(nextHost.getMember().getEmail());
