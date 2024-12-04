@@ -155,7 +155,6 @@ public class AuthController {
     // 쿠키 설정 메서드
     private void setCookie(HttpServletResponse response, String name, String value, long maxAge) {
         Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
         cookie.setSecure(false); // 프로덕션에서는 true로 설정
         cookie.setPath("/");
         cookie.setMaxAge((int) maxAge);
@@ -165,7 +164,6 @@ public class AuthController {
     // 쿠키 삭제 메서드
     private void deleteCookie(HttpServletResponse response, String name) {
         Cookie cookie = new Cookie(name, null);
-        cookie.setHttpOnly(true);
         cookie.setSecure(false); // 프로덕션에서는 true로 설정
         cookie.setPath("/");
         cookie.setMaxAge(0); // 삭제
