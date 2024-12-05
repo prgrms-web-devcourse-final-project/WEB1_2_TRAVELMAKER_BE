@@ -24,7 +24,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public MemberResponseDTO read(String email) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(MemberException.NOT_FOUND::get);
+                .orElseThrow(MemberException.INFO_NOT_FOUND::get);
         return MemberConverter.toMemberResponseDTO(member);
     }
 

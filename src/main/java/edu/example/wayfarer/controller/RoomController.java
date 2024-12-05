@@ -11,6 +11,9 @@ import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.service.MemberRoomService;
 import edu.example.wayfarer.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +26,20 @@ public class RoomController {
     private final MemberRoomService memberRoomService;
     private final SecurityUtil securityUtil;
 
-    @Operation(summary = "단일 방 정보 조회")
+    @Operation(summary = "단일 방 정보 조회", responses = {
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "404", description = "방을 찾을 수 없습니다", content = @Content),
+    })
     @GetMapping("/{roomId}")
     public ResponseEntity<RoomResponseDTO> readRoom(@PathVariable String roomId) {
         return ResponseEntity.ok(roomService.read(roomId));
     }
 
-    @Operation(summary = "방 정보 수정")
+    @Operation(summary = "방 정보 수정(방장만 가능)", responses = {
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "404", description = "방을 찾을 수 없습니다", content = @Content),
+            @ApiResponse(responseCode = "401", description = "권한이 없습니다", content = @Content)
+    })
     @PutMapping
     public ResponseEntity<RoomResponseDTO> updateRoom(@RequestBody RoomUpdateDTO roomUpdateDTO) {
         // 로그인한 사용자가 해당 방의 방장이 맞는지 아닌지 확인

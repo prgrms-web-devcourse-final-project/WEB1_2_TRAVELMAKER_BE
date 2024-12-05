@@ -9,13 +9,13 @@ public enum MarkerException {
     MAX_LIMIT_EXCEEDED("마커 생성 제한 갯수를 초과했습니다.", HttpStatus.BAD_REQUEST),
     CONFIRMED_LIMIT_EXCEEDED("마커 확정 제한 갯수를 초과했습니다.", HttpStatus.BAD_REQUEST);
 
-    private final MarkerTaskException markerTaskException;
+    private final TaskException markerTaskException;
 
     MarkerException(String message, HttpStatus status) {
-        markerTaskException = new MarkerTaskException(message, status);
+        markerTaskException = new TaskException(message, status);
     }
 
-    public MarkerTaskException get() {
+    public TaskException get() {
         return markerTaskException;
     }
 }

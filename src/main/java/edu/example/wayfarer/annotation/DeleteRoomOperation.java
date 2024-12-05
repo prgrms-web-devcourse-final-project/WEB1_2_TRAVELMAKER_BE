@@ -16,6 +16,8 @@ import java.lang.annotation.Target;
 @Operation(summary = "방 삭제 (방장만 가능)", responses = {
         @ApiResponse(responseCode = "200", description = "삭제되었습니다.",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeleteResponse.class))),
+        @ApiResponse(responseCode = "404", description = "방을 찾을 수 없습니다", content = @Content),
+        @ApiResponse(responseCode = "401", description = "권한이 없습니다", content = @Content)
 })
 public @interface DeleteRoomOperation {
 }

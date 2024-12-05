@@ -132,10 +132,10 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
         );
     }
 
-    @ExceptionHandler(GeocodingTaskException.class)
-    public ResponseEntity<?> handleGeocodingTaskException(GeocodingTaskException e) {
+    @ExceptionHandler(TaskException.class)
+    public ResponseEntity<?> handleTaskException(TaskException e){
         Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("error message", e.getMessage());
+        errorResponse.put("message", e.getMessage());
         errorResponse.put("status", e.getStatus());
         errorResponse.put("timestamp", LocalDateTime.now());
 
@@ -144,51 +144,63 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                 .body(errorResponse);
     }
 
-    @ExceptionHandler(ScheduleItemTaskException.class)
-    public ResponseEntity<?> handleScheduleItemTaskException(ScheduleItemTaskException e) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("error message", e.getMessage());
-        errorResponse.put("status", e.getStatus());
-        errorResponse.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity
-                .status(e.getStatus())
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(MarkerTaskException.class)
-    public ResponseEntity<?> handleMarkerTaskException(MarkerTaskException e) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("error message", e.getMessage());
-        errorResponse.put("status", e.getStatus());
-        errorResponse.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity
-                .status(e.getStatus())
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(ScheduleTaskException.class)
-    public ResponseEntity<?> handleScheduleTaskException(ScheduleTaskException e) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("error message", e.getMessage());
-        errorResponse.put("status", e.getStatus());
-        errorResponse.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity
-                .status(e.getStatus())
-                .body(errorResponse);
-    }
-
-    @ExceptionHandler(RoomTaskException.class)
-    public ResponseEntity<?> handleRoomTaskException(RoomTaskException e) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("error message", e.getMessage());
-        errorResponse.put("status", e.getStatus());
-        errorResponse.put("timestamp", LocalDateTime.now());
-
-        return ResponseEntity
-                .status(e.getStatus())
-                .body(errorResponse);
-    }
+//    @ExceptionHandler(TaskException.class)
+//    public ResponseEntity<?> handleGeocodingTaskException(TaskException e) {
+//        Map<String, Object> errorResponse = new HashMap<>();
+//        errorResponse.put("error message", e.getMessage());
+//        errorResponse.put("status", e.getStatus());
+//        errorResponse.put("timestamp", LocalDateTime.now());
+//
+//        return ResponseEntity
+//                .status(e.getStatus())
+//                .body(errorResponse);
+//    }
+//
+//    @ExceptionHandler(TaskException.class)
+//    public ResponseEntity<?> handleScheduleItemTaskException(TaskException e) {
+//        Map<String, Object> errorResponse = new HashMap<>();
+//        errorResponse.put("error message", e.getMessage());
+//        errorResponse.put("status", e.getStatus());
+//        errorResponse.put("timestamp", LocalDateTime.now());
+//
+//        return ResponseEntity
+//                .status(e.getStatus())
+//                .body(errorResponse);
+//    }
+//
+//    @ExceptionHandler(TaskException.class)
+//    public ResponseEntity<?> handleMarkerTaskException(TaskException e) {
+//        Map<String, Object> errorResponse = new HashMap<>();
+//        errorResponse.put("error message", e.getMessage());
+//        errorResponse.put("status", e.getStatus());
+//        errorResponse.put("timestamp", LocalDateTime.now());
+//
+//        return ResponseEntity
+//                .status(e.getStatus())
+//                .body(errorResponse);
+//    }
+//
+//    @ExceptionHandler(TaskException.class)
+//    public ResponseEntity<?> handleScheduleTaskException(TaskException e) {
+//        Map<String, Object> errorResponse = new HashMap<>();
+//        errorResponse.put("error message", e.getMessage());
+//        errorResponse.put("status", e.getStatus());
+//        errorResponse.put("timestamp", LocalDateTime.now());
+//
+//        return ResponseEntity
+//                .status(e.getStatus())
+//                .body(errorResponse);
+//    }
+//
+//    @ExceptionHandler(TaskException.class)
+//    public ResponseEntity<?> handleRoomTaskException(TaskException e) {
+//        Map<String, Object> errorResponse = new HashMap<>();
+//        errorResponse.put("error message", e.getMessage());
+//        errorResponse.put("status", e.getStatus());
+//        errorResponse.put("timestamp", LocalDateTime.now());
+//
+//        return ResponseEntity
+//                .status(e.getStatus())
+//                .body(errorResponse);
+//    }
 }

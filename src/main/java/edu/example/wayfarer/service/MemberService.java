@@ -1,6 +1,5 @@
 package edu.example.wayfarer.service;
 
-import edu.example.wayfarer.dto.member.MemberImgUpdateDTO;
 import edu.example.wayfarer.dto.member.MemberResponseDTO;
 import org.springframework.web.multipart.MultipartFile;
 

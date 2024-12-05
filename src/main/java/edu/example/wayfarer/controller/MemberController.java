@@ -7,6 +7,8 @@ import edu.example.wayfarer.dto.responses.DeleteResponse;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +21,10 @@ public class MemberController {
     private final MemberService memberService;
     private final SecurityUtil securityUtil;
 
-    @Operation(summary = "사용자 정보 조회")
+    @Operation(summary = "사용자 정보 조회", responses = {
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "404", description = "사용자 정보를 찾을 수 없습니다.", content = @Content)
+    })
     @GetMapping
     public ResponseEntity<MemberResponseDTO> readMember(){
         Member currentUser = securityUtil.getCurrentUser();

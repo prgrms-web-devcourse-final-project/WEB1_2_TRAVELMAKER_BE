@@ -10,6 +10,8 @@ import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.service.MemberRoomService;
 import edu.example.wayfarer.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,9 +29,11 @@ public class MainController {
     private final MemberRoomService memberRoomService;
     private final SecurityUtil securityUtil;
 
-    @Operation(summary = "방 생성")
+    @Operation(summary = "방 생성", responses = {
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "400", description = "날짜를 제대로 입력해주세요. \t\n 여행기간 설정은 30일까지 가능합니다.", content = @Content),
+    })
     @PostMapping
-    @ResponseStatus(HttpStatus.OK)
     public RoomResponseDTO createRoom(@RequestBody RoomRequestDTO roomRequestDTO) {
         Member currentUser = securityUtil.getCurrentUser();
         RoomRequestDTO updatedDTO = new RoomRequestDTO(
@@ -41,7 +45,9 @@ public class MainController {
         return roomService.create(updatedDTO, currentUser.getEmail());
     }
 
-    @Operation(summary = "방 리스트 조회")
+    @Operation(summary = "방 리스트 조회", responses = {
+            @ApiResponse(responseCode = "200", description = "OK")
+    })
     @GetMapping("/list")
     public ResponseEntity<List<RoomListDTO>> getListByEmail() {
         Member currentUser = securityUtil.getCurrentUser();
