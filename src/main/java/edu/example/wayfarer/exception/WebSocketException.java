@@ -5,7 +5,7 @@ public enum WebSocketException {
     INVALID_TOKEN("Invalid token", 401),
     INVALID_MESSAGE_FORMAT("Invalid message format", 1002), // 1002: Protocol Error
     INVALID_ACTION("Invalid action", 1003),
-    INVALID_EMAIL("Invalid email", 1003);
+    INVALID_EMAIL("Invalid email", 400);
 
     private final String message;
     private final int code;
