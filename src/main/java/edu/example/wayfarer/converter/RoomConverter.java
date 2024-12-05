@@ -22,6 +22,7 @@ public class RoomConverter {
 
     public static RoomListDTO toRoomListDTO(Room room) {
         return new RoomListDTO(
+                room.getRoomId(),
                 room.getTitle(),
                 room.getCountry(),
                 room.getStartDate(),

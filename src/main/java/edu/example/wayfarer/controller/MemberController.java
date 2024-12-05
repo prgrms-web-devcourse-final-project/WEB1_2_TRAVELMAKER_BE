@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,8 +40,8 @@ public class MemberController {
     }
 
     @Operation(summary = "프로필 사진 수정")
-    @PutMapping("/profileImg")
-    public ResponseEntity<MemberResponseDTO> updateProfileImg(@RequestParam("image") MultipartFile image ){
+    @PutMapping(value = "/profileImg",  consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MemberResponseDTO> updateProfileImg(@RequestPart("image") MultipartFile image ){
         Member currentUser = securityUtil.getCurrentUser();
         MemberResponseDTO updatedMember = memberService.updateImg(currentUser.getEmail(), image);
         return ResponseEntity.ok(updatedMember);
