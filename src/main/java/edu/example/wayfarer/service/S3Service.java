@@ -4,6 +4,7 @@ package edu.example.wayfarer.service;
 import edu.example.wayfarer.config.s3.AwsS3Config;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import org.apache.tika.Tika;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,15 +20,20 @@ import java.io.IOException;
 public class S3Service {
 
     private final S3Client s3Client;
-
     private final AwsS3Config awsS3Config;
 
-    public String upload(String fileName, MultipartFile file) {
+    public String upload(String email, MultipartFile file) {
+        String fileName = "profiles/" + email + "/" + System.currentTimeMillis() + "-" + file.getOriginalFilename();
         try {
+
+            Tika tika = new Tika();
+            String contentType = tika.detect(file.getInputStream());
+
             s3Client.putObject(
                     PutObjectRequest.builder()
                             .bucket(awsS3Config.getBucketName())
                             .key(fileName)
+                            .contentType(contentType)
                             .build(),
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );

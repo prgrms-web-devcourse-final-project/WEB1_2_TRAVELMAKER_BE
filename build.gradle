@@ -63,6 +63,8 @@ dependencies {
     implementation 'org.springframework.session:spring-session-data-redis'
 
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.apache.tika:tika-core:2.9.0'
+
 }
 
 tasks.named('test') {

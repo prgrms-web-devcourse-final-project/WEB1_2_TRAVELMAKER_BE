@@ -48,7 +48,7 @@ public class MemberServiceImpl implements MemberService {
             s3Service.deleteFileFromS3(oldImageUrl);
         }
 
-        String newImageUrl = s3Service.upload(email + "/profile", newImage);
+        String newImageUrl = s3Service.upload(email , newImage);
         member.changeImage(newImageUrl);
         memberRepository.save(member);
 
