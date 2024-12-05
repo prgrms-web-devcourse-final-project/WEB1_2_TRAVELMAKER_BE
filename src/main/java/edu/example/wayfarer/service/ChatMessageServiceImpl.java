@@ -1,7 +1,6 @@
 package edu.example.wayfarer.service;
 
 import edu.example.wayfarer.converter.ChatMessageConverter;
-import edu.example.wayfarer.dto.chatMessage.ChatMessageListDTO;
 import edu.example.wayfarer.dto.chatMessage.ChatMessageRequestDTO;
 import edu.example.wayfarer.dto.chatMessage.ChatMessageResponseDTO;
 import edu.example.wayfarer.dto.chatMessage.ChatMessageUpdateDTO;
@@ -64,8 +63,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     }
 
     @Override
-    public List<ChatMessageListDTO> getChatMessageListDTOByRoomId(String roomId) {
-        return chatMessageRepository.findChatMessageListDTOByRoomId(roomId);
+    public List<ChatMessageResponseDTO> getChatMessageListDTOByRoomId(String roomId) {
+        return chatMessageRepository.findChatMessageResponseDTOByRoomId(roomId);
     }
 
     private void verifyMemberInRoom(String email, String roomId){
