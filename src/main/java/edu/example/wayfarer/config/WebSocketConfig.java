@@ -20,7 +20,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/room")
-                .setAllowedOrigins("http://localhost:8080")
+                .setAllowedOrigins("*")
                 .addInterceptors(new WebSocketHandSakeInterceptor(jwtUtil));
     }
 
