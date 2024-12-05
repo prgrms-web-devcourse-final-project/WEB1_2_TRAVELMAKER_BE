@@ -1,6 +1,8 @@
 package edu.example.wayfarer.handler;
 
+import edu.example.wayfarer.converter.WebSocketMessageConverter;
 import edu.example.wayfarer.dto.chatMessage.ChatMessageRequestDTO;
+import edu.example.wayfarer.dto.chatMessage.ChatMessageResponseDTO;
 import edu.example.wayfarer.exception.WebSocketException;
 import edu.example.wayfarer.exception.WebSocketTaskException;
 import edu.example.wayfarer.service.ChatMessageService;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -30,9 +33,12 @@ public class ChatHandler {
         switch (action) {
             case "ENTER_ROOM" -> sendWelcomeMessage(roomId, email);
             case "SEND_MESSAGE" -> broadcastMessage(roomId, email, data);
+            case "LIST_MESSAGES" -> listMessages(roomId);
             default -> throw new WebSocketTaskException(WebSocketException.INVALID_ACTION);
         }
     }
+
+
 
     private void sendWelcomeMessage(String roomId, String email) {
         Map<String, Object> welcomeMessage = new LinkedHashMap<>();
@@ -69,6 +75,20 @@ public class ChatHandler {
         log.debug("BROADCAST_MESSAGE: " + broadcastMessage);
 
         template.convertAndSend("/topic/room/" + roomId, broadcastMessage);
+    }
+
+    private void listMessages(String roomId) {
+        List<ChatMessageResponseDTO> messages = chatMessageService.getChatMessageListDTOByRoomId(roomId);
+
+        //WebSocketMessageConverter로 List message 생성
+        WebSocketMessageConverter<List<ChatMessageResponseDTO>> listConverter = new WebSocketMessageConverter<>();
+        WebSocketMessageConverter.WebsocketMessage<List<ChatMessageResponseDTO>> listMessage =
+                listConverter.createMessage("LIST_MESSAGES", messages);
+        log.debug("LIST MESSAGES: " + listMessage);
+
+        template.convertAndSend("/topic/room/" + roomId, listMessage);
+
+
     }
 
 }
