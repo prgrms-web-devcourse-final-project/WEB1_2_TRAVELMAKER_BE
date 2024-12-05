@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 
 public record RoomListDTO(
+        String roomId,
         @Schema(defaultValue = "OO여행!!") String title,
         @Schema(defaultValue = "프랑스") String country,
         @Schema(defaultValue = "2025-01-01") LocalDate startDate,
