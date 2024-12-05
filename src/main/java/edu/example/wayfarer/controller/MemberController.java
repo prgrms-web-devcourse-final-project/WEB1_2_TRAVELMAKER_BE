@@ -3,6 +3,7 @@ package edu.example.wayfarer.controller;
 import edu.example.wayfarer.annotation.DeleteMemberOperation;
 import edu.example.wayfarer.auth.util.SecurityUtil;
 import edu.example.wayfarer.dto.member.MemberResponseDTO;
+import edu.example.wayfarer.dto.member.MemberUpdateDTO;
 import edu.example.wayfarer.dto.responses.DeleteResponse;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.service.MemberService;
@@ -34,9 +35,9 @@ public class MemberController {
 
     @Operation(summary = "닉네임 수정")
     @PutMapping
-    public ResponseEntity<MemberResponseDTO> updateMemberNickname(@RequestBody String newNickname){
+    public ResponseEntity<MemberResponseDTO> updateMemberNickname(@RequestBody MemberUpdateDTO memberUpdateDTO){
         Member currentUser = securityUtil.getCurrentUser();
-        return ResponseEntity.ok(memberService.updateNickname(newNickname, currentUser.getEmail()));
+        return ResponseEntity.ok(memberService.updateNickname(memberUpdateDTO, currentUser.getEmail()));
     }
 
     @Operation(summary = "프로필 사진 수정")
