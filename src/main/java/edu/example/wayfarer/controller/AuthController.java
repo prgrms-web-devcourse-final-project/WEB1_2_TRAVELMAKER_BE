@@ -3,7 +3,6 @@ package edu.example.wayfarer.controller;
 import edu.example.wayfarer.apiPayload.code.status.ErrorStatus;
 import edu.example.wayfarer.apiPayload.exception.handler.AuthHandler;
 import edu.example.wayfarer.auth.util.KakaoUtil;
-import edu.example.wayfarer.dto.KakaoDTO;
 import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.dto.GoogleUserInfo;
 import edu.example.wayfarer.entity.Token;
@@ -12,7 +11,9 @@ import edu.example.wayfarer.service.AuthService;
 import edu.example.wayfarer.auth.util.GoogleUtil;
 import edu.example.wayfarer.auth.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.servlet.http.Cookie;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,18 +21,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 
-@RestController
+@Controller
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Slf4j
+@RestController
 public class AuthController {
 
     private final AuthService authService;
@@ -58,8 +63,8 @@ public class AuthController {
 
     @GetMapping("/login/kakao")
     public void redirectToKakao(HttpServletResponse response,
-                                 @Value("${KAKAO_CLIENT_ID}") String clientId,
-                                 @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}") String redirectUri) throws IOException {
+                                @Value("${KAKAO_CLIENT_ID}") String clientId,
+                                @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}") String redirectUri) throws IOException {
         String kakaoLoginUrl = "https://kauth.kakao.com/oauth/authorize?"
                 + "client_id=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
                 + "&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
@@ -71,14 +76,19 @@ public class AuthController {
 
     // Google 및 Kakao 콜백 엔드포인트 통합
     @GetMapping("/{provider}/callback")
-    public ResponseEntity<?> socialCallback(
+    public RedirectView socialCallback(
             @PathVariable("provider") String provider,
             @RequestParam("code") String accessCode, //반환된 accessCode 로 각 소셜서버에서 정보가져오기 시작
+            @Value("${spring.jwt.secret}") final String secretKey,//원래는 jwt토큰 생성시에 쓰이는 키인데 , 한번 더 재사용
             HttpServletResponse httpServletResponse,
             @Value("${app.redirect.login.success.url}") String url
     ) {
 
         Member member;
+
+        //쿼리 파라미터 암호화를 위한 키
+        SecretKey newKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+
         if ("google".equalsIgnoreCase(provider)) {
             // 구글 로그인 처리
             try {
@@ -91,11 +101,15 @@ public class AuthController {
                 // AuthService로 회원 처리 (쿠키 설정 포함)
                 member = authService.googleLogin(userInfo);
                 Optional<Token> token = tokenRepository.findByEmail(member.getEmail());
+
                 if (token.isPresent()) {
-                    return ResponseEntity.ok(Map.of(
-                            "accessToken", token.get().getAccessToken(),
-                            "refreshToken", token.get().getRefreshToken()
-                    ));
+
+                    String accessToken = token.get().getAccessToken();
+
+                    String redirectUrl = url + "?accessToken=" + accessToken;
+
+                    return new RedirectView(redirectUrl);
+
                 } else {
                     throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
                 }
@@ -109,11 +123,15 @@ public class AuthController {
                 // AuthService로 회원 처리 (쿠키 설정 포함)
                 member = authService.kakaoLogin(accessCode);
                 Optional<Token> token = tokenRepository.findByEmail(member.getEmail());
+
                 if (token.isPresent()) {
-                    return ResponseEntity.ok(Map.of(
-                            "accessToken", token.get().getAccessToken(),
-                            "refreshToken", token.get().getRefreshToken()
-                    ));
+
+                    String accessToken = token.get().getAccessToken();
+
+                    String redirectUrl = url + "?accessToken=" + accessToken;
+
+                    return new RedirectView(redirectUrl);
+
                 } else {
                     throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
                 }
@@ -126,6 +144,7 @@ public class AuthController {
         }
     }
 
+    //Authorization에 들어가는 엑세스토큰은 한번 더 jwt로 인코딩된 토큰이기 때문에, 복호화를 한번 거쳐야합니다.
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String authorization, HttpServletResponse response) {
         try {
@@ -133,7 +152,11 @@ public class AuthController {
             if (authorization == null || !authorization.startsWith("Bearer ")) {
                 throw new AuthHandler(ErrorStatus._TOKEN_NOT_FOUND);
             }
+
+            // Bearer {한번 더 암호화된 JWT}니까 {한번 더 암호화된 JWT}만 갖고 옴
             String accessToken = authorization.split(" ")[1];
+
+            log.info("[*] AccessToken : {}", accessToken);
 
             // Access Token 유효성 검증
             try {
