@@ -29,7 +29,10 @@ public class RedisHandler {
     //@Scheduled(fixedRate = 43200000)
 
     // 60초에 한번씩 DB에 저장 (테스트용)
-    @Scheduled(fixedRate = 600000)
+    //@Scheduled(fixedRate = 60000)
+
+    // 12시간에 한번씩 DB에 저장 (배포용)
+    @Scheduled(fixedRate = 43200000)
     public void migrateMessagesTODB() {
         log.info("Starting Redis to DB migration...");
 
