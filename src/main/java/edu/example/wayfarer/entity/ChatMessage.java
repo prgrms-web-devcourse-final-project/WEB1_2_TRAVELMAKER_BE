@@ -35,7 +35,6 @@ public class ChatMessage {
 
 //    private MessageType messageType;
 
-    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @LastModifiedDate

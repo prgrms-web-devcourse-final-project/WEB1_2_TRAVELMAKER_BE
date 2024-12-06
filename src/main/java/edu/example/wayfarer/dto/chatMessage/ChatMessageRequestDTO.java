@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record ChatMessageRequestDTO(
         String roomId,
         String email,
-        String content
+        String content,
+        String timestamp
 ) {
 }
