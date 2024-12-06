@@ -30,11 +30,13 @@ public class MarkerConverter {
 
     public static MarkerResponseDTO toMarkerResponseDTO(
             Marker marker,
-            Integer itemOrder
+            Integer itemOrder,
+            String profileImage
     ) {
         return new MarkerResponseDTO(
                 marker.getMarkerId(),
                 marker.getMember().getEmail(),
+                profileImage,
                 marker.getSchedule().getScheduleId(),
                 marker.getLat(),
                 marker.getLng(),
