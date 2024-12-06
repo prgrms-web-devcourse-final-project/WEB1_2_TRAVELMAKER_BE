@@ -22,8 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,7 +33,6 @@ public class MemberRoomServiceImpl implements MemberRoomService {
     private final MemberRoomRepository memberRoomRepository;
     private final RoomRepository roomRepository;
     private final MemberRepository memberRepository;
-    private final ScheduleRepository scheduleRepository;
 
     /*
     create 설명 (방 입장)
@@ -51,11 +48,6 @@ public class MemberRoomServiceImpl implements MemberRoomService {
         Room room = roomRepository.findById(memberRoomRequestDTO.roomId())
                 .orElseThrow(MemberRoomException.ROOM_NOT_FOUND::get);
 
-        // MemberRoomRequestDTO에 있는 roomId와 roomCode가 맞는지 확인
-        if(!room.getRoomCode().equals(memberRoomRequestDTO.roomCode())) {
-            MemberRoomException.INVALID_ROOMCODE.throwException();
-        }
-
         Member currentUser = memberRepository.findByEmail(email)
                 .orElseThrow(MemberException.NOT_FOUND::get);
 
@@ -65,6 +57,11 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
         if(memberExistsInRoom) {
             throw MemberRoomException.DUPLICATED_MEMBER.get();
+        }
+
+        // MemberRoomRequestDTO에 있는 roomId와 roomCode가 맞는지 확인
+        if(!room.getRoomCode().equals(memberRoomRequestDTO.roomCode())) {
+            MemberRoomException.INVALID_ROOMCODE.throwException();
         }
 
         // Color 순회하여 사용 가능한 Color 찾기

@@ -65,6 +65,7 @@ dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation 'org.apache.tika:tika-core:2.9.0'
 
+
 }
 
 tasks.named('test') {

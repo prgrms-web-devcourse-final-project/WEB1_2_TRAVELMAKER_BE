@@ -21,7 +21,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -107,7 +106,7 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public void delete(Member member, String roomId) {
         Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new NoSuchElementException("삭제할 방이 존재하지 않습니다."));
+                .orElseThrow(RoomException.NOT_FOUND::get);
 
         verifyHost(member.getEmail(), room.getHostEmail());
 
