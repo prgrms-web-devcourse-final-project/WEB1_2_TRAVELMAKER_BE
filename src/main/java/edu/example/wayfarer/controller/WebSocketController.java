@@ -4,6 +4,7 @@ import edu.example.wayfarer.exception.WebSocketException;
 import edu.example.wayfarer.exception.WebSocketTaskException;
 import edu.example.wayfarer.handler.ChatHandler;
 import edu.example.wayfarer.handler.MarkerHandler;
+import edu.example.wayfarer.handler.MemberHandler;
 import edu.example.wayfarer.handler.ScheduleHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -25,6 +26,7 @@ public class WebSocketController {
     private final ChatHandler chatHandler;
     private final MarkerHandler markerHandler;
     private final ScheduleHandler scheduleHandler;
+    private final MemberHandler memberHandler;
 
     // WebSocket 연결 이벤트 처리
     @EventListener
@@ -66,6 +68,16 @@ public class WebSocketController {
     ) {
         scheduleHandler.handleSchedule(roomId, schedulePayload);
 
+    }
+
+    // 멤버 관련 처리
+    @MessageMapping("room/{roomId}/member")
+    public void handleMember(
+            @DestinationVariable String roomId,
+            @Payload Map<String, Object> memberPayload,
+            SimpMessageHeaderAccessor headerAccessor
+    ) {
+        memberHandler.handleMember(roomId, memberPayload);
     }
 
     private String getEmail(SimpMessageHeaderAccessor headerAccessor) {
