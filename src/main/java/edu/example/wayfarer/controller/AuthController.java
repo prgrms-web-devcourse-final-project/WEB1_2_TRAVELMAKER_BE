@@ -100,19 +100,7 @@ public class AuthController {
 
                 // AuthService로 회원 처리 (쿠키 설정 포함)
                 member = authService.googleLogin(userInfo);
-                Optional<Token> token = tokenRepository.findByEmail(member.getEmail());
-
-                if (token.isPresent()) {
-
-                    String accessToken = token.get().getAccessToken();
-
-                    String redirectUrl = url + "?accessToken=" + accessToken;
-
-                    return new RedirectView(redirectUrl);
-
-                } else {
-                    throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
-                }
+                return getRedirectView(url, member);
             } catch (Exception e) {
                 log.error("Google Callback Error: {}", e.getMessage());
                 throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
@@ -122,25 +110,29 @@ public class AuthController {
             try {
                 // AuthService로 회원 처리 (쿠키 설정 포함)
                 member = authService.kakaoLogin(accessCode);
-                Optional<Token> token = tokenRepository.findByEmail(member.getEmail());
-
-                if (token.isPresent()) {
-
-                    String accessToken = token.get().getAccessToken();
-
-                    String redirectUrl = url + "?accessToken=" + accessToken;
-
-                    return new RedirectView(redirectUrl);
-
-                } else {
-                    throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
-                }
+                return getRedirectView(url, member);
             } catch (Exception e) {
                 log.error("Kakao Callback Error: {}", e.getMessage());
                 throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
             }
         } else {
             throw new AuthHandler(ErrorStatus._INVALID_PROVIDER);
+        }
+    }
+
+    private RedirectView getRedirectView(@Value("${app.redirect.login.success.url}") String url, Member member) {
+        Optional<Token> token = tokenRepository.findByEmail(member.getEmail());
+
+        if (token.isPresent()) {
+
+            String accessToken = token.get().getAccessToken();
+            log.info("로그인 성공! Access Token : {}", accessToken);
+            String redirectUrl = url + "?accessToken=" + accessToken;
+
+            return new RedirectView(redirectUrl);
+
+        } else {
+            throw new AuthHandler(ErrorStatus._AUTH_INVALID_TOKEN);
         }
     }
 

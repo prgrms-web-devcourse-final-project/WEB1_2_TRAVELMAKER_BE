@@ -67,20 +67,28 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             } catch (ExpiredJwtException e) {
                 log.info("[*] Access Token이 만료되었습니다. Refresh Token으로 재발급을 시도합니다.");
-                String email = jwtUtil.getEmail(accessToken);
-                Token token = tokenRepository.findByEmail(email).get();
-                String refreshToken = token.getRefreshToken();
-                String socialAccessToken=token.getSocialAccessToken();
-                String provider = token.getProvider();
-
-                if (refreshToken != null && jwtUtil.isRefreshTokenValid(refreshToken)) {
-                    jwtUtil.generateAndStoreTokens(email, "ROLE_USER", socialAccessToken, provider);
-                    SecurityContextHolder.getContext().setAuthentication(jwtUtil.createAuthentication(email));
+                String email = jwtUtil.getEmailFromExpiredToken(accessToken); // 만료된 토큰에서 이메일 추출
+                if (email != null) {
+                    Optional<Token> tokenOptional = tokenRepository.findByEmail(email);
+                    if (tokenOptional.isPresent()) {
+                        String refreshToken = tokenOptional.get().getRefreshToken();
+                        if (refreshToken != null && jwtUtil.isRefreshTokenValid(refreshToken)) {
+                            jwtUtil.generateAndStoreTokens(email, "ROLE_USER", null, null);
+                            SecurityContextHolder.getContext().setAuthentication(jwtUtil.createAuthentication(email));
+                        } else {
+                            log.warn("[*] Refresh Token이 유효하지 않습니다. 인증에 실패했습니다.");
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.getWriter().write("Unauthorized - Token expired or invalid");
+                            return; // 필터 체인을 중단하고 응답을 반환합니다.
+                        }
+                    } else {
+                        log.warn("[*] 이메일에 해당하는 토큰을 찾을 수 없습니다.");
+                    }
                 } else {
-                    log.warn("[*] Refresh Token이 유효하지 않습니다. 인증에 실패했습니다.");
+                    log.warn("[*] 만료된 토큰에서 이메일을 추출하지 못했습니다.");
                     response.setStatus(HttpStatus.UNAUTHORIZED.value());
                     response.getWriter().write("Unauthorized - Token expired or invalid");
-                    return; // 필터 체인을 중단하고 응답을 반환합니다.
+                    return;
                 }
             }
         } else {
