@@ -6,7 +6,6 @@ public record ChatMessageResponseDTO(
         String roomId,
         String email,
         String content,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime createdAt
 ) {
 }

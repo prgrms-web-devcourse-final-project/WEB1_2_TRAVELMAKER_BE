@@ -17,6 +17,7 @@ import edu.example.wayfarer.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -65,6 +66,11 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     @Override
     public List<ChatMessageResponseDTO> getChatMessageListDTOByRoomId(String roomId) {
         return chatMessageRepository.findChatMessageResponseDTOByRoomId(roomId);
+    }
+
+    @Override
+    public List<ChatMessageResponseDTO> getChatMessagesBeforeTimestamp(String roomId, LocalDateTime createdAt) {
+        return chatMessageRepository.findChatMessageResponseDTOByRoomIdBeforeCreatedAt(roomId,createdAt);
     }
 
     private void verifyMemberInRoom(String email, String roomId){

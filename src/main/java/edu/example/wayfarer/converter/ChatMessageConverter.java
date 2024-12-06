@@ -13,19 +13,13 @@ import java.util.Locale;
 public class ChatMessageConverter {
 
     public static ChatMessage toChatMessage(Room room, Member member,String content, String timestamp) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss.SSS z yyyy", Locale.ENGLISH);
-
-        // KST를 Asia/Seoul로 바꿔서 파싱
-        timestamp = timestamp.replace("KST", "Asia/Seoul");
-
-        // ZonedDateTime을 사용하여 시간대 정보를 포함한 파싱
-        ZonedDateTime zonedDateTime = ZonedDateTime.parse(timestamp, formatter);
+        LocalDateTime time = stringTOLocalDateTime(timestamp);
 
         return ChatMessage.builder()
                 .room(room)
                 .member(member)
                 .content(content)
-                .createdAt(zonedDateTime.toLocalDateTime())
+                .createdAt(time)
                 .build();
     }
 
@@ -34,9 +28,21 @@ public class ChatMessageConverter {
                 chatMessage.getRoom().getRoomId(),
                 chatMessage.getMember().getEmail(),
                 chatMessage.getContent(),
-                chatMessage.getCreatedAt(),
-                chatMessage.getUpdatedAt()
+                chatMessage.getCreatedAt()
         );
+
+    }
+
+    public static LocalDateTime stringTOLocalDateTime(String timestamp) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss.SSS z yyyy", Locale.ENGLISH);
+
+        // KST를 Asia/Seoul로 바꿔서 파싱
+        timestamp = timestamp.replace("KST", "Asia/Seoul");
+
+        // ZonedDateTime을 사용하여 시간대 정보를 포함한 파싱
+        ZonedDateTime zonedDateTime = ZonedDateTime.parse(timestamp, formatter);
+
+        return zonedDateTime.toLocalDateTime();
 
     }
 }
