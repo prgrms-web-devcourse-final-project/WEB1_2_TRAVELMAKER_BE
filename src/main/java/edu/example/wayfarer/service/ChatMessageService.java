@@ -16,4 +16,6 @@ public interface ChatMessageService {
 
     List<ChatMessageResponseDTO> getChatMessageListDTOByRoomId(String roomId);
 
+    boolean isMessageExistsInDB(ChatMessageRequestDTO chatMessageRequestDTO);
+
 }

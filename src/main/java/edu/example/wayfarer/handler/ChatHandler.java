@@ -8,13 +8,15 @@ import edu.example.wayfarer.exception.WebSocketTaskException;
 import edu.example.wayfarer.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -22,6 +24,15 @@ import java.util.Map;
 public class ChatHandler {
     private final SimpMessagingTemplate template;
     private final ChatMessageService chatMessageService;
+    public static final String CHAT_CACHE_PREFIX = "ChatMessage:";
+
+    @Autowired
+    @Qualifier("jsonRedisTemplate")
+    private RedisTemplate<String, Object> jsonRedisTemplate;
+
+    // 타임스탬프 포맷 정의 (밀리세컨드까지 포함)
+    private static final SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss.SSS z yyyy", Locale.ENGLISH);
+
 
     public void handleChat(String roomId, String email, Map<String, Object> messagePayload) {
         //클라이언트가 보낸 Payload를 action과 data로 분리
@@ -46,7 +57,8 @@ public class ChatHandler {
         welcomeMessage.put("data", Map.of(
                 "sender", "System",
                 "message", email + " 님이 입장하셨습니다.",
-                "timestamp", new Date().toString())
+                "timestamp", timestampFormat.format(new Date())
+                )
         );
 
         log.debug("WELCOME MESSAGE: " + welcomeMessage);
@@ -65,12 +77,17 @@ public class ChatHandler {
         broadcastMessage.put("data", Map.of(
                 "sender", email,
                 "message", message,
-                "timestamp", new Date().toString())
+                "timestamp", timestampFormat.format(new Date())
+                )
         );
 
+        //Redis에 chatMesssage 캐시 저장
+        jsonRedisTemplate.opsForList().rightPush(CHAT_CACHE_PREFIX + roomId, broadcastMessage);
+        jsonRedisTemplate.expire(CHAT_CACHE_PREFIX + roomId, 1, TimeUnit.DAYS);
+
         //chatMessage DB에 저장
-        ChatMessageRequestDTO chatMessageRequestDTO = new ChatMessageRequestDTO (roomId, email, message);
-        chatMessageService.createChatMessage(chatMessageRequestDTO);
+//        ChatMessageRequestDTO chatMessageRequestDTO = new ChatMessageRequestDTO (roomId, email, message);
+//        chatMessageService.createChatMessage(chatMessageRequestDTO);
 
         log.debug("BROADCAST_MESSAGE: " + broadcastMessage);
 

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
@@ -18,4 +19,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     @Modifying
     @Query("DELETE FROM ChatMessage c WHERE c.room.roomId = :roomId")
     void deleteByRoomId(@Param("roomId") String roomId);
+
+    boolean existsByRoom_RoomIdAndMemberEmailAndCreatedAt(String roomId, String sender, LocalDateTime createdAt);
 }

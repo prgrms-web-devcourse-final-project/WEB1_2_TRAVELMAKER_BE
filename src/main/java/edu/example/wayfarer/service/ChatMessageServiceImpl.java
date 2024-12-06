@@ -37,7 +37,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         // 해당 사용자가 방의 참여자인지 확인
         verifyMemberInRoom(chatMessageRequestDTO.email(), chatMessageRequestDTO.roomId());
 
-        ChatMessage chatMessage = ChatMessageConverter.toChatMessage(room, member, chatMessageRequestDTO.content());
+        ChatMessage chatMessage = ChatMessageConverter.toChatMessage(room, member, chatMessageRequestDTO.content(), chatMessageRequestDTO.timestamp());
         chatMessageRepository.save(chatMessage);
         return ChatMessageConverter.toChatMessageResponseDTO(chatMessage);
     }
@@ -76,5 +76,22 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         if(!chatMessage.getMember().getEmail().equals(email)){
             throw(ChatMessageException.UNAUTHORIZED.get());
         }
+    }
+
+    @Override
+    public boolean isMessageExistsInDB(ChatMessageRequestDTO chatMessageRequestDTO) {
+        Room room = roomRepository.findById(chatMessageRequestDTO.roomId())
+                .orElseThrow(RoomException.NOT_FOUND::get);
+        Member member = memberRepository.findByEmail(chatMessageRequestDTO.email())
+                .orElseThrow(MemberException.NOT_FOUND::get);
+
+        ChatMessage chatMessage = ChatMessageConverter.toChatMessage(room, member, chatMessageRequestDTO.content(), chatMessageRequestDTO.timestamp());
+
+        // DB에서 해당 메시지가 존재하는지 확인하는 로직
+        return chatMessageRepository.existsByRoom_RoomIdAndMemberEmailAndCreatedAt(
+                chatMessage.getRoom().getRoomId(),
+                chatMessage.getMember().getEmail(),
+                chatMessage.getCreatedAt()
+        );
     }
 }

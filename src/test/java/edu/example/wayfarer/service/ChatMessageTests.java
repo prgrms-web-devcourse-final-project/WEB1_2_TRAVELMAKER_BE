@@ -28,7 +28,8 @@ public class ChatMessageTests {
         ChatMessageRequestDTO chatMessageRequestDTO = new ChatMessageRequestDTO(
             "mP5LcSAt",
                 "aa@aa.com",
-                "이곳에 나홀로"
+                "이곳에 나홀로",
+                "Fri Dec 06 00:12:14 KST 2024"
         );
         chatMessageService.createChatMessage(chatMessageRequestDTO);
     }
