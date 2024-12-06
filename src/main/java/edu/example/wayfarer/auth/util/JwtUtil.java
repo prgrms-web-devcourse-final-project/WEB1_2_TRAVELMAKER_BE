@@ -6,6 +6,7 @@ import edu.example.wayfarer.entity.Token;
 import edu.example.wayfarer.repository.TokenRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,19 +30,28 @@ import java.util.Date;
 @Slf4j
 @Getter
 public class JwtUtil {
-    private final SecretKey secretKey;
+    private SecretKey secretKey;
     private final long accessTokenValiditySeconds;
     private final long refreshTokenValiditySeconds;
     private final TokenRepository tokenRepository;
 
+    @Value("${spring.jwt.secret}")
+    private String secretKeyString;
+
     public JwtUtil(
-            @Value("${spring.jwt.secret}") final String secretKey,
             @Value("${spring.jwt.access-token-time}") final long accessTokenValiditySeconds,
             @Value("${spring.jwt.refresh-token-time}") final long refreshTokenValiditySeconds, TokenRepository tokenRepository) {
-        this.secretKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         this.accessTokenValiditySeconds = accessTokenValiditySeconds;
         this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
         this.tokenRepository = tokenRepository;
+    }
+
+    @PostConstruct
+    private void initializeSecretKey() {
+        if (secretKeyString == null || secretKeyString.isEmpty()) {
+            throw new IllegalStateException("JWT secret key is not configured properly");
+        }
+        this.secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes(StandardCharsets.UTF_8));
     }
 
     // HTTP 요청의 'Authorization' 헤더 또는 쿠키에서 JWT 액세스 토큰을 검색
