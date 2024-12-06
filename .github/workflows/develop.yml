@@ -45,6 +45,16 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
+      # Nginx 설정 파일 생성
+      - name: Create .platform/nginx/conf.d/proxy.conf
+        run: |
+          mkdir -p .platform/nginx/conf.d
+          echo "client_max_body_size 30M;" > .platform/nginx/conf.d/proxy.conf
+
+      # 배포 패키지 생성
+      - name: Create deployment package
+        run: zip -r app.zip .platform build/libs/*.jar
+
       # 7. 현재 시간 가져오기
       - name: Get current time
         uses: josStorer/get-current-time@v2
@@ -73,4 +83,4 @@ jobs:
           # 배포 리전(서울)
           region: ap-northeast-2
           # 빌드된 jar 파일 경로
-          deployment_package: ./build/libs/${{env.artifact}}
+          deployment_package: ./app.zip
