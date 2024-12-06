@@ -30,7 +30,7 @@ public class RedisHandler {
         log.info("Starting Redis to DB migration...");
 
         Set<String> keys = jsonRedisTemplate.keys(CHAT_CACHE_PREFIX+"*");
-        log.info("Found keys: {}", keys);
+        log.debug("Found keys: {}", keys);
         if (keys == null || keys.isEmpty()) {
             log.info("No keys found in Redis.");
             log.info("Migration complete.");
@@ -39,7 +39,7 @@ public class RedisHandler {
 
         for (String key : keys) {
             List<Object> messageList = jsonRedisTemplate.opsForList().range(key, 0, -1);
-            log.info("messageList: {}", messageList);
+            log.debug("messageList: {}", messageList);
 
             for (Object message : messageList) {
                 if (!(message instanceof Map<?,?> messageData)) {
@@ -66,8 +66,6 @@ public class RedisHandler {
                     log.info("Message already exists in DB: roomId={}, email={}, content={}", roomId, email, content);
                 }
             }
-            jsonRedisTemplate.delete(key);
-            log.info("Redis Key deleted");
         }
         log.info("Migration complete.");
     }

@@ -85,10 +85,6 @@ public class ChatHandler {
         jsonRedisTemplate.opsForList().rightPush(CHAT_CACHE_PREFIX + roomId, broadcastMessage);
         jsonRedisTemplate.expire(CHAT_CACHE_PREFIX + roomId, 1, TimeUnit.DAYS);
 
-        //chatMessage DB에 저장
-//        ChatMessageRequestDTO chatMessageRequestDTO = new ChatMessageRequestDTO (roomId, email, message);
-//        chatMessageService.createChatMessage(chatMessageRequestDTO);
-
         log.debug("BROADCAST_MESSAGE: " + broadcastMessage);
 
         template.convertAndSend("/topic/room/" + roomId, broadcastMessage);
