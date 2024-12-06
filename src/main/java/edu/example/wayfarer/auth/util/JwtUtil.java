@@ -163,6 +163,24 @@ public class JwtUtil {
                 .build().parseClaimsJws(token);//setSigningKey로 설정된 비밀 키를 사용하여 토큰의 서명을 검증하고, 토큰이 유효한지 확인
     }
 
+    // 만료된 토큰에서 이메일 추출
+    public String getEmailFromExpiredToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.get("email", String.class);
+        } catch (ExpiredJwtException e) {
+            log.info("[*] 만료된 토큰에서 이메일을 추출합니다.");
+            return e.getClaims().get("email", String.class);
+        } catch (JwtException e) {
+            log.error("[*] 토큰에서 이메일을 추출하는 도중 오류 발생: {}", e.getMessage());
+            return null;
+        }
+    }
+
     // Access Token에서 이메일 추출
     public String getEmail(String token) {
         return getClaims(token).getBody()//페이로드 데이터에 접근
