@@ -14,11 +14,17 @@ import edu.example.wayfarer.service.MemberRoomService;
 import edu.example.wayfarer.service.RoomService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +33,11 @@ public class RoomController {
     private final RoomService roomService;
     private final MemberRoomService memberRoomService;
     private final SecurityUtil securityUtil;
+    private final SimpMessagingTemplate template;
+    // 타임스탬프 포맷 정의 (밀리세컨드까지 포함)
+    private static final SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss.SSS z yyyy", Locale.ENGLISH);
+
+
 
     @Operation(summary = "단일 방 정보 조회", responses = {
             @ApiResponse(responseCode = "200", description = "OK"),
@@ -72,6 +83,16 @@ public class RoomController {
         Member currentUser = securityUtil.getCurrentUser();
         memberRoomService.delete(currentUser, roomId);
 
+        //웹소켓 메시지 브로드캐스팅
+        Map<String, Object> leaveMessage = new LinkedHashMap<>();
+        leaveMessage.put("action", "LEAVE_MESSAGE");
+        leaveMessage.put("data", Map.of(
+                        "message", currentUser.getEmail()
+                )
+        );
+
+        template.convertAndSend("/topic/room/" + roomId+"/member", leaveMessage);
+
         LeaveResponse response = new LeaveResponse("퇴장하였습니다.");
         return ResponseEntity.ok(response);
     }
@@ -82,6 +103,14 @@ public class RoomController {
     public ResponseEntity<LeaveResponse> forcedExit(@RequestBody MemberRoomForceDeleteDTO forceDeleteDTO) {
         Member currentUser = securityUtil.getCurrentUser();
         memberRoomService.forceDelete(forceDeleteDTO, currentUser);
+
+        //웹소켓 메시지 브로드캐스팅
+        Map<String, Object> forcedExitMessage = new LinkedHashMap<>();
+        forcedExitMessage.put("action", "FORCE_EXIT");
+        forcedExitMessage.put("data", Map.of("message", forceDeleteDTO.deletingEmail())
+        );
+
+        template.convertAndSend("/topic/room/" + forceDeleteDTO.roomId()+"/member", forcedExitMessage);
         LeaveResponse response = new LeaveResponse("강제퇴장하였습니다.");
         return ResponseEntity.ok(response);
     }
