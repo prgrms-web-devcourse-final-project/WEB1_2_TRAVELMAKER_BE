@@ -128,6 +128,7 @@ public class RoomServiceImpl implements RoomService {
         return RoomConverter.toRoomResponseDTO(roomRepository.save(room));
     }
 
+    // 방 삭제 메서드
     @Override
     public void delete(Member member, String roomId) {
         Room room = roomRepository.findById(roomId)

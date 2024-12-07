@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.example.wayfarer.converter.MemberRoomConverter;
 import edu.example.wayfarer.converter.RoomConverter;
+import edu.example.wayfarer.dto.memberRoom.MemberRoomForceDeleteDTO;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomResponseDTO;
 import edu.example.wayfarer.dto.room.RoomListDTO;
@@ -11,6 +12,7 @@ import edu.example.wayfarer.entity.Member;
 import edu.example.wayfarer.entity.MemberRoom;
 import edu.example.wayfarer.entity.Room;
 import edu.example.wayfarer.entity.enums.Color;
+import edu.example.wayfarer.exception.AuthorizationException;
 import edu.example.wayfarer.exception.MemberException;
 import edu.example.wayfarer.exception.MemberRoomException;
 import edu.example.wayfarer.exception.RoomException;
@@ -156,6 +158,24 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
             return roomListDTOS;
     }
+
+    // 사용자 강퇴
+    @Override
+    public void forceDelete(MemberRoomForceDeleteDTO forceDeleteDTO, Member member) {
+        Room room = roomRepository.findById(forceDeleteDTO.roomId())
+                .orElseThrow(MemberRoomException.ROOM_NOT_FOUND::get);
+
+        // 사용자가 방장인지 확인
+        if(!room.getHostEmail().equals(member.getEmail())){
+            throw AuthorizationException.UNAUTHORIZED.get();
+        }
+
+        memberRoomRepository.deleteByEmailAndRoomId(forceDeleteDTO.deletingEmail(), forceDeleteDTO.roomId());
+
+        //Redis에서 memberRoom 캐시 삭제
+        jsonRedisTemplate.opsForHash().delete("Member:" + forceDeleteDTO.roomId(), forceDeleteDTO.deletingEmail());
+    }
+
 
     protected void hostExit(Member member, Room room){
         // 현재 방장의 MemberRoom 조회

@@ -1,8 +1,10 @@
 package edu.example.wayfarer.controller;
 
 import edu.example.wayfarer.annotation.DeleteRoomOperation;
+import edu.example.wayfarer.annotation.ForcedExitOperation;
 import edu.example.wayfarer.annotation.LeaveOperation;
 import edu.example.wayfarer.auth.util.SecurityUtil;
+import edu.example.wayfarer.dto.memberRoom.MemberRoomForceDeleteDTO;
 import edu.example.wayfarer.dto.responses.DeleteResponse;
 import edu.example.wayfarer.dto.responses.LeaveResponse;
 import edu.example.wayfarer.dto.room.RoomResponseDTO;
@@ -71,6 +73,16 @@ public class RoomController {
         memberRoomService.delete(currentUser, roomId);
 
         LeaveResponse response = new LeaveResponse("퇴장하였습니다.");
+        return ResponseEntity.ok(response);
+    }
+
+    // 강제퇴장
+    @ForcedExitOperation
+    @DeleteMapping("/forcedExit")
+    public ResponseEntity<LeaveResponse> forcedExit(@RequestBody MemberRoomForceDeleteDTO forceDeleteDTO) {
+        Member currentUser = securityUtil.getCurrentUser();
+        memberRoomService.forceDelete(forceDeleteDTO, currentUser);
+        LeaveResponse response = new LeaveResponse("강제퇴장하였습니다.");
         return ResponseEntity.ok(response);
     }
 

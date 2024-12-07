@@ -17,8 +17,8 @@ public interface MemberRoomRepository extends JpaRepository<MemberRoom, Long> {
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM MemberRoom mr WHERE mr.room.roomId = :roomId")
-    void deleteByRoomId(@Param("roomId") String roomId);
+    @Query("DELETE FROM MemberRoom mr WHERE mr.member.email = :email AND mr.room.roomId = :roomId")
+    void deleteByEmailAndRoomId(@Param("email") String email, @Param("roomId") String roomId);
 
     // 특정 Room에 해당 Color가 이미 사용중인지 확인
     boolean existsByRoomRoomIdAndColor(String roomId, Color color);
