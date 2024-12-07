@@ -14,6 +14,9 @@ import edu.example.wayfarer.exception.RoomException;
 import edu.example.wayfarer.repository.*;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +28,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RoomServiceImpl implements RoomService {
+    @Autowired
+    @Qualifier("jsonRedisTemplate")
+    private RedisTemplate<String, Object> jsonRedisTemplate;
     private final RoomRepository roomRepository;
     private final MemberRepository memberRepository;
     private final MemberRoomRepository memberRoomRepository;
@@ -110,6 +116,7 @@ public class RoomServiceImpl implements RoomService {
 
         verifyHost(member.getEmail(), room.getHostEmail());
 
+        jsonRedisTemplate.delete("Member:" + roomId);
         roomRepository.delete(room);
     }
 

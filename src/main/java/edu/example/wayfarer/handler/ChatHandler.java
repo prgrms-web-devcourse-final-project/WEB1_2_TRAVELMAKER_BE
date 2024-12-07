@@ -1,5 +1,8 @@
 package edu.example.wayfarer.handler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.example.wayfarer.converter.ChatMessageConverter;
 import edu.example.wayfarer.converter.WebSocketMessageConverter;
 import edu.example.wayfarer.dto.chatMessage.ChatMessageRequestDTO;
@@ -27,7 +30,9 @@ import java.util.stream.Collectors;
 public class ChatHandler {
     private final SimpMessagingTemplate template;
     private final ChatMessageService chatMessageService;
+    private final ObjectMapper objectMapper;
     public static final String CHAT_CACHE_PREFIX = "ChatMessage:";
+
 
     @Autowired
     @Qualifier("jsonRedisTemplate")
@@ -58,9 +63,9 @@ public class ChatHandler {
         Map<String, Object> welcomeMessage = new LinkedHashMap<>();
         welcomeMessage.put("action", "WELCOME_MESSAGE");
         welcomeMessage.put("data", Map.of(
-                "sender", "System",
-                "message", email + " 님이 입장하셨습니다.",
-                "timestamp", timestampFormat.format(new Date())
+                        "sender", "System",
+                        "message", email + " 님이 입장하셨습니다.",
+                        "timestamp", timestampFormat.format(new Date())
                 )
         );
 
@@ -70,6 +75,21 @@ public class ChatHandler {
     }
 
     private void broadcastMessage(String roomId, String email, Map<String, Object> data) {
+        String memberJson = (String) jsonRedisTemplate.opsForHash().get("Member:" + roomId, email);
+        String nickname=null;
+        String profileImage=null;
+        if (memberJson != null) {
+            try {
+                // JSON 문자열을 JsonNode로 변환
+                JsonNode jsonNode = objectMapper.readTree(memberJson);
+                // nickname과 profileImage 추출
+                nickname = jsonNode.get("nickname").asText();
+                profileImage = jsonNode.get("profileImage").asText();
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
         String message = (String) data.get("message");
         if (message == null) {
             throw new WebSocketTaskException(WebSocketException.INVALID_MESSAGE_FORMAT);
@@ -80,7 +100,9 @@ public class ChatHandler {
         broadcastMessage.put("data", Map.of(
                 "sender", email,
                 "message", message,
-                "timestamp", timestampFormat.format(new Date())
+                "timestamp", timestampFormat.format(new Date()),
+                "nickname", nickname,
+                "profileImage", profileImage
                 )
         );
 
@@ -93,84 +115,85 @@ public class ChatHandler {
         template.convertAndSend("/topic/room/" + roomId, broadcastMessage);
     }
 
-    private void listMessages(String roomId) {
 
-        //레디스에서 메시지 읽기
-        List<ChatMessageResponseDTO> redisMessages = readMessagesFromRedis(roomId);
-        log.debug("redisMessages: {}", redisMessages);
-        //레디스에서 읽은 메시지가 있으면 가장 첫 번째 메시지를 기준으로 timestamp 추출
-        LocalDateTime latestRedisTimestamp = null;
-        if (!redisMessages.isEmpty()) {
-            ChatMessageResponseDTO firstRedisMessage = redisMessages.get(0); // 레디스에 저장된 가장 오래된 메시지
-            latestRedisTimestamp = firstRedisMessage.createdAt();
+        private void listMessages(String roomId) {
+
+            //레디스에서 메시지 읽기
+            List<ChatMessageResponseDTO> redisMessages = readMessagesFromRedis(roomId);
+            log.debug("redisMessages: {}", redisMessages);
+            //레디스에서 읽은 메시지가 있으면 가장 첫 번째 메시지를 기준으로 timestamp 추출
+            LocalDateTime latestRedisTimestamp = null;
+            if (!redisMessages.isEmpty()) {
+                ChatMessageResponseDTO firstRedisMessage = redisMessages.get(0); // 레디스에 저장된 가장 오래된 메시지
+                latestRedisTimestamp = firstRedisMessage.createdAt();
+            }
+
+            //DB에서 레디스에 저장된 메시지보다 이전 시간대의 메시지 읽어오기
+            List<ChatMessageResponseDTO> dbMessages = new ArrayList<>();
+            if (latestRedisTimestamp != null) {
+                // 레디스 메시지보다 이전에 생성된 메시지들을 DB에서 읽어옴
+                dbMessages = getChatMessagesBeforeTimestamp(roomId, latestRedisTimestamp);
+            }
+            log.debug("DB Messages: {}", dbMessages);
+
+            //레디스와 DB에서 읽은 메시지를 합치기 (중복 제거)
+            List<ChatMessageResponseDTO> allMessages = mergeMessages(redisMessages, dbMessages);
+
+            //WebSocketMessageConverter로 List message 생성
+            WebSocketMessageConverter<List<ChatMessageResponseDTO>> listConverter = new WebSocketMessageConverter<>();
+            WebSocketMessageConverter.WebsocketMessage<List<ChatMessageResponseDTO>> listMessage =
+                    listConverter.createMessage("LIST_MESSAGES", allMessages);
+            log.debug("LIST MESSAGES: " + listMessage);
+
+            template.convertAndSend("/topic/room/" + roomId, listMessage);
+
+
         }
 
-        //DB에서 레디스에 저장된 메시지보다 이전 시간대의 메시지 읽어오기
-        List<ChatMessageResponseDTO> dbMessages = new ArrayList<>();
-        if (latestRedisTimestamp != null) {
-            // 레디스 메시지보다 이전에 생성된 메시지들을 DB에서 읽어옴
-            dbMessages = getChatMessagesBeforeTimestamp(roomId, latestRedisTimestamp);
-        }
-        log.debug("DB Messages: {}", dbMessages);
+        private List<ChatMessageResponseDTO> readMessagesFromRedis(String roomId) {
+            // Redis에서 메시지 가져오기
+            List <Object> redisMessages = jsonRedisTemplate.opsForList().range(CHAT_CACHE_PREFIX+roomId, 0, -1);
+            // 메시지를 DTO로 변환
+            if (redisMessages == null || redisMessages.isEmpty()) {
+                return new ArrayList<>();
+            }
 
-        //레디스와 DB에서 읽은 메시지를 합치기 (중복 제거)
-        List<ChatMessageResponseDTO> allMessages = mergeMessages(redisMessages, dbMessages);
-
-        //WebSocketMessageConverter로 List message 생성
-        WebSocketMessageConverter<List<ChatMessageResponseDTO>> listConverter = new WebSocketMessageConverter<>();
-        WebSocketMessageConverter.WebsocketMessage<List<ChatMessageResponseDTO>> listMessage =
-                listConverter.createMessage("LIST_MESSAGES", allMessages);
-        log.debug("LIST MESSAGES: " + listMessage);
-
-        template.convertAndSend("/topic/room/" + roomId, listMessage);
-
-
-    }
-
-    private List<ChatMessageResponseDTO> readMessagesFromRedis(String roomId) {
-        // Redis에서 메시지 가져오기
-        List <Object> redisMessages = jsonRedisTemplate.opsForList().range(CHAT_CACHE_PREFIX+roomId, 0, -1);
-        // 메시지를 DTO로 변환
-        if (redisMessages == null || redisMessages.isEmpty()) {
-            return new ArrayList<>();
+            return redisMessages.stream()
+                    .filter(message -> message instanceof Map<?, ?>) // 메시지가 Map 형태인지 확인
+                    .map(message -> {
+                        @SuppressWarnings("unchecked") // 타입 경고 억제
+                        Map<String, Object> messageMap = (Map<String, Object>) message;
+                        return convertToChatMessageResponseDTO(roomId, messageMap);
+                    })
+                    .toList();
         }
 
-        return redisMessages.stream()
-                .filter(message -> message instanceof Map<?, ?>) // 메시지가 Map 형태인지 확인
-                .map(message -> {
-                    @SuppressWarnings("unchecked") // 타입 경고 억제
-                    Map<String, Object> messageMap = (Map<String, Object>) message;
-                    return convertToChatMessageResponseDTO(roomId, messageMap);
-                })
-                .toList();
+        private ChatMessageResponseDTO convertToChatMessageResponseDTO(String roomId, Map<String, Object> messageMap) {
+            // 메시지 맵에서 필요한 데이터 추출
+
+            String email = (String) ((Map<?, ?>) messageMap.get("data")).get("sender");
+            String content = (String) ((Map<?, ?>) messageMap.get("data")).get("message");
+            String stringCreatedAt = (String) ((Map<?, ?>) messageMap.get("data")).get("timestamp");
+            LocalDateTime createdAt = ChatMessageConverter.stringTOLocalDateTime(stringCreatedAt);
+
+            // ChatMessageResponseDTO 객체 생성 및 반환
+            return new ChatMessageResponseDTO(roomId, email, content, createdAt);
+        }
+
+        // DB에서 레디스 메시지 시간대 이전의 메시지 불러오기
+        private List<ChatMessageResponseDTO> getChatMessagesBeforeTimestamp(String roomId, LocalDateTime createdAt) {
+            return chatMessageService.getChatMessagesBeforeTimestamp(roomId, createdAt);
+        }
+
+        private List<ChatMessageResponseDTO> mergeMessages(List<ChatMessageResponseDTO> redisMessages, List<ChatMessageResponseDTO> dbMessages) {
+            // 중복 제거 및 합치기
+            Set<ChatMessageResponseDTO> uniqueMessages = new HashSet<>();
+            uniqueMessages.addAll(redisMessages);
+            uniqueMessages.addAll(dbMessages);
+
+            return uniqueMessages.stream()
+                    .sorted(Comparator.comparing(ChatMessageResponseDTO::createdAt))
+                    .collect(Collectors.toList());
+        }
+
     }
-
-    private ChatMessageResponseDTO convertToChatMessageResponseDTO(String roomId, Map<String, Object> messageMap) {
-        // 메시지 맵에서 필요한 데이터 추출
-
-        String email = (String) ((Map<?, ?>) messageMap.get("data")).get("sender");
-        String content = (String) ((Map<?, ?>) messageMap.get("data")).get("message");
-        String stringCreatedAt = (String) ((Map<?, ?>) messageMap.get("data")).get("timestamp");
-        LocalDateTime createdAt = ChatMessageConverter.stringTOLocalDateTime(stringCreatedAt);
-
-        // ChatMessageResponseDTO 객체 생성 및 반환
-        return new ChatMessageResponseDTO(roomId, email, content, createdAt);
-    }
-
-    // DB에서 레디스 메시지 시간대 이전의 메시지 불러오기
-    private List<ChatMessageResponseDTO> getChatMessagesBeforeTimestamp(String roomId, LocalDateTime createdAt) {
-        return chatMessageService.getChatMessagesBeforeTimestamp(roomId, createdAt);
-    }
-
-    private List<ChatMessageResponseDTO> mergeMessages(List<ChatMessageResponseDTO> redisMessages, List<ChatMessageResponseDTO> dbMessages) {
-        // 중복 제거 및 합치기
-        Set<ChatMessageResponseDTO> uniqueMessages = new HashSet<>();
-        uniqueMessages.addAll(redisMessages);
-        uniqueMessages.addAll(dbMessages);
-
-        return uniqueMessages.stream()
-                .sorted(Comparator.comparing(ChatMessageResponseDTO::createdAt))
-                .collect(Collectors.toList());
-    }
-
-}

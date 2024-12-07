@@ -1,5 +1,7 @@
 package edu.example.wayfarer.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.example.wayfarer.converter.MemberRoomConverter;
 import edu.example.wayfarer.converter.RoomConverter;
 import edu.example.wayfarer.dto.memberRoom.MemberRoomRequestDTO;
@@ -17,11 +19,16 @@ import edu.example.wayfarer.repository.MemberRoomRepository;
 import edu.example.wayfarer.repository.RoomRepository;
 import edu.example.wayfarer.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,9 +37,14 @@ import java.util.stream.Stream;
 @Transactional
 public class MemberRoomServiceImpl implements MemberRoomService {
 
+    @Autowired
+    @Qualifier("jsonRedisTemplate")
+    private RedisTemplate<String, Object> jsonRedisTemplate;
     private final MemberRoomRepository memberRoomRepository;
     private final RoomRepository roomRepository;
     private final MemberRepository memberRepository;
+    private final ObjectMapper objectMapper;
+
 
     /*
     create 설명 (방 입장)
@@ -80,6 +92,19 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
         memberRoomRepository.save(memberRoom);
 
+        //Redis에 memberRoom 캐시 추가
+        Map<String, Object> memberInfo = new LinkedHashMap<>();
+        memberInfo.put("nickname", currentUser.getNickname());
+        memberInfo.put("profileImage", currentUser.getProfileImage());
+
+        try {
+            // Field, Map을 JSON 문자열로 변환
+            String jsonMemberInfo = objectMapper.writeValueAsString(memberInfo);
+            jsonRedisTemplate.opsForHash().put("Member:" + room.getRoomId(), email, jsonMemberInfo);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
         return MemberRoomConverter.toMemberRoomResponseDTO(memberRoom);
     }
 
@@ -101,6 +126,8 @@ public class MemberRoomServiceImpl implements MemberRoomService {
             memberRoomRepository.delete(memberRoom);
         }
 
+        //Redis에서 memberRoom 캐시 삭제
+        jsonRedisTemplate.opsForHash().delete("Member:" + roomId, member.getEmail());
     }
 
     // 해당 방에 참가하고 있는 참여자들을 볼 수 있는 리스트
