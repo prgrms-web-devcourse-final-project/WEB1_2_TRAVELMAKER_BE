@@ -35,6 +35,7 @@ public class MarkerConverter {
         return new MarkerResponseDTO(
                 marker.getMarkerId(),
                 marker.getMember().getEmail(),
+                marker.getMember().getProfileImage(),
                 marker.getSchedule().getScheduleId(),
                 marker.getLat(),
                 marker.getLng(),
