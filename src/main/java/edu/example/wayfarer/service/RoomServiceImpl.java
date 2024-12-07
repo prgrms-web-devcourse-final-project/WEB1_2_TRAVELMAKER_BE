@@ -135,7 +135,9 @@ public class RoomServiceImpl implements RoomService {
 
         verifyHost(member.getEmail(), room.getHostEmail());
 
+        jsonRedisTemplate.delete("ChatMessage:" + roomId);
         jsonRedisTemplate.delete("Member:" + roomId);
+
         roomRepository.delete(room);
     }
 
