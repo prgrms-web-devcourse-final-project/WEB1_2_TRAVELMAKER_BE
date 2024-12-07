@@ -1,5 +1,7 @@
 package edu.example.wayfarer.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.example.wayfarer.exception.AuthorizationException;
 import edu.example.wayfarer.converter.MemberRoomConverter;
 import edu.example.wayfarer.converter.RoomConverter;
@@ -23,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +39,8 @@ public class RoomServiceImpl implements RoomService {
     private final MemberRepository memberRepository;
     private final MemberRoomRepository memberRoomRepository;
     private final ScheduleRepository scheduleRepository;
+    private final ObjectMapper objectMapper;
+
 
     /*
     create 설명
@@ -68,6 +74,19 @@ public class RoomServiceImpl implements RoomService {
         MemberRoom memberRoom = MemberRoomConverter.toMemberRoom(savedRoom, foundMember, colors[1]);
         savedRoom.getMemberRooms().add(memberRoom);
         memberRoomRepository.save(memberRoom);
+
+        //Redis에 memberRoom 캐시 추가
+        Map<String, Object> memberInfo = new LinkedHashMap<>();
+        memberInfo.put("nickname", foundMember.getNickname());
+        memberInfo.put("profileImage", foundMember.getProfileImage());
+
+        try {
+            // Field, Map을 JSON 문자열로 변환
+            String jsonMemberInfo = objectMapper.writeValueAsString(memberInfo);
+            jsonRedisTemplate.opsForHash().put("Member:" + room.getRoomId(), email, jsonMemberInfo);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
         // schedule 저장
         saveSchedules(savedRoom, roomRequestDTO.startDate(), roomRequestDTO.endDate());
