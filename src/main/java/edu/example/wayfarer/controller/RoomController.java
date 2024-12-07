@@ -87,13 +87,11 @@ public class RoomController {
         Map<String, Object> leaveMessage = new LinkedHashMap<>();
         leaveMessage.put("action", "LEAVE_MESSAGE");
         leaveMessage.put("data", Map.of(
-                        "sender", "System",
-                        "message", currentUser.getEmail()+"님이 퇴장하셨습니다.",
-                        "timestamp", timestampFormat.format(new Date())
+                        "message", currentUser.getEmail()
                 )
         );
 
-        template.convertAndSend("/topic/room/" + roomId, leaveMessage);
+        template.convertAndSend("/topic/room/" + roomId+"/member", leaveMessage);
 
         LeaveResponse response = new LeaveResponse("퇴장하였습니다.");
         return ResponseEntity.ok(response);
@@ -105,6 +103,14 @@ public class RoomController {
     public ResponseEntity<LeaveResponse> forcedExit(@RequestBody MemberRoomForceDeleteDTO forceDeleteDTO) {
         Member currentUser = securityUtil.getCurrentUser();
         memberRoomService.forceDelete(forceDeleteDTO, currentUser);
+
+        //웹소켓 메시지 브로드캐스팅
+        Map<String, Object> forcedExitMessage = new LinkedHashMap<>();
+        forcedExitMessage.put("action", "FORCE_EXIT");
+        forcedExitMessage.put("data", Map.of("message", forceDeleteDTO.deletingEmail())
+        );
+
+        template.convertAndSend("/topic/room/" + forceDeleteDTO.roomId()+"/member", forcedExitMessage);
         LeaveResponse response = new LeaveResponse("강제퇴장하였습니다.");
         return ResponseEntity.ok(response);
     }
