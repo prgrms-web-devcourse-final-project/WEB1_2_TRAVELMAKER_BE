@@ -93,7 +93,7 @@ jobs:
           # Elastic Beanstalk 애플리케이션 이름
           application_name: wayfarer-web
           # Elastic Beanstalk 환경 이름
-          environment_name: Wayfarer-web-env
+          environment_name: Wayfarer-web-env-1
           # 현재 시간을 사용한 버전 레이블
           version_label: github-action-${{steps.current-time.outputs.formattedTime}}
           # 배포 리전(서울)
