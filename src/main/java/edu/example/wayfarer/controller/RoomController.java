@@ -73,6 +73,15 @@ public class RoomController {
         Member currentUser = securityUtil.getCurrentUser();
         roomService.delete(currentUser, roomId);
 
+        //웹소켓 메시지 브로드캐스팅
+        Map<String, Object> roomDeleteMessage = new LinkedHashMap<>();
+        roomDeleteMessage.put("action", "DELETE_ROOM");
+        roomDeleteMessage.put("data", Map.of(
+                        "message", roomId
+                )
+        );
+        template.convertAndSend("/topic/room/" + roomId+"/member", roomDeleteMessage);
+
         DeleteResponse response = new DeleteResponse("삭제되었습니다.");
         return ResponseEntity.ok(response);
     }
