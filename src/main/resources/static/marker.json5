@@ -1,0 +1,29 @@
+[
+  {
+    "markerId": 4,
+    "email": "member1@abc.com",
+    "profileImage": "image1.png",
+    "scheduleId": 1,
+    "lat": 15.0,
+    "lng": 15.0,
+    "color": "#007AFF",
+    "confirm": false,
+    "itemOrder": null,
+    "createdAt": "2024-12-01T16:46:55.561174",
+    "updatedAt": "2024-12-03T11:49:13.602535"
+  },
+  {
+    "markerId": 5,
+    "email": "member1@abc.com",
+    "profileImage": "image1.png",
+    "scheduleId": 1,
+    "lat": 15.0,
+    "lng": 15.0,
+    "color": "#F72216",
+    "confirm": true,
+    "itemOrder": 0,
+    "createdAt": "2024-12-01T16:46:57.965917",
+    "updatedAt": "2024-12-01T16:50:01.255808"
+  }, // ...
+]
+
