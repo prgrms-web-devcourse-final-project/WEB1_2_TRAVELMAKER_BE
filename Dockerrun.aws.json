@@ -1,29 +1,12 @@
 {
-  "AWSEBDockerrunVersion": "3",
-  "containerDefinitions": [
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "hyeongyu94/spring-app:latest",
+    "Update": "true"
+  },
+  "Ports": [
     {
-      "name": "spring-app",
-      "image": "hyeongyu94/spring-app:latest",
-      "memory": 512,
-      "essential": true,
-      "portMappings": [
-        {
-          "hostPort": 8080,
-          "containerPort": 8080
-        }
-      ]
-    },
-    {
-      "name": "nginx",
-      "image": "hyeongyu94/nginx:latest",
-      "memory": 256,
-      "essential": true,
-      "portMappings": [
-        {
-          "hostPort": 80,
-          "containerPort": 80
-        }
-      ]
+      "ContainerPort": 8080
     }
   ]
 }

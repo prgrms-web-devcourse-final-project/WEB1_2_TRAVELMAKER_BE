@@ -57,10 +57,10 @@ jobs:
           docker push hyeongyu94/spring-app:latest
 
       # 8. Nginx Docker 이미지 빌드 및 Docker Hub 푸시
-      - name: Build and push Nginx Docker image
-        run: |
-          docker build -t hyeongyu94/nginx:latest ./nginx
-          docker push hyeongyu94/nginx:latest 
+#      - name: Build and push Nginx Docker image
+#        run: |
+#          docker build -t hyeongyu94/nginx:latest ./nginx
+#          docker push hyeongyu94/nginx:latest
 
       # 9. 현재 시간 가져오기
       - name: Get current time
