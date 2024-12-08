@@ -41,6 +41,32 @@ jobs:
           name: application-test.properties
           path: ./src/main/resources/application-test.properties
 
+      # 5. docker-auth.config 파일 생성
+      - name: Create docker-auth.config
+        run: |
+          mkdir -p .ebextensions
+          echo "files:" > .ebextensions/docker-auth.config
+          echo "  \"/root/.docker/config.json\":" >> .ebextensions/docker-auth.config
+          echo "    mode: \"000600\"" >> .ebextensions/docker-auth.config
+          echo "    owner: root" >> .ebextensions/docker-auth.config
+          echo "    group: root" >> .ebextensions/docker-auth.config
+          echo "    content: |" >> .ebextensions/docker-auth.config
+          echo "      {" >> .ebextensions/docker-auth.config
+          echo "        \"auths\": {" >> .ebextensions/docker-auth.config
+          echo "          \"https://index.docker.io/v1/\": {" >> .ebextensions/docker-auth.config
+          echo "            \"auth\": \"$(echo -n '${{ secrets.DOCKER_HUB_USERNAME }}:${{ secrets.DOCKER_HUB_PASSWORD }}' | base64)\"" >> .ebextensions/docker-auth.config
+          echo "          }" >> .ebextensions/docker-auth.config
+          echo "        }" >> .ebextensions/docker-auth.config
+          echo "      }" >> .ebextensions/docker-auth.config
+
+      # 3. docker-auth.config 파일을 아티팩트로 업로드
+      - name: Upload docker-auth.config as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-auth-config
+          path: .ebextensions/docker-auth.config
+
+
       # 5. Gradle Wrapper 에 실행 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

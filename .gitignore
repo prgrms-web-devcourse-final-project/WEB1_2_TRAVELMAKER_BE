@@ -27,6 +27,7 @@ out/
 !**/src/test/**/out/
 application.properties
 application-*.properties
+docker-auth.config
 
 ### NetBeans ###
 /nbproject/private/
