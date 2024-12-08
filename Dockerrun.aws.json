@@ -1,7 +1,7 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Image": {
-    "Name": "hyeongyu94/spring-app:latest",
+    "Name": "533267244952.dkr.ecr.ap-northeast-2.amazonaws.com/wayfarer-server:latest",
     "Update": "true"
   },
   "Ports": [

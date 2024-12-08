@@ -41,32 +41,6 @@ jobs:
           name: application-test.properties
           path: ./src/main/resources/application-test.properties
 
-      # 5. docker-auth.config 파일 생성
-      - name: Create docker-auth.config
-        run: |
-          mkdir -p .ebextensions
-          echo "files:" > .ebextensions/docker-auth.config
-          echo "  \"/root/.docker/config.json\":" >> .ebextensions/docker-auth.config
-          echo "    mode: \"000600\"" >> .ebextensions/docker-auth.config
-          echo "    owner: root" >> .ebextensions/docker-auth.config
-          echo "    group: root" >> .ebextensions/docker-auth.config
-          echo "    content: |" >> .ebextensions/docker-auth.config
-          echo "      {" >> .ebextensions/docker-auth.config
-          echo "        \"auths\": {" >> .ebextensions/docker-auth.config
-          echo "          \"https://index.docker.io/v1/\": {" >> .ebextensions/docker-auth.config
-          echo "            \"auth\": \"$(echo -n '${{ secrets.DOCKER_HUB_USERNAME }}:${{ secrets.DOCKER_HUB_PASSWORD }}' | base64)\"" >> .ebextensions/docker-auth.config
-          echo "          }" >> .ebextensions/docker-auth.config
-          echo "        }" >> .ebextensions/docker-auth.config
-          echo "      }" >> .ebextensions/docker-auth.config
-
-      # 3. docker-auth.config 파일을 아티팩트로 업로드
-      - name: Upload docker-auth.config as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: docker-auth-config
-          path: .ebextensions/docker-auth.config
-
-
       # 5. Gradle Wrapper 에 실행 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -75,18 +49,29 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      # 7. Spring Boot Docker 이미지 빌드 및 Docker Hub 푸시
-      - name: Build and push Spring Boot Docker image
-        run: |
-          docker build -t hyeongyu94/spring-app:latest .
-          echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-          docker push hyeongyu94/spring-app:latest
+      # 2. AWS CLI 설정
+      - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # 8. Nginx Docker 이미지 빌드 및 Docker Hub 푸시
-#      - name: Build and push Nginx Docker image
-#        run: |
-#          docker build -t hyeongyu94/nginx:latest ./nginx
-#          docker push hyeongyu94/nginx:latest
+      # 7. Spring Boot Docker 이미지 빌드
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.ECR_REPOSITORY }}:latest .
+
+      # 4. ECR 로그인
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin 533267244952.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      # 5. Docker 이미지 태그 및 푸시
+      - name: Tag and push Docker image to ECR
+        run: |
+          docker tag ${{ secrets.ECR_REPOSITORY }}:latest 533267244952.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+          docker push 533267244952.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
       # 9. 현재 시간 가져오기
       - name: Get current time
@@ -95,9 +80,7 @@ jobs:
         with:
           format: YYYY-MM-DDTHH-mm-ss
           utcOffset: "+09:00"
-#      # 8. 배포용패키지경로저장
-#      - name: Set artifact
-#        run: echo "artifact=$(ls ./build/libs)" >> $GITHUB_ENV
+
 
       # 10. Elastic Beanstalk 에 배포
       - name: Beanstalk Deploy
