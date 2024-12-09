@@ -16,6 +16,9 @@ import edu.example.wayfarer.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -109,17 +112,40 @@ public class MarkerServiceImpl implements MarkerService {
         // scheduleId 로 Marker 리스트 조회
         List<Marker> markers = markerRepository.findByScheduleScheduleId(scheduleId);
 
-        // 조회된 Marker 리스트를 MakerResponseDTO 리스트로 변환하여 반환
-        return markers.stream()
-                .map(marker -> {
-                    // itemOrder 값 설정
-                    Integer itemOrder = Boolean.TRUE.equals(marker.getConfirm())
-                            ? scheduleItemOrderManager.getIndex(marker.getScheduleItem())
-                            : null;
-                    // MarkerResponseDTO 생성
-                    return MarkerConverter.toMarkerResponseDTO(marker, itemOrder);
-                })
+        // confirm이 true인 마커들을 따로 추출
+        List<Marker> confirmedMarkers = markers.stream()
+                .filter(marker -> Boolean.TRUE.equals(marker.getConfirm()))
+                .sorted(Comparator.comparing(Marker::getUpdatedAt))  // 확정변경된 순서대로 정렬
                 .collect(Collectors.toList());
+
+        // confirm이 true인 마커들에 대해 순차적으로 itemOrder 설정
+        List<MarkerResponseDTO> responseDTOs = new ArrayList<>();
+        int index = 1;
+        for (Marker marker : confirmedMarkers) {
+//            Integer itemOrder = scheduleItemOrderManager.getIndex(marker.getScheduleItem());
+            // itemOrder 설정 후 MarkerResponseDTO 생성
+            responseDTOs.add(MarkerConverter.toMarkerResponseDTO(marker, index));
+            index++;  // itemOrder가 null이 아니면 사용하고, 아니면 순차적으로 index 증가
+        }
+
+        // confirm이 false인 마커들은 그냥 추가
+        for (Marker marker : markers) {
+            if (!Boolean.TRUE.equals(marker.getConfirm())) {
+                responseDTOs.add(MarkerConverter.toMarkerResponseDTO(marker, null));
+            }
+        }
+        return responseDTOs;
+//        // 조회된 Marker 리스트를 MakerResponseDTO 리스트로 변환하여 반환
+//        return markers.stream()
+//                .map(marker -> {
+//                    // itemOrder 값 설정
+//                    Integer itemOrder = Boolean.TRUE.equals(marker.getConfirm())
+//                            ? scheduleItemOrderManager.getIndex(marker.getScheduleItem())
+//                            : null;
+//                    // MarkerResponseDTO 생성
+//                    return MarkerConverter.toMarkerResponseDTO(marker, itemOrder);
+//                })
+//                .collect(Collectors.toList());
     }
 
     /**

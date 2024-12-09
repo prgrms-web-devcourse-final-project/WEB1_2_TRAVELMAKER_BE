@@ -72,6 +72,12 @@ public class JwtUtil {
                 }
             }
         }
+        // 3. URL 쿼리 파라미터에서 검색
+        String queryParamToken = request.getParameter("accessToken");
+        if (queryParamToken != null) {
+            log.info("[*] Access Token found in query parameter: {}", queryParamToken);
+            return queryParamToken;
+        }
 
         log.warn("[*] No Access Token found in request");
         return null;

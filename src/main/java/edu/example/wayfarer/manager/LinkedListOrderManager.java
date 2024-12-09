@@ -9,6 +9,7 @@ import edu.example.wayfarer.repository.ScheduleItemRepository;
 import edu.example.wayfarer.util.BreakableBiConsumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,12 +31,13 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
      * @return 해당 ScheduleItem 의 인덱스(0부터 시작)
      */
     @Override
+    @Transactional
     public int getIndex(ScheduleItem scheduleItem) {
         // 1. scheduleId 를 가지는 첫번째 scheduleItem 조회
         ScheduleItem startItem = findStartItem(scheduleItem.getMarker().getSchedule().getScheduleId());
 
         // 2. 시작 index 값
-        int index = 0;
+        int index = 1;
 
         // 3. 조회한 scheduleItem 을 LinkedList 를 순회할 첫 아이템으로 지정
         ScheduleItem currentItem = startItem;
@@ -166,7 +168,7 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
         // 순회를 시작할 현재 노드
         ScheduleItem currentItem = startItem;
         // 현재 노드의 인덱스
-        int index = 0;
+        int index = 1;
 
         // LinkedList 순회
         while (currentItem != null) {
