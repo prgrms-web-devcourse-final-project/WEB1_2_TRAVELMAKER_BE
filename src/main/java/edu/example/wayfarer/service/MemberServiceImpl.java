@@ -23,6 +23,7 @@ public class MemberServiceImpl implements MemberService {
     private final RoomRepository roomRepository;
     private final MemberRoomServiceImpl memberRoomServiceImpl;
     private final S3Service s3Service;
+    private final AuthServiceImpl authServiceImpl;
 
     @Override
     public MemberResponseDTO read(String email) {
@@ -65,6 +66,7 @@ public class MemberServiceImpl implements MemberService {
                 .orElseThrow(MemberException.NOT_FOUND::get);
 
         // 만약 탈퇴한 회원이 host인 방이 있다면 host가 바뀌도록
+        authServiceImpl.revokeAndDeleteToken(email);
         foundRoom.forEach(room ->
                 memberRoomServiceImpl.hostExit(member, room));
         memberRepository.deleteById(email);
