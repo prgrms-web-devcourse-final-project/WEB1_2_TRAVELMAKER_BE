@@ -45,11 +45,16 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
             if (currentItem.equals(scheduleItem)) {
                 return index;  // 목표 아이템 발견시 인덱스 반환
             }
+            // 마지막 아이템이면 nextItem이 null이므로, 더 이상 반복하지 않도록 처리
+            if (currentItem.getNextItem() == null) {
+                break;  // 마지막 아이템에 도달했으면 루프 종료
+            }
             currentItem = currentItem.getNextItem(); // 다음 아이템으로 이동
             index++;
         }
 
-        return -1;
+        // 마지막 항목까지 순회한 후 예외 처리 안하고 index 반환
+        return index;
     }
 
     /**
