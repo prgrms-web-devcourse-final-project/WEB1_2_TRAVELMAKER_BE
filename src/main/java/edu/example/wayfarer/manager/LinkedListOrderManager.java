@@ -49,8 +49,7 @@ public class LinkedListOrderManager implements ScheduleItemOrderManager {
             index++;
         }
 
-        // 예외 처리
-        throw ScheduleItemException.NOT_FOUND.get();
+        return -1;
     }
 
     /**
