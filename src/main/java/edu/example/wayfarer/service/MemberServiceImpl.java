@@ -21,6 +21,7 @@ public class MemberServiceImpl implements MemberService {
     private final RoomRepository roomRepository;
     private final MemberRoomServiceImpl memberRoomServiceImpl;
     private final S3Service s3Service;
+    private final AuthServiceImpl authServiceImpl;
 
     @Override
     public MemberResponseDTO read(String email) {
@@ -67,6 +68,7 @@ public class MemberServiceImpl implements MemberService {
             Room room = foundRoom.get();
             memberRoomServiceImpl.hostExit(member, room);
         }
+        authServiceImpl.revokeAndDeleteToken(email);
         memberRepository.deleteById(email);
     }
 

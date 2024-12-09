@@ -121,10 +121,6 @@ public class JwtUtil {
 
         // Redis에 토큰 저장
         tokenRepository.save(token);
-//
-//        // 쿠키 설정
-//        setAccessTokenCookie(response, accessToken); //수정필요
-//        setRefreshTokenCookie(response, refreshToken);
     }
 
     // Access Token 생성
