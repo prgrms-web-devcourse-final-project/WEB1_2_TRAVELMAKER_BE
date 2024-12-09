@@ -119,7 +119,7 @@ public class MarkerHandler {
     private void addSchedule(String roomId, Long markerId) {
 
         ScheduleItemResponseDTO foundScheduleItem =  scheduleItemService.readByMarkerId(markerId);
-
+        log.info("foundScheduleItem: " +foundScheduleItem.itemOrder());
         //WebSocketMessageConverter를 사용해 메시지 객체 생성
         WebSocketMessageConverter<ScheduleItemResponseDTO> foundConverter = new WebSocketMessageConverter<>();
         WebSocketMessageConverter.WebsocketMessage<ScheduleItemResponseDTO> createdScheduleItemMessage =

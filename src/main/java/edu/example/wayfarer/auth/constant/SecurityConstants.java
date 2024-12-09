@@ -20,7 +20,7 @@ public class SecurityConstants {
             //"/favicon.ico",
             //"/auth/logout",
             "/auth/refresh",
-            "/index.html"
+            "/favicon.ico"
             //"/", // 메인페이지
      };
 

@@ -58,9 +58,9 @@ public class WebSocketHandSakeInterceptor implements HandshakeInterceptor {
     private String getAccessTokenFromQueryParam(String queryParam) {
 
         // 요청 헤더에서 Authorization 추출
-        if (queryParam == null || !queryParam.startsWith("access_token=")) {
+        if (queryParam == null || !queryParam.startsWith("accessToken=")) {
             throw new WebSocketTaskException(WebSocketException.INVALID_TOKEN);
         }
-        return queryParam.substring("access_token=".length());
+        return queryParam.substring("accessToken=".length());
     }
 }
