@@ -179,6 +179,7 @@ public class MemberRoomServiceImpl implements MemberRoomService {
 
     protected void hostExit(Member member, Room room){
         // 현재 방장의 MemberRoom 조회
+        System.out.println("멤버 : " + member.getEmail() + " 방 : " + room.getRoomId());
         MemberRoom currentHost = memberRoomRepository.findByMemberEmailAndRoomRoomId(member.getEmail(), room.getRoomId())
                 .orElseThrow(MemberRoomException.LEFT_MEMBER::get); // 여기 사실 방장이 없으면 안되는 건데..
 

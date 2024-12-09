@@ -58,7 +58,7 @@ public class RoomServiceImpl implements RoomService {
     @Transactional
     public RoomResponseDTO create(RoomRequestDTO roomRequestDTO, String email) {
         // 날짜 유효성 검사
-        validateDates(roomRequestDTO);
+        validateDates(roomRequestDTO.startDate(), roomRequestDTO.endDate());
         Room room = RoomConverter.toRoom(roomRequestDTO);
         room.setHostEmail(email);
 
@@ -120,6 +120,9 @@ public class RoomServiceImpl implements RoomService {
         // 권한 확인
         verifyHost(email, room.getHostEmail());
 
+        // 날짜 확인
+        validateDates(roomUpdateDTO.startDate(), roomUpdateDTO.endDate());
+
         // 방 정보 업데이트
         updateRoomDetails(room, roomUpdateDTO);
 
@@ -142,12 +145,12 @@ public class RoomServiceImpl implements RoomService {
         roomRepository.delete(room);
     }
 
-    private void validateDates(RoomRequestDTO roomRequestDTO) {
-        if(roomRequestDTO.startDate().isAfter(roomRequestDTO.endDate())){
+    private void validateDates(LocalDate startDate, LocalDate endDate) {
+        if(startDate.isAfter(endDate)){
             throw RoomException.INVALID_DATE.get();
         }
 
-        long daysBetween = ChronoUnit.DAYS.between(roomRequestDTO.startDate(), roomRequestDTO.endDate()) + 1;
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         if(daysBetween > 30){
             throw RoomException.OVER_30DAYS.get();
         }
