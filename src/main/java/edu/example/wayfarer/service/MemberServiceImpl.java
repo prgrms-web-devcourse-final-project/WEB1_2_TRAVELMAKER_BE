@@ -9,9 +9,11 @@ import edu.example.wayfarer.exception.MemberException;
 import edu.example.wayfarer.repository.MemberRepository;
 import edu.example.wayfarer.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -58,17 +60,18 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public void delete(String email) {
-        Optional<Room> foundRoom = roomRepository.findByHostEmail(email);
+        var foundRoom = roomRepository.findAllByHostEmail(email);
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberException.NOT_FOUND::get);
 
         // 만약 탈퇴한 회원이 host인 방이 있다면 host가 바뀌도록
-        if(foundRoom.isPresent()){
-            Room room = foundRoom.get();
-            memberRoomServiceImpl.hostExit(member, room);
-        }
+        foundRoom.forEach(room ->
+                memberRoomServiceImpl.hostExit(member, room));
         memberRepository.deleteById(email);
+
     }
+
+
 
 
 }
