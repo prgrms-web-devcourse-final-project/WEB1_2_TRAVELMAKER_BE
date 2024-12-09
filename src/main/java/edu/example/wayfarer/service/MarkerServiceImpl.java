@@ -253,6 +253,9 @@ public class MarkerServiceImpl implements MarkerService {
                 .previousItem(lastItem)
                 .build();
 
+        // 새로 추가
+        marker.setScheduleItem(newItem);
+
         // linkedList 연결
         if (lastItem != null) {
             lastItem.changeNextItem(newItem);
