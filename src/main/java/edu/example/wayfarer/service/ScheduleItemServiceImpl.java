@@ -57,6 +57,7 @@ public class ScheduleItemServiceImpl implements ScheduleItemService {
      * @return ScheduleItemResponseDTO 조회된 ScheduleItem 의 응답 데이터
      */
     @Override
+    @Transactional
     public ScheduleItemResponseDTO readByMarkerId(Long markerId) {
         // markerId 로 scheduleItem 조회
         ScheduleItem scheduleItem = scheduleItemRepository.findByMarkerMarkerId(markerId)
